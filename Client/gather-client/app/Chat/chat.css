@@ -99,3 +99,16 @@
     display: flex;
     justify-content: center;
 }
+
+ul, ol{
+    padding-left: 2rem;
+  }
+
+li {
+    padding-top: 1rem;
+}
+
+h2, h3, h1 {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
