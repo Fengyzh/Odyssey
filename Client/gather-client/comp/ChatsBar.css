@@ -1,0 +1,26 @@
+.ChatsBar-cont {
+    height: 100%;
+    width: 0%;
+    position: fixed;
+    background-color: beige;
+    top: auto;
+    transition: 0.3s ease;
+    overflow: hidden;
+    z-index: 999;
+    white-space: nowrap;
+
+}
+
+.bar-top {
+    padding-top: 1rem;
+    padding-left: 2rem;
+    display: flex;
+    align-items: center;
+    padding-right: 2rem;
+
+}
+
+.mode-toggle {
+    padding-left: 1rem;
+}
+

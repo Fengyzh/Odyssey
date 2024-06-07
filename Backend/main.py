@@ -22,6 +22,14 @@ class LLM_controller():
         self.text_stream.append(text)
     
 
+    def gen_llm(self, p, c=""):
+        response = ollama.generate(
+        model='dolphin-mistral',
+        prompt=p,
+        stream=True)
+
+        return response
+
 def chat_llm_request(p, c=""):
 
     text_stream.append({'role': 'user', 'content': p})
@@ -36,9 +44,10 @@ def chat_llm_request(p, c=""):
     return response
 
 
+
 #u = input('q: ')
 result = ""
-#llm = LLM_controller()
+llm = LLM_controller()
 
 """ while u != "bye":
     #result = chat_llm_request(u)
@@ -53,21 +62,26 @@ result = ""
 
 
 from flask import Flask, Response, request, jsonify
+from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_cors import CORS
 
 
-def format_chunks(stream_res):
+def format_chunks(stream_res, isGenerate):
     complete_text = []
     for chunk in stream_res:
-        print(chunk['message']['content'], end='', flush=True)
-        complete_text.append(chunk['message']['content'])
-        #complete_text += chunk['message']['content']
+        if isGenerate:
+            #print(chunk, end='', flush=True)
+            complete_text.append(chunk['response'])
+        else:
+            print(chunk['message']['content'], end='', flush=True)
+            complete_text += chunk['message']['content']
 
     return complete_text
 
 
 app = Flask(__name__)
 CORS(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 
 llm_res = []
@@ -92,48 +106,65 @@ def handle_post():
     return jsonify(response)
 
 
-@app.route('/api/stream')
+@app.route('/api/stream', methods=['GET', 'POST'])
 def stream():
 
     def get_data():
         #messages = ["Hello", "How are you?", "This is a streamed response", "Goodbye"]
 
         #data = llm.chat_llm(request_msg['message'])
-
+        llm_res = llm.chat_llm(request_msg['message'])
         for chunk in llm_res:
-            time.sleep(1)
             print(chunk)
-            yield f'data: {chunk}\n\n'
+            content = chunk['message']['content']
+            yield f'data: {content}\n\n'
     
-    #request_msg = request.get_json()
+    request_msg = request.get_json()
 
 
     #if request_msg and 'message' in request_msg:
-    return Response(get_data(), content_type='text/event-stream')
+    return get_data(), {'Content-Type': 'text/plain'}
 
     #return Response({"msg":"No Message"})
 
-def generate_tokens(q):
-    for chunks in llm.chat_llm(q):
-        yield chunks
 
-@app.route('/api/stream2', methods=['GET', "POST"])
+
+@app.route('/api/stream2', methods=["POST"])
 def streamPost():
     request_msg = request.get_json()
     if request_msg and 'message' in request_msg:
         q = request_msg['message']
     else:
         q = "hello"
-    def generate_tokens(q):
+    
+    def fetch_stream(q):
+        socketio.emit('start_response', {'data':'Start Response'})
         stream = llm.chat_llm(q)
-        for chunks in stream:
-            yield chunks['message']['content']
-
-    return generate_tokens(q)
-
-
-
-
+        for chunk in stream:
+            #print(chunk['message']['content'])
+            socketio.emit('text_stream', {'data':chunk['message']['content']})
+        socketio.emit('end_response', {'data': 'End Response'})
+    socketio.start_background_task(target=fetch_stream, q=q)
+    return jsonify({'status': 'streaming started'})
 
 
-app.run()
+@socketio.on('connect')
+def handle_connect(data):
+    emit('response', {'data': 'Connected!'})
+
+
+@app.route('/api/summary', methods=["POST"])
+def summary():
+    request_msg = request.get_json()
+    if request_msg and 'context' in request_msg:
+        q = f"Summarize the following in a few words for the title of a document: {request_msg['context']}"
+        response = format_chunks(llm.gen_llm(q), True)
+    
+        return jsonify({'title': response})
+    return jsonify({'title': "Response"})
+        
+
+
+
+socketio.run(app)
+

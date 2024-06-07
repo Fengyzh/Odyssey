@@ -9,10 +9,12 @@
 .chat-page-title-cont{
     padding-top: 1rem;
     padding-left: 2rem;
+    display: flex;
+    color: white;
 }
 
 .chat-page-title {
-    color: white;
+    padding-left: 1rem;
 }
 
 .chat-box{
@@ -21,7 +23,7 @@
     color: white;   
     width: 100%;
     height: 100%;
-    padding: 0 3%;
+    padding: 0 15%;
     padding-bottom: 5%;
     padding-top: 2%;
     overflow-y: scroll;
@@ -35,11 +37,15 @@
     align-self: flex-start;
     border: 2px solid rgb(1, 253, 156);
     position: relative;
+    max-width: 75%;
+
 }
 
 .chat-client {
     align-self: flex-end;
    /*  background-color: red; */
+   max-width: 50%;
+
 }
 
 .chat-bubble {
@@ -48,14 +54,13 @@
     background-color: rgb(43, 42, 42);
     border-radius: 10px;
     padding: 1rem;
-    max-width: 50%;
 }
 
 .chat-input {
     background-color: rgb(43, 42, 42);
     border-radius: 10px;
     border: 2px solid transparent;
-    width: 90%;
+    width: 50%;
     height: 2rem;
     color: white;
     padding: 0 1rem;

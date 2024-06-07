@@ -6,7 +6,7 @@ import Markdown from 'react-markdown';
 
 
 interface AniTextProps {
-    text: string[]; 
+    text: string; 
     className: string;
   }
 
@@ -26,7 +26,7 @@ const StaggerText: React.FC<AniTextProps> = ({ text, className } ) => {
     
     return (
     <div className={className}>
-     <Markdown>{text.join("")}</Markdown>
+     <Markdown>{text}</Markdown>
 {/*     <motion.span initial="hidden" animate="animate" transition={{staggerChildren:0.05}}> 
         {text.map((char) => (
             
