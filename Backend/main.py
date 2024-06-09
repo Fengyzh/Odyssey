@@ -1,3 +1,4 @@
+import os
 import time
 import ollama
 
@@ -106,7 +107,7 @@ def handle_post():
     return jsonify(response)
 
 
-@app.route('/api/stream', methods=['GET', 'POST'])
+@app.route('/api/stream', methods=['POST'])
 def stream():
 
     def get_data():
@@ -117,7 +118,7 @@ def stream():
         for chunk in llm_res:
             print(chunk)
             content = chunk['message']['content']
-            yield f'data: {content}\n\n'
+            yield f'{content}'
     
     request_msg = request.get_json()
 
@@ -165,6 +166,25 @@ def summary():
         
 
 
+@app.route('/api/upload', methods=["POST"])
+def upload():
+    UPLOAD_FOLDER = os.path.join(os.getcwd(), 'docs')
 
-socketio.run(app)
+    if 'files' not in request.files:
+        return jsonify({'error': 'No files part in the request'}), 400
+    
+    files = request.files.getlist('files')
+    if len(files) == 0:
+        return jsonify({'error': 'No selected files'}), 400
+    
+    for file in files:
+        if file and file.filename != '':
+            file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+            file.save(file_path)
+    
+    return jsonify({'message': 'Files successfully uploaded'}), 200
+
+
+app.run()
+#socketio.run(app)
 
