@@ -5,25 +5,32 @@ import io from 'socket.io-client';
 import axios from 'axios'
 import StaggerText from '@/comp/StaggerText'
 import { useSidebar } from '../context/sidebarContext';
+import NavLayout from '@/app/navLayout'
 
 export default function page() {
 
+
+  /* Chat looks like:
+    [{role:xxxx, message:xxxx}, {role:xxxx, message:xxxx}...]
+  */
   
   const [prompt, setPrompt] = useState("")
   const [chat, setChat] = useState<ChatResponse[] | any[]>([])
   const [wait, setWait] = useState(false)
   const [init, setInit] = useState(true)
-  const [title, setTitle] = useState(true)
+  const [title, setTitle] = useState('Chat Title')
   const [files, setFiles] = useState<FileList | [] | null>([]);
 
 
   const socketRef = useRef<null | any>(null);
-
-  const { isSidebarToggled, toggleSidebar, setIsSidebarToggled } = useSidebar();
-
+  const chatRef = useRef<null | any>(null);
 
 
-  useEffect(() => {
+  const { isSidebarToggled, toggleSidebar, currentChat, setCurrentChat } = useSidebar();
+
+
+
+/*   useEffect(() => {
 
     socketRef.current = io("http://localhost:5000");
 
@@ -86,34 +93,55 @@ export default function page() {
       socket.disconnect();
       console.log("Disconnected from WebSocket server");
     };
-  }, []);
+  }, []); */
+
+
 
 
 
 
   const sendPrompt = async () => {
+
     let userMessage = {role:'user', msg:prompt}
     setWait(prev => !prev)
-    setChat(prevChat => [...prevChat, userMessage]);
+    setChat(prevChat => [...prevChat, userMessage, { role: 'assistant', msg: "" }]);
 
-    setChat((prevChat) => [...prevChat, { role: 'assistant', msg: "" }])
+    if (currentChat === "") {
+      const createResponse = await axios.get("http://localhost:5000/api/newchat")
+      const entryId = createResponse.data.id
+      console.log(entryId)
+      setCurrentChat(entryId)
+      chatRef.current = entryId
+    }
+
+
+    //setChat((prevChat) => [...prevChat, { role: 'assistant', msg: "" }])
+    let curContext = [...chat]
+    curContext.push(userMessage)
+
     const response = await fetch("http://localhost:5000/api/stream", {
       method: 'POST',
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({message: prompt})
+      body: JSON.stringify({
+        message: prompt, 
+        context:curContext,
+        id:currentChat? currentChat : chatRef.current
+      })
 
     })
 
     const reader = response.body?.getReader();
+    setWait(prev => !prev)
 
 
-    for (let i = 0; i<10; i++) {
+    while(true) {
       if (reader) {
         const {done, value} = await reader.read()
         let a = new TextDecoder().decode(value)
         if (done) {
+          console.log("break!")
           break;
         }
         setChat((prevChat) => {      
@@ -129,6 +157,7 @@ export default function page() {
       }
 }
 
+
 /*     axios.post("http://localhost:5000/api/stream", {
       message: prompt,
       context: chat
@@ -136,7 +165,7 @@ export default function page() {
       console.log(res.data)
     }) */
 
-    console.log("client started streaming")
+    //console.log("client started streaming")
     //console.log(chat)
 
 /*     .then((res) => {
@@ -190,6 +219,7 @@ const sendFiles = async (e: FormEvent) => {
 
 
   return (
+    <NavLayout>
     <div className='chat-page'>
       <div className='chat-page-title-cont'>
         <h2 className='sidebar-toggle' onClick={()=>toggleSidebar()}>O</h2>
@@ -227,5 +257,6 @@ const sendFiles = async (e: FormEvent) => {
       </div>
 
     </div>
+    </NavLayout>
   )
 }

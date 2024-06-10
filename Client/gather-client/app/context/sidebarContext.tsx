@@ -2,10 +2,13 @@
 
 import React, { createContext, useState, useContext, ReactNode, Dispatch, SetStateAction } from 'react';
 
+
 interface SidebarContextType {
   isSidebarToggled: boolean;
   toggleSidebar: () => void;
   setIsSidebarToggled: Dispatch<SetStateAction<boolean>>;
+  currentChat:string;
+  setCurrentChat: Dispatch<SetStateAction<string>>
 }
 
 // Create the context with an empty default value
@@ -15,9 +18,13 @@ interface SidebarProviderProps {
   children: ReactNode;
 }
 
+
+
+
 // Create the provider component
 export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) => {
-  const [isSidebarToggled, setIsSidebarToggled] = useState<boolean>(false);
+  const [isSidebarToggled, setIsSidebarToggled] = useState<boolean>(true);
+  const [currentChat, setCurrentChat] = useState<string>("")
 
   const toggleSidebar = () => {
     console.log(11111)
@@ -25,7 +32,7 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
   };
 
   return (
-    <SidebarContext.Provider value={{ isSidebarToggled, setIsSidebarToggled, toggleSidebar }}>
+    <SidebarContext.Provider value={{ isSidebarToggled, setIsSidebarToggled, toggleSidebar, currentChat, setCurrentChat }}>
       {children}
     </SidebarContext.Provider>
   );

@@ -4,6 +4,10 @@
     "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro",
     "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
 
+  --accent-color: rgb(1, 253, 156);
+  --background-color-dark: rgb(27, 27, 27);
+  --deep-background-color-dark: rgb(22, 22, 22)
+
 }
 
 

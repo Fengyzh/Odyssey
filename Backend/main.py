@@ -1,5 +1,6 @@
 import os
 import time
+from bson import ObjectId
 import ollama
 
 
@@ -63,8 +64,14 @@ llm = LLM_controller()
 
 
 from flask import Flask, Response, request, jsonify
-from flask_socketio import SocketIO, emit, join_room, leave_room
+from flask_socketio import SocketIO, emit
 from flask_cors import CORS
+import pymongo
+
+
+mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
+mongoDB = mongoClient["Project-gather"]
+mongoCollection = mongoDB["LLM-Chats"]
 
 
 def format_chunks(stream_res, isGenerate):
@@ -111,16 +118,26 @@ def handle_post():
 def stream():
 
     def get_data():
-        #messages = ["Hello", "How are you?", "This is a streamed response", "Goodbye"]
-
-        #data = llm.chat_llm(request_msg['message'])
+        complete_text = ""
+        #print(request_msg['context'])
         llm_res = llm.chat_llm(request_msg['message'])
         for chunk in llm_res:
-            print(chunk)
+            #print(chunk)
+            complete_text += chunk['message']['content']
             content = chunk['message']['content']
             yield f'{content}'
-    
+        
+        """ Complete Current Chat history """
+        temp = request_msg['context']
+        temp.append({'role':'assistant', 'msg':complete_text})
+        #print(temp)
+        if (request_msg['id']):
+            object_id = ObjectId(request_msg['id'])
+            mongoCollection.update_one({'_id':object_id}, {'$set':{
+                'history': temp
+            }})
     request_msg = request.get_json()
+    
 
 
     #if request_msg and 'message' in request_msg:
@@ -184,6 +201,14 @@ def upload():
     
     return jsonify({'message': 'Files successfully uploaded'}), 200
 
+
+
+
+@app.route('/api/newchat', methods=["GET"])
+def newChat():
+    result = mongoCollection.insert_one({'title': "New Chat", 'history':[]})
+    result_id = result.inserted_id
+    return jsonify({'id': str(result_id)})
 
 app.run()
 #socketio.run(app)

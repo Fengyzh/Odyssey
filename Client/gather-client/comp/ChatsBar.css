@@ -1,8 +1,8 @@
 .ChatsBar-cont {
     height: 100%;
-    width: 0%;
+    width: 12%;
     position: fixed;
-    background-color: beige;
+    background-color: var(--deep-background-color-dark);
     top: auto;
     transition: 0.3s ease;
     overflow: hidden;
@@ -12,6 +12,7 @@
 }
 
 .bar-top {
+    color: white;
     padding-top: 1rem;
     padding-left: 2rem;
     display: flex;
@@ -21,6 +22,21 @@
 }
 
 .mode-toggle {
+    color: var(--accent-color);
     padding-left: 1rem;
 }
 
+.nav-chat-titles {
+    color: white;
+    margin-bottom: 0.5rem;
+    padding-left: 1rem;
+    font-size: x-large;
+    font-weight: bolder;
+    background-color: transparent;
+    transition: 0.3s ease-in-out;
+    cursor: pointer;
+}
+
+.nav-chat-titles:hover {
+    background-color: var(--accent-color);
+}
