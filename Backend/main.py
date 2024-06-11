@@ -210,6 +210,29 @@ def newChat():
     result_id = result.inserted_id
     return jsonify({'id': str(result_id)})
 
+
+@app.route('/api/chats', methods=["GET"])
+def getChats():
+    entries = list(mongoCollection.find({}, {"_id": 1, "title": 1}))  # Retrieve all entries and convert cursor to a list
+    for entry in entries:
+        entry['_id'] = str(entry['_id'])  # Convert ObjectId to string for JSON serialization
+    #print(entries)
+    return jsonify(entries)
+
+@app.route('/api/chat/<chatId>', methods=["GET"])
+def getChat(chatId):
+    try:
+        entry = mongoCollection.find_one({"_id": ObjectId(chatId)})  # Retrieve the entry with specified fields
+        if entry:
+            entry['_id'] = str(entry['_id'])  # Convert ObjectId to string for JSON serialization
+            return jsonify(entry)
+        else:
+            return jsonify({"error": "Entry not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+
 app.run()
 #socketio.run(app)
 

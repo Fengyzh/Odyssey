@@ -1,14 +1,22 @@
 'use client'
 
-import React, { createContext, useState, useContext, ReactNode, Dispatch, SetStateAction } from 'react';
+import axios from 'axios';
+import React, { createContext, useState, useContext, ReactNode, Dispatch, SetStateAction, useEffect } from 'react';
 
+
+interface ChatSnippets {
+  _id:string;
+  title:string;
+}
 
 interface SidebarContextType {
   isSidebarToggled: boolean;
   toggleSidebar: () => void;
   setIsSidebarToggled: Dispatch<SetStateAction<boolean>>;
   currentChat:string;
-  setCurrentChat: Dispatch<SetStateAction<string>>
+  setCurrentChat: Dispatch<SetStateAction<string>>;
+  chats:ChatSnippets[];
+  fetchChatSnippets: () => void;
 }
 
 // Create the context with an empty default value
@@ -25,14 +33,31 @@ interface SidebarProviderProps {
 export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) => {
   const [isSidebarToggled, setIsSidebarToggled] = useState<boolean>(true);
   const [currentChat, setCurrentChat] = useState<string>("")
+  const [chats, setChats] = useState<ChatSnippets[]>([])
+
+
+
+  const fetchChatSnippets = () => {
+    axios.get("http://localhost:5000/api/chats").then((res)=>{
+      setChats(res.data)
+      console.log(res.data)
+    })
+
+  }
+
+  useEffect(() => {
+    fetchChatSnippets
+  }, [])
+
 
   const toggleSidebar = () => {
     console.log(11111)
     setIsSidebarToggled(prevState => !prevState);
   };
+  
 
   return (
-    <SidebarContext.Provider value={{ isSidebarToggled, setIsSidebarToggled, toggleSidebar, currentChat, setCurrentChat }}>
+    <SidebarContext.Provider value={{ isSidebarToggled, setIsSidebarToggled, toggleSidebar, currentChat, setCurrentChat, chats, fetchChatSnippets }}>
       {children}
     </SidebarContext.Provider>
   );

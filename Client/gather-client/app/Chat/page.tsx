@@ -22,80 +22,26 @@ export default function page() {
   const [files, setFiles] = useState<FileList | [] | null>([]);
 
 
-  const socketRef = useRef<null | any>(null);
-  const chatRef = useRef<null | any>(null);
 
 
-  const { isSidebarToggled, toggleSidebar, currentChat, setCurrentChat } = useSidebar();
+  const { isSidebarToggled, toggleSidebar, currentChat, setCurrentChat, fetchChatSnippets } = useSidebar();
 
 
-
-/*   useEffect(() => {
-
-    socketRef.current = io("http://localhost:5000");
-
-    const socket = socketRef.current;
-
-    socket.on('connect', () => {
-      console.log('Connected to WebSocket server');
-    });
-
-    const handleTextStream = (data:any) => {
-      //console.log(data);
-      setChat((prevChat) => {      
-        if (prevChat.length === 0) {
-          return [{ role: 'assistant', msg: data.data }];
-        } else {
-          const updatedChat = [...prevChat];
-          const lastMessage = updatedChat[updatedChat.length - 1];
-          updatedChat[updatedChat.length - 1] = { ...lastMessage, msg: lastMessage.msg + data.data };          
-          return updatedChat;
-        }
-      });
-    };
-
-    const handleEndResponse = () => {
-      console.log("Socket End");
-      //socket.disconnect();
-      socket.off('text_stream', handleTextStream);
-
-
-      console.log(chat)
-      if (init) {
-        axios.post("http://localhost:5000/api/summary", {
-          context: chat
-        }).then((res)=> {
+  useEffect(() => {
+    if (currentChat) {
+      axios.get("http://localhost:5000/api/chat/" + currentChat).then((res)=>{
+        if (res.data.history.length != 0) {
+          setChat(res.data.history)
           setTitle(res.data.title)
-        })
-      }
-      
-      setInit(false)
-    };
+        }
+      })
+    } else {
+      setChat([])
+      setTitle('Chat Title')
+    }
 
-    const handleStartResponse = () => {
-      setWait(prev => !prev)
-      socket.on('text_stream', handleTextStream);
-
-      setChat((prevChat) => [...prevChat, { role: 'assistant', msg: "" }]);
-      console.log("Socket Start");
-    };
-
-    const handleResponse = (data:any) => {
-      console.log(data.data);
-    };
-
-    //socket.on('text_stream', handleTextStream);
-    socket.on('end_response', handleEndResponse);
-    socket.on('start_response', handleStartResponse);
-    socket.on('response', handleResponse);
-
-    return () => {
-      socket.disconnect();
-      console.log("Disconnected from WebSocket server");
-    };
-  }, []); */
-
-
+  }, [currentChat])
+  
 
 
 
@@ -105,20 +51,22 @@ export default function page() {
     let userMessage = {role:'user', msg:prompt}
     setWait(prev => !prev)
     setChat(prevChat => [...prevChat, userMessage, { role: 'assistant', msg: "" }]);
+    let createdEntryId;
 
-    if (currentChat === "") {
+    if (!currentChat) {
       const createResponse = await axios.get("http://localhost:5000/api/newchat")
       const entryId = createResponse.data.id
-      console.log(entryId)
+      //console.log(entryId)
       setCurrentChat(entryId)
-      chatRef.current = entryId
+      createdEntryId = entryId
+      fetchChatSnippets()
     }
 
 
     //setChat((prevChat) => [...prevChat, { role: 'assistant', msg: "" }])
     let curContext = [...chat]
     curContext.push(userMessage)
-
+    console.log(createdEntryId)
     const response = await fetch("http://localhost:5000/api/stream", {
       method: 'POST',
       headers: {
@@ -127,7 +75,7 @@ export default function page() {
       body: JSON.stringify({
         message: prompt, 
         context:curContext,
-        id:currentChat? currentChat : chatRef.current
+        id:currentChat? currentChat : createdEntryId
       })
 
     })
@@ -227,8 +175,7 @@ const sendFiles = async (e: FormEvent) => {
       </div>
 
       <div className='chat-box'> 
-        <div className='chat-bubble chat-client'>hi Lorem ipsum dolor sit amet consectetur adipisicing elit. Qui quos blanditiis magnam aspernatur autem amet molestias, accusamus placeat nobis iusto aliquid, ducimus recusandae exercitationem fuga, dicta repellat. Error praesentium nemo enim, voluptas tempora accusantium quo repudiandae fuga? Minus, error illo suscipit ut voluptatem sunt accusamus! Eum quo eaque iure, dolorum natus libero unde commodi! Soluta sapiente quasi ducimus eum! Accusantium!</div>
-        <div className='chat-bubble chat-ai'>hi Lorem ipsum dolor sit amet consectetur adipisicing elit. Qui quos blanditiis magnam aspernatur autem amet molestias, accusamus placeat nobis iusto aliquid, ducimus recusandae exercitationem fuga, dicta repellat. Error praesentium nemo enim, voluptas tempora accusantium quo repudiandae fuga? Minus, error illo suscipit ut voluptatem sunt accusamus! Eum quo eaque iure, dolorum natus libero unde commodi! Soluta sapiente quasi ducimus eum! Accusantium!</div>
+        <h3> {chat.length === 0? "New Chat?" : ""} </h3>
 
         {chat.map((item, index)=> {
           //console.log(chat)

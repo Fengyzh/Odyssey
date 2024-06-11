@@ -3,8 +3,15 @@ import React, { useEffect, useState } from 'react'
 import './ChatsBar.css'
 import { useSidebar } from '@/app/context/sidebarContext';
 import { usePathname } from 'next/navigation'
+import axios from 'axios';
 
 export default function ChatsBar() {
+
+
+interface ChatSnippets {
+    _id:string;
+    title:string;
+}
 
 
 /* 
@@ -16,12 +23,16 @@ TODO:
     get that chat convo so that we are not getting every chat all at once to clog up memory
 
 */
+    const pathname = usePathname()
 
     const [convos, setConvos] = useState([{title:'Chat1'}, {title:'Chat2'}, {title:'Chat3'}])
+    const { isSidebarToggled, toggleSidebar, setCurrentChat, currentChat, fetchChatSnippets, chats } = useSidebar();
+ 
 
-    const { isSidebarToggled, toggleSidebar, setIsSidebarToggled } = useSidebar();
-
-    const pathname = usePathname()
+    useEffect(() => {
+        fetchChatSnippets()
+    }, [])
+    
 
 
     useEffect(() => {
@@ -42,6 +53,15 @@ TODO:
     }, [])
 
 
+    const handleChatSelect = (chatId:string) => {
+        setCurrentChat(chatId)
+    }
+
+    const handleNewChat = () => {
+        setCurrentChat("")
+    }
+
+
   return (
         <div className='ChatsBar-cont'>
             <div className='bar-top'>
@@ -49,11 +69,12 @@ TODO:
                 <h2 className='mode-toggle'>Chat Page</h2>
             </div>
             <div>
-                {convos.map((conv, index)=>{
-                    return <div key={index} className='nav-chat-titles'>{conv.title}</div>
+                {chats.map((chat:ChatSnippets, index)=>{
+                    return <div onClick={()=>handleChatSelect(chat._id)} key={index} className='nav-chat-titles'>{chat.title}</div>
                 })}
             </div>
             <button onClick={()=>{console.log(pathname)}}>PATH</button>
+            <button onClick={()=>{handleNewChat()}}>Start a new Chat</button>
 
         </div>
   )
