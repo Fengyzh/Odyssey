@@ -17,14 +17,16 @@ export default function page() {
   const [prompt, setPrompt] = useState("")
   const [chat, setChat] = useState<ChatResponse[] | any[]>([])
   const [wait, setWait] = useState(false)
-  const [init, setInit] = useState(true)
   const [title, setTitle] = useState('Chat Title')
-  const [files, setFiles] = useState<FileList | [] | null>([]);
+  const [files, setFiles] = useState<FileList | [] | File[]>([]);
+  const [bufferFiles, setBufferFiles] = useState<FileList | [] | File[]>([]);
+
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
 
 
-
-  const { isSidebarToggled, toggleSidebar, currentChat, setCurrentChat, fetchChatSnippets } = useSidebar();
+  const { toggleSidebar, currentChat, setCurrentChat, fetchChatSnippets } = useSidebar();
 
 
   useEffect(() => {
@@ -135,21 +137,29 @@ export default function page() {
   /* TODO: Currently in order for the user to upload multiple files, they have to shift + click on the files
     We want to make it so what we buffer the files whenever the user selects a file and we send all the files at
     once when the user click send (Should wait until we finish the navbar files view) */
-
-  setFiles(e.target.files)
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      console.log(newFiles)
+      //setFiles((prevFiles) => [...prevFiles, ...newFiles]);
+      setBufferFiles((prevFiles) => [...prevFiles, ...newFiles]);
+      //console.log(e.target.files)
+    }
  }
 
 
  // Tempoary file upload control
+ // Can refactor this out as its own comp for other modes too
 const sendFiles = async (e: FormEvent) => {
-  if (!files) {
+  e.preventDefault()
+  if (!bufferFiles) {
     console.log("No files selected")
     return
   }
 
   const formData = new FormData()
-  for (let i = 0; i < files.length; i++) {
-    formData.append('files', files[i])
+  for (let i = 0; i < bufferFiles.length; i++) {
+    console.log(bufferFiles[i])
+    formData.append('files', bufferFiles[i])
   }
 
   try {
@@ -158,10 +168,24 @@ const sendFiles = async (e: FormEvent) => {
           'Content-Type': 'multipart/form-data',
       },
   })
+  setBufferFiles([])
   console.log(response.data)
   } catch (err) {
     console.log(err)
   }
+
+}
+
+
+const handleBufferDelete = (index:number) => {
+  if (fileInputRef.current) {
+    fileInputRef.current.value = '';
+  }
+
+  let t = Array.from(bufferFiles)
+   t.splice(index, 1);
+  setBufferFiles([...t])
+
 
 }
 
@@ -195,10 +219,24 @@ const sendFiles = async (e: FormEvent) => {
 
 
       <div className='chatbox-cont'>
-        <form onSubmit={(e)=>sendFiles(e)}>
-          <input type="file" multiple onChange={handleFileChange}></input>
-          <button className='chat-send' type="submit"> {'F>'} </button>
-        </form>
+
+        <div className='file-cont'>
+          <div className='files-buffer'>
+            {Array.from(bufferFiles).map((file, index)=>{
+              return (
+                <div key={index}>
+                  <span>{file.name + "|"}</span>
+                  <span onClick={()=>handleBufferDelete(index)}>x</span>
+                </div>
+              )
+            })}
+          </div>
+          <form className='file-form' onSubmit={(e)=>sendFiles(e)}>
+            <input type="file" multiple onChange={handleFileChange} ref={fileInputRef}></input>
+            <button className='chat-send' type="submit"> {'F>'} </button>
+          </form>
+        </div>
+
         <input className='chat-input' type='text' onChange={(e)=>{setPrompt(e.target.value)}}></input>
         <button className='chat-send' onClick={()=>sendPrompt()}> {'>'} </button>
       </div>

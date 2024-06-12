@@ -8,6 +8,8 @@
     overflow: hidden;
     z-index: 999;
     white-space: nowrap;
+    display: flex;
+    flex-direction: column;
 
 }
 
@@ -38,5 +40,25 @@
 }
 
 .nav-chat-titles:hover {
+    background-color: var(--accent-color);
+}
+
+.nav-tab-comp-cont {
+    height: 90%;
+    background-color: red;
+}
+
+.nav-bottom-btn-group {
+    cursor: pointer;
+    color: white;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    margin: 1rem;
+    text-align: center;
+    background-color: rgb(39, 39, 39);
+    transition: 0.3s ease-in-out;
+}
+
+.nav-bottom-btn-group:hover {
     background-color: var(--accent-color);
 }

@@ -26,7 +26,7 @@ TODO:
     const pathname = usePathname()
 
     const [convos, setConvos] = useState([{title:'Chat1'}, {title:'Chat2'}, {title:'Chat3'}])
-    const { isSidebarToggled, toggleSidebar, setCurrentChat, currentChat, fetchChatSnippets, chats } = useSidebar();
+    const { isSidebarToggled, toggleSidebar, setCurrentChat, currentChat, fetchChatSnippets, chats, tab, setTab } = useSidebar();
  
 
     useEffect(() => {
@@ -62,20 +62,41 @@ TODO:
     }
 
 
+
+
+    const chatHistoryComp =  
+    (<>
+    {chats.map((chat:ChatSnippets, index)=>{
+        return <div onClick={()=>handleChatSelect(chat._id)} key={index} className='nav-chat-titles'>{chat.title}</div>
+    })}
+</>)
+
+    const filesComp = (
+        <div className='nav-files-cont'>
+            Lol files
+        </div>
+    )
+
+
   return (
         <div className='ChatsBar-cont'>
             <div className='bar-top'>
                 <h2 className='sidebar-toggle' onClick={()=>toggleSidebar()}>O</h2>
                 <h2 className='mode-toggle'>Chat Page</h2>
             </div>
-            <div>
-                {chats.map((chat:ChatSnippets, index)=>{
-                    return <div onClick={()=>handleChatSelect(chat._id)} key={index} className='nav-chat-titles'>{chat.title}</div>
-                })}
-            </div>
-            <button onClick={()=>{console.log(pathname)}}>PATH</button>
-            <button onClick={()=>{handleNewChat()}}>Start a new Chat</button>
 
+            <div className='nav-tab-comp-cont'>
+                {tab === "files"? filesComp : chatHistoryComp}
+            </div>
+            
+            <div className='nav-bottom-btn-group'>
+                {tab === "files"? <h2 onClick={()=> setTab("chat")}>Chat</h2> : <h2 onClick={()=>setTab("files")}>Files</h2>}
+            </div>
+
+            <div>
+                <button onClick={()=>{console.log(pathname)}}>PATH</button>
+                <button onClick={()=>{handleNewChat()}}>Start a new Chat</button>
+            </div>
         </div>
   )
 }

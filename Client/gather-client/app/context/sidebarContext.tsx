@@ -17,6 +17,8 @@ interface SidebarContextType {
   setCurrentChat: Dispatch<SetStateAction<string>>;
   chats:ChatSnippets[];
   fetchChatSnippets: () => void;
+  tab: string;
+  setTab:Dispatch<SetStateAction<string>>;
 }
 
 // Create the context with an empty default value
@@ -34,6 +36,7 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
   const [isSidebarToggled, setIsSidebarToggled] = useState<boolean>(true);
   const [currentChat, setCurrentChat] = useState<string>("")
   const [chats, setChats] = useState<ChatSnippets[]>([])
+  const [tab, setTab] = useState<string>("")
 
 
 
@@ -57,7 +60,7 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
   
 
   return (
-    <SidebarContext.Provider value={{ isSidebarToggled, setIsSidebarToggled, toggleSidebar, currentChat, setCurrentChat, chats, fetchChatSnippets }}>
+    <SidebarContext.Provider value={{ isSidebarToggled, setIsSidebarToggled, toggleSidebar, currentChat, setCurrentChat, chats, fetchChatSnippets, tab, setTab }}>
       {children}
     </SidebarContext.Provider>
   );

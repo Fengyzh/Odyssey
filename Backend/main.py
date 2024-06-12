@@ -1,5 +1,4 @@
 import os
-import time
 from bson import ObjectId
 import ollama
 
@@ -193,6 +192,9 @@ def upload():
     files = request.files.getlist('files')
     if len(files) == 0:
         return jsonify({'error': 'No selected files'}), 400
+    
+    """ for file in files:
+        print(file.filename) """
     
     for file in files:
         if file and file.filename != '':
