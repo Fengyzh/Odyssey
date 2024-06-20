@@ -71,6 +71,7 @@ import pymongo
 mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
 mongoDB = mongoClient["Project-gather"]
 mongoCollection = mongoDB["LLM-Chats"]
+mongoDocCollection = mongoDB["LLM-Docs"]
 
 
 def format_chunks(stream_res, isGenerate):
@@ -186,10 +187,11 @@ def summary():
 def upload():
     UPLOAD_FOLDER = os.path.join(os.getcwd(), 'docs')
 
-    if 'files' not in request.files:
-        return jsonify({'error': 'No files part in the request'}), 400
+    if 'files' not in request.files or 'chatID' not in request.form:
+        return jsonify({'error': 'No files or chatID part in the request'}), 400
     
     files = request.files.getlist('files')
+    chatID = request.form.get('chatID')
     if len(files) == 0:
         return jsonify({'error': 'No selected files'}), 400
     
@@ -198,8 +200,18 @@ def upload():
     
     for file in files:
         if file and file.filename != '':
+
+            # File save to local
             file_path = os.path.join(UPLOAD_FOLDER, file.filename)
             file.save(file_path)
+
+            
+            # File save as a doc (add collection_name later when vectorDB is setup)
+            result = mongoDocCollection.insert_one({'name': file.filename, 'chats':[str(chatID)]})
+            mongoCollection.update_one(
+                {'_id': ObjectId(chatID)},
+                {'$push': {'docs': str(result.inserted_id)}}
+            )
     
     return jsonify({'message': 'Files successfully uploaded'}), 200
 
@@ -208,7 +220,7 @@ def upload():
 
 @app.route('/api/newchat', methods=["GET"])
 def newChat():
-    result = mongoCollection.insert_one({'title': "New Chat", 'history':[]})
+    result = mongoCollection.insert_one({'title': "New Chat", 'history':[], 'docs':[]})
     result_id = result.inserted_id
     return jsonify({'id': str(result_id)})
 
@@ -221,6 +233,8 @@ def getChats():
     #print(entries)
     return jsonify(entries)
 
+
+
 @app.route('/api/chat/<chatId>', methods=["GET"])
 def getChat(chatId):
     try:
@@ -230,6 +244,30 @@ def getChat(chatId):
             return jsonify(entry)
         else:
             return jsonify({"error": "Entry not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route('/api/files/<chatId>', methods=["GET"])
+def getCurFiles(chatId):
+    try:
+        entry = mongoCollection.find_one({"_id": ObjectId(chatId)}, {"_id":1, "docs":1})  # Retrieve the entry with specified fields
+        if not entry or 'docs' not in entry:
+            return jsonify({"error": "Entry not found or docs field missing"}), 404
+
+        docList = list(entry['docs'])
+        docList = [ObjectId(doc_id) for doc_id in docList]
+
+        docs = list(mongoDocCollection.find({'_id': {'$in': docList}}, {'name': 1, '_id': 1}))
+        for i in docs:
+            i["_id"] = str(i["_id"])
+
+        x = [str(i["_id"]) for i in docs]
+        print(x)
+
+        return jsonify(docs)
+        
+
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 

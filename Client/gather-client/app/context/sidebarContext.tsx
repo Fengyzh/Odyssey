@@ -9,6 +9,11 @@ interface ChatSnippets {
   title:string;
 }
 
+interface FileSnippers {
+  _id:string;
+  name:string;
+}
+
 interface SidebarContextType {
   isSidebarToggled: boolean;
   toggleSidebar: () => void;
@@ -17,8 +22,10 @@ interface SidebarContextType {
   setCurrentChat: Dispatch<SetStateAction<string>>;
   chats:ChatSnippets[];
   fetchChatSnippets: () => void;
-  tab: string;
-  setTab:Dispatch<SetStateAction<string>>;
+  tab: boolean;
+  setTab:Dispatch<SetStateAction<boolean>>;
+  curFiles: FileSnippers[]
+  fetchCurrentChatFiles: () => void;
 }
 
 // Create the context with an empty default value
@@ -36,7 +43,8 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
   const [isSidebarToggled, setIsSidebarToggled] = useState<boolean>(true);
   const [currentChat, setCurrentChat] = useState<string>("")
   const [chats, setChats] = useState<ChatSnippets[]>([])
-  const [tab, setTab] = useState<string>("")
+  const [tab, setTab] = useState<boolean>(true)
+  const [curFiles, setCurFiles] = useState([])
 
 
 
@@ -49,18 +57,29 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
   }
 
   useEffect(() => {
-    fetchChatSnippets
+    fetchChatSnippets()
   }, [])
 
 
   const toggleSidebar = () => {
-    console.log(11111)
     setIsSidebarToggled(prevState => !prevState);
   };
+
+
+  const fetchCurrentChatFiles = () => {
+    if (currentChat) {
+        axios.get("http://localhost:5000/api/files/" + currentChat).then((res)=>{
+            if (res.data) {                
+                setCurFiles(res.data)
+                console.log(res.data)}
+        })
+    }
+  }
+
   
 
   return (
-    <SidebarContext.Provider value={{ isSidebarToggled, setIsSidebarToggled, toggleSidebar, currentChat, setCurrentChat, chats, fetchChatSnippets, tab, setTab }}>
+    <SidebarContext.Provider value={{ isSidebarToggled, setIsSidebarToggled, toggleSidebar, currentChat, setCurrentChat, chats, fetchChatSnippets, tab, setTab, fetchCurrentChatFiles, curFiles }}>
       {children}
     </SidebarContext.Provider>
   );

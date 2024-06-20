@@ -25,13 +25,18 @@ TODO:
 */
     const pathname = usePathname()
 
-    const [convos, setConvos] = useState([{title:'Chat1'}, {title:'Chat2'}, {title:'Chat3'}])
-    const { isSidebarToggled, toggleSidebar, setCurrentChat, currentChat, fetchChatSnippets, chats, tab, setTab } = useSidebar();
+    const { isSidebarToggled, toggleSidebar, setCurrentChat, currentChat, fetchChatSnippets, chats, tab, setTab, fetchCurrentChatFiles, curFiles } = useSidebar();
  
 
     useEffect(() => {
         fetchChatSnippets()
     }, [])
+
+
+    useEffect(() => {
+        fetchCurrentChatFiles()
+
+    }, [currentChat])
     
 
 
@@ -73,7 +78,9 @@ TODO:
 
     const filesComp = (
         <div className='nav-files-cont'>
-            Lol files
+            {curFiles && curFiles.map((f, i) => {
+                return <div key={i}>{f.name}</div>
+            })}
         </div>
     )
 
@@ -86,11 +93,11 @@ TODO:
             </div>
 
             <div className='nav-tab-comp-cont'>
-                {tab === "files"? filesComp : chatHistoryComp}
+                {!tab? filesComp : chatHistoryComp}
             </div>
             
-            <div className='nav-bottom-btn-group'>
-                {tab === "files"? <h2 onClick={()=> setTab("chat")}>Chat</h2> : <h2 onClick={()=>setTab("files")}>Files</h2>}
+            <div onClick={()=> setTab(!tab)} className='nav-bottom-btn-group'>
+                {!tab? <h2>Chat</h2> : <h2>Files</h2>}
             </div>
 
             <div>

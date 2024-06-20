@@ -26,7 +26,7 @@ export default function page() {
 
 
 
-  const { toggleSidebar, currentChat, setCurrentChat, fetchChatSnippets } = useSidebar();
+  const { toggleSidebar, currentChat, setCurrentChat, fetchChatSnippets, fetchCurrentChatFiles } = useSidebar();
 
 
   useEffect(() => {
@@ -151,6 +151,20 @@ export default function page() {
  // Can refactor this out as its own comp for other modes too
 const sendFiles = async (e: FormEvent) => {
   e.preventDefault()
+  let createdEntryId;
+
+
+  if (!currentChat) {
+    const createResponse = await axios.get("http://localhost:5000/api/newchat")
+    const entryId = createResponse.data.id
+    //console.log(entryId)
+    setCurrentChat(entryId)
+    createdEntryId = entryId
+    fetchChatSnippets()
+  }
+
+
+
   if (!bufferFiles) {
     console.log("No files selected")
     return
@@ -161,6 +175,9 @@ const sendFiles = async (e: FormEvent) => {
     console.log(bufferFiles[i])
     formData.append('files', bufferFiles[i])
   }
+
+  formData.append('chatID', currentChat? currentChat : createdEntryId)
+
 
   try {
     const response = await axios.post('http://localhost:5000/api/upload', formData, {
@@ -173,6 +190,7 @@ const sendFiles = async (e: FormEvent) => {
   } catch (err) {
     console.log(err)
   }
+  fetchCurrentChatFiles()
 
 }
 
