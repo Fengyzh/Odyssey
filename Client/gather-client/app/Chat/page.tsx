@@ -6,6 +6,7 @@ import axios from 'axios'
 import StaggerText from '@/comp/StaggerText'
 import { useSidebar } from '../context/sidebarContext';
 import NavLayout from '@/app/navLayout'
+import { ChatResponse } from '@/comp/Types';
 
 export default function page() {
 
@@ -32,10 +33,9 @@ export default function page() {
   useEffect(() => {
     if (currentChat) {
       axios.get("http://localhost:5000/api/chat/" + currentChat).then((res)=>{
-        if (res.data.history.length != 0) {
           setChat(res.data.history)
           setTitle(res.data.title)
-        }
+        
       })
     } else {
       setChat([])

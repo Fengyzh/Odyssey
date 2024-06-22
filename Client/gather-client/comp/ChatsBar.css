@@ -57,8 +57,69 @@
     text-align: center;
     background-color: rgb(39, 39, 39);
     transition: 0.3s ease-in-out;
+    white-space: nowrap;
 }
 
 .nav-bottom-btn-group:hover {
     background-color: var(--accent-color);
+}
+
+.file-snippet-cont {
+    height: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: larger;
+    margin-bottom: 0.5rem;
+    margin-top: 0.5rem;
+    width: 100%;
+    white-space: nowrap;
+    flex-direction: column;
+}
+
+
+.file-snippet {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    width: 90%;
+    background-color: black;
+    border-radius: 10px;
+    justify-content: space-between;
+
+}
+
+
+
+
+.file-section-cont {
+    display: flex;
+    justify-content: center;
+    color: white;
+}
+
+.file-delete-snippet {
+    color: tomato;
+    opacity: 0;
+    transition: 0.3s ease-in-out;
+    cursor: pointer;
+}
+
+.file-delete-snippet:hover {
+    opacity: 1;
+}
+
+.file-add-snippet {
+    color: var(--accent-color);
+    transition: 0.3s ease-in-out;
+    opacity: 1;
+    cursor: pointer;
+    margin-right: 0.5rem;
+}
+
+.file-control-cont {
+    display: flex;
 }

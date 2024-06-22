@@ -248,6 +248,18 @@ def getChat(chatId):
         return jsonify({"error": str(e)}), 400
 
 
+@app.route('/api/files', methods=["GET"])
+def getAllFiles():
+    try:
+        entries = list(mongoDocCollection.find({}, {"_id": 1, "name": 1}))
+        for entry in entries:
+            entry['_id'] = str(entry['_id']) 
+        return jsonify(entries)
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
 @app.route('/api/files/<chatId>', methods=["GET"])
 def getCurFiles(chatId):
     try:
@@ -262,15 +274,24 @@ def getCurFiles(chatId):
         for i in docs:
             i["_id"] = str(i["_id"])
 
-        x = [str(i["_id"]) for i in docs]
-        print(x)
-
         return jsonify(docs)
-        
-
+    
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+
+
+@app.route('/api/files/<chatId>', methods=["POST"])
+def deleteCurFiles(chatId):
+
+        request_files = request.get_json()['files']
+        updatedFileList = [i['_id'] for i in request_files]
+        mongoCollection.update_one(
+            {'_id': ObjectId(chatId)},
+            {'$set':{'docs': updatedFileList}}
+        )
+
+        return jsonify({"success":"File Deleted"}), 200
 
 
 app.run()

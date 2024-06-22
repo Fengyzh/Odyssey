@@ -4,15 +4,9 @@ import './ChatsBar.css'
 import { useSidebar } from '@/app/context/sidebarContext';
 import { usePathname } from 'next/navigation'
 import axios from 'axios';
+import { ChatSnippets, FileSnippets } from './Types';
 
 export default function ChatsBar() {
-
-
-interface ChatSnippets {
-    _id:string;
-    title:string;
-}
-
 
 /* 
 TODO:
@@ -26,10 +20,13 @@ TODO:
     const pathname = usePathname()
 
     const { isSidebarToggled, toggleSidebar, setCurrentChat, currentChat, fetchChatSnippets, chats, tab, setTab, fetchCurrentChatFiles, curFiles } = useSidebar();
- 
+    const [allFiles, setAllFiles] = useState<FileSnippets[] | []>([])
+
 
     useEffect(() => {
         fetchChatSnippets()
+        fetchAllFiles()
+
     }, [])
 
 
@@ -58,6 +55,16 @@ TODO:
     }, [])
 
 
+    const fetchAllFiles = () => {
+        axios.get("http://localhost:5000/api/files").then((res)=>{
+          setAllFiles(res.data)
+          //console.log(res.data)
+        })
+    
+      }
+
+
+
     const handleChatSelect = (chatId:string) => {
         setCurrentChat(chatId)
     }
@@ -66,7 +73,16 @@ TODO:
         setCurrentChat("")
     }
 
+    // Later change to update files to support both delete and add
+    const  handleDeleteFile = async (fid:string) => {
+        let newFileList = curFiles.filter(file => file._id !== fid);
 
+
+        await axios.post('http://localhost:5000/api/files/' + currentChat, {files:newFileList})
+        fetchCurrentChatFiles()
+        
+    }
+    
 
 
     const chatHistoryComp =  
@@ -77,11 +93,43 @@ TODO:
 </>)
 
     const filesComp = (
+    <>
+        <div className='file-section-cont'>
+            <h2>All Files</h2>
+ 
+
+        </div>
+        <div className='nav-files-cont'>
+            {allFiles && allFiles.map((f, i) => {
+                    return <div className='file-snippet-cont' key={i}>
+                                <div className='file-snippet'>
+                                    <p>{f.name}</p>
+                                    <div className='file-control-cont'>
+                                        <h4 className='file-add-snippet'>+</h4>
+                                        <h4 onClick={()=>handleDeleteFile(f._id)} className='file-delete-snippet'>X</h4>
+                                    </div>
+                                </div>
+                        </div>
+                })}
+        </div>
+
+
+        <div className='file-section-cont'>
+            <h2>Files in Chat</h2>
+        </div>
+
+
         <div className='nav-files-cont'>
             {curFiles && curFiles.map((f, i) => {
-                return <div key={i}>{f.name}</div>
+                return <div className='file-snippet-cont' key={i}>
+                            <div className='file-snippet'>
+                                <p>{f.name}</p>
+                                <h4 onClick={()=>handleDeleteFile(f._id)} className='file-delete-snippet'>X</h4>
+                            </div>
+                    </div>
             })}
         </div>
+    </>
     )
 
 
@@ -92,12 +140,15 @@ TODO:
                 <h2 className='mode-toggle'>Chat Page</h2>
             </div>
 
+
+
+
             <div className='nav-tab-comp-cont'>
                 {!tab? filesComp : chatHistoryComp}
             </div>
             
             <div onClick={()=> setTab(!tab)} className='nav-bottom-btn-group'>
-                {!tab? <h2>Chat</h2> : <h2>Files</h2>}
+                {!tab? <h3>Chat</h3> : <h3>Files</h3>}
             </div>
 
             <div>

@@ -2,17 +2,8 @@
 
 import axios from 'axios';
 import React, { createContext, useState, useContext, ReactNode, Dispatch, SetStateAction, useEffect } from 'react';
+import { ChatSnippets, FileSnippets } from '@/comp/Types';
 
-
-interface ChatSnippets {
-  _id:string;
-  title:string;
-}
-
-interface FileSnippers {
-  _id:string;
-  name:string;
-}
 
 interface SidebarContextType {
   isSidebarToggled: boolean;
@@ -24,8 +15,9 @@ interface SidebarContextType {
   fetchChatSnippets: () => void;
   tab: boolean;
   setTab:Dispatch<SetStateAction<boolean>>;
-  curFiles: FileSnippers[]
+  curFiles: FileSnippets[]
   fetchCurrentChatFiles: () => void;
+
 }
 
 // Create the context with an empty default value
@@ -51,10 +43,13 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
   const fetchChatSnippets = () => {
     axios.get("http://localhost:5000/api/chats").then((res)=>{
       setChats(res.data)
-      console.log(res.data)
+      //console.log(res.data)
     })
 
   }
+
+
+
 
   useEffect(() => {
     fetchChatSnippets()
@@ -66,12 +61,13 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
   };
 
 
-  const fetchCurrentChatFiles = () => {
+  const  fetchCurrentChatFiles = () => {
     if (currentChat) {
         axios.get("http://localhost:5000/api/files/" + currentChat).then((res)=>{
             if (res.data) {                
                 setCurFiles(res.data)
-                console.log(res.data)}
+                console.log(res.data)
+              }
         })
     }
   }
@@ -79,7 +75,7 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
   
 
   return (
-    <SidebarContext.Provider value={{ isSidebarToggled, setIsSidebarToggled, toggleSidebar, currentChat, setCurrentChat, chats, fetchChatSnippets, tab, setTab, fetchCurrentChatFiles, curFiles }}>
+    <SidebarContext.Provider value={{ isSidebarToggled, setIsSidebarToggled, toggleSidebar, currentChat, setCurrentChat, chats, fetchChatSnippets, tab, setTab, fetchCurrentChatFiles, curFiles}}>
       {children}
     </SidebarContext.Provider>
   );
