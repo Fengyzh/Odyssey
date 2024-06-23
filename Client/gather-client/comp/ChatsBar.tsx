@@ -21,6 +21,7 @@ TODO:
 
     const { isSidebarToggled, toggleSidebar, setCurrentChat, currentChat, fetchChatSnippets, chats, tab, setTab, fetchCurrentChatFiles, curFiles } = useSidebar();
     const [allFiles, setAllFiles] = useState<FileSnippets[] | []>([])
+    const [bufferFiles, setBufferFiles] = useState<string[] | [] >([]);
 
 
     useEffect(() => {
@@ -82,6 +83,40 @@ TODO:
         fetchCurrentChatFiles()
         
     }
+
+    const handleAddToCur = (fid:string) => {
+        setBufferFiles((prevFiles) => [...prevFiles, fid]);
+          
+    }
+
+
+    const handleConfirmAdd = async () => {
+        let createdEntryId;
+
+
+        if (!currentChat) {
+          const createResponse = await axios.get("http://localhost:5000/api/newchat")
+          const entryId = createResponse.data.id
+          setCurrentChat(entryId)
+          createdEntryId = entryId
+          fetchChatSnippets()
+        }
+
+        const formData = new FormData()
+        for (let i = 0; i < bufferFiles.length; i++) {
+          console.log(bufferFiles[i])
+          formData.append('files', bufferFiles[i])
+        }
+      
+        formData.append('chatID', currentChat? currentChat : createdEntryId)
+
+        const response = await axios.post('http://localhost:5000/api/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        })
+        setBufferFiles([])
+    }
     
 
 
@@ -105,7 +140,7 @@ TODO:
                                 <div className='file-snippet'>
                                     <p>{f.name}</p>
                                     <div className='file-control-cont'>
-                                        <h4 className='file-add-snippet'>+</h4>
+                                        <h4 onClick={()=>handleAddToCur(f._id)} className='file-add-snippet'>+</h4>
                                         <h4 onClick={()=>handleDeleteFile(f._id)} className='file-delete-snippet'>X</h4>
                                     </div>
                                 </div>
@@ -120,6 +155,10 @@ TODO:
 
 
         <div className='nav-files-cont'>
+            
+            {/* TODO: Add File Buffer UI */}
+
+
             {curFiles && curFiles.map((f, i) => {
                 return <div className='file-snippet-cont' key={i}>
                             <div className='file-snippet'>
@@ -129,6 +168,7 @@ TODO:
                     </div>
             })}
         </div>
+        <button onClick={()=>handleConfirmAdd()}>Confirm Add</button>
     </>
     )
 
