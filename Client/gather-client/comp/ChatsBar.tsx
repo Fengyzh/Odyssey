@@ -1,10 +1,11 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react'
 import './ChatsBar.css'
 import { useSidebar } from '@/app/context/sidebarContext';
 import { usePathname } from 'next/navigation'
 import axios from 'axios';
 import { ChatSnippets, FileSnippets } from './Types';
+import FileSnippetsComp from './FileSnippetsComp';
 
 export default function ChatsBar() {
 
@@ -21,8 +22,10 @@ TODO:
 
     const { isSidebarToggled, toggleSidebar, setCurrentChat, currentChat, fetchChatSnippets, chats, tab, setTab, fetchCurrentChatFiles, curFiles } = useSidebar();
     const [allFiles, setAllFiles] = useState<FileSnippets[] | []>([])
-    const [bufferFiles, setBufferFiles] = useState<string[] | [] >([]);
+    const [bufferFiles, setBufferFiles] = useState<FileList | [] | File[]>([]);
+    const [addBufferFiles, setAddBufferFiles] = useState<[] | FileSnippets[]>([]);
 
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         fetchChatSnippets()
@@ -57,7 +60,7 @@ TODO:
 
 
     const fetchAllFiles = () => {
-        axios.get("http://localhost:5000/api/files").then((res)=>{
+        axios.get("http://localhost:5000/api/files/all").then((res)=>{
           setAllFiles(res.data)
           //console.log(res.data)
         })
@@ -74,23 +77,41 @@ TODO:
         setCurrentChat("")
     }
 
-    // Later change to update files to support both delete and add
     const  handleDeleteFile = async (fid:string) => {
         let newFileList = curFiles.filter(file => file._id !== fid);
 
 
         await axios.post('http://localhost:5000/api/files/' + currentChat, {files:newFileList})
         fetchCurrentChatFiles()
-        
     }
 
-    const handleAddToCur = (fid:string) => {
-        setBufferFiles((prevFiles) => [...prevFiles, fid]);
-          
+    const handleDeleteDoc = async(fid:string) => {
+        await axios.post('http://localhost:5000/api/files/all', {fid:fid})
+        fetchAllFiles()
     }
 
+    const handleBufferDelete = (index:number, buffer:boolean) => {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
 
-    const handleConfirmAdd = async () => {
+        let t
+
+        if (buffer) {
+            t = Array.from(bufferFiles)
+            t.splice(index, 1);
+            setBufferFiles([...t]) 
+        } else {
+            t = addBufferFiles
+            t.splice(index, 1);
+            setAddBufferFiles([...t])
+        }
+      }
+
+
+
+    const handleConfirmAdd = async (e: FormEvent) => {
+        e.preventDefault()
         let createdEntryId;
 
 
@@ -107,6 +128,10 @@ TODO:
           console.log(bufferFiles[i])
           formData.append('files', bufferFiles[i])
         }
+
+        for (let j = 0; j < addBufferFiles.length; j++) {
+            formData.append('addToCur', addBufferFiles[j]._id)
+          }
       
         formData.append('chatID', currentChat? currentChat : createdEntryId)
 
@@ -116,7 +141,27 @@ TODO:
             },
         })
         setBufferFiles([])
+        setAddBufferFiles([])
+        fetchCurrentChatFiles()
+
     }
+
+
+    const handleFileChange = (e:ChangeEvent<HTMLInputElement>) => {
+
+          if (e.target.files) {
+            const newFiles = Array.from(e.target.files);
+            console.log(newFiles)
+            setBufferFiles((prevFiles) => [...prevFiles, ...newFiles]);
+            //console.log(e.target.files)
+          }
+       }
+
+    
+    const handleAddCur = (fid:string, fname:string) => {
+        setAddBufferFiles((prev) => [...prev, {_id:fid, name:fname}])
+    }
+
     
 
 
@@ -140,8 +185,8 @@ TODO:
                                 <div className='file-snippet'>
                                     <p>{f.name}</p>
                                     <div className='file-control-cont'>
-                                        <h4 onClick={()=>handleAddToCur(f._id)} className='file-add-snippet'>+</h4>
-                                        <h4 onClick={()=>handleDeleteFile(f._id)} className='file-delete-snippet'>X</h4>
+                                        <h4 className='file-add-snippet' onClick={()=>handleAddCur(f._id, f.name)}>+</h4>
+                                        <h4 onClick={()=>handleDeleteDoc(f._id)} className='file-delete-snippet'>X</h4>
                                     </div>
                                 </div>
                         </div>
@@ -157,6 +202,21 @@ TODO:
         <div className='nav-files-cont'>
             
             {/* TODO: Add File Buffer UI */}
+                {addBufferFiles.map((file, index) => {
+                    return  <FileSnippetsComp file={file} index={index} delfunc={handleBufferDelete} type={'add'}/>
+                })}
+
+            {Array.from(bufferFiles).map((file, index)=>{
+              return (
+                <div className='file-snippet-cont' key={index}>
+
+                    <div className='file-snippet file-snippet-add'>
+                        <p>{file.name}</p>
+                        <h4 onClick={()=>handleBufferDelete(index, true)} className='file-delete-snippet'>X</h4>
+                    </div>
+                </div>
+              )
+            })}
 
 
             {curFiles && curFiles.map((f, i) => {
@@ -168,7 +228,7 @@ TODO:
                     </div>
             })}
         </div>
-        <button onClick={()=>handleConfirmAdd()}>Confirm Add</button>
+ 
     </>
     )
 
@@ -186,6 +246,15 @@ TODO:
             <div className='nav-tab-comp-cont'>
                 {!tab? filesComp : chatHistoryComp}
             </div>
+
+            {!tab?
+            
+            <form className='nav-file-form' onSubmit={(e)=>handleConfirmAdd(e)}>
+                <input type="file" id="file-upload" multiple onChange={handleFileChange} ref={fileInputRef}></input>
+                <label  className="file-upload" htmlFor="file-upload"> F + </label>
+                <button className='file-send' type="submit">{'F >'}</button>
+            </form> : ""}
+
             
             <div onClick={()=> setTab(!tab)} className='nav-bottom-btn-group'>
                 {!tab? <h3>Chat</h3> : <h3>Files</h3>}

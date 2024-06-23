@@ -187,17 +187,26 @@ def summary():
 def upload():
     UPLOAD_FOLDER = os.path.join(os.getcwd(), 'docs')
 
-    if 'files' not in request.files or 'chatID' not in request.form:
-        return jsonify({'error': 'No files or chatID part in the request'}), 400
+    """ if 'files' not in request.files or 'chatID' not in request.form or 'addToCur' not in request.form:
+        return jsonify({'error': 'No files or chatID part in the request'}), 400 """
     
     files = request.files.getlist('files')
     chatID = request.form.get('chatID')
-    if len(files) == 0:
-        return jsonify({'error': 'No selected files'}), 400
+    addToCur = request.form.getlist('addToCur')
+
+    """ if len(files) == 0:
+        return jsonify({'error': 'No selected files'}), 400 """
     
     """ for file in files:
         print(file.filename) """
-    
+    print('\n\n', addToCur, '\n\n')
+    for i in addToCur:
+        mongoCollection.update_one(
+                {'_id': ObjectId(chatID)},
+                {'$push': {'docs': str(i)}}
+            )
+
+
     for file in files:
         if file and file.filename != '':
 
@@ -248,7 +257,7 @@ def getChat(chatId):
         return jsonify({"error": str(e)}), 400
 
 
-@app.route('/api/files', methods=["GET"])
+@app.route('/api/files/all', methods=["GET"])
 def getAllFiles():
     try:
         entries = list(mongoDocCollection.find({}, {"_id": 1, "name": 1}))
@@ -256,6 +265,21 @@ def getAllFiles():
             entry['_id'] = str(entry['_id']) 
         return jsonify(entries)
     
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route('/api/files/all', methods=["POST"])
+def deleteFile():
+    fid = request.get_json()['fid']
+
+    try:
+        object_id = ObjectId(fid)
+        
+        # Delete the document
+        result = mongoDocCollection.delete_one({'_id': object_id})
+        if result.deleted_count == 1:
+            return {'message': 'Document deleted successfully'}, 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
