@@ -13,6 +13,11 @@
 
 }
 
+.chat-history-cont {
+    margin-top: 0.5rem;
+}
+
+
 .bar-top {
     color: white;
     padding-top: 1rem;
@@ -197,4 +202,24 @@
 
 .nav-files-cont{
     max-height: 100%;
+}
+
+.nav-new-chat-cont {
+    background-color: var(--shallow-background-color-dark);
+    text-align: center;
+    padding: 1rem;
+}
+
+.nav-new-chat {
+    cursor: pointer;
+    color: white;
+    margin: 0;
+    background-color: var(--deep-background-color-dark);
+    border-radius: 5px;
+    padding: 0.5rem;
+    transition: 0.3s ease-in-out;
+}
+
+.nav-new-chat:hover {
+    background-color: var(--accent-color);
 }

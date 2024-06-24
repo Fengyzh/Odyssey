@@ -292,6 +292,7 @@ def getCurFiles(chatId):
             return jsonify({"error": "Entry not found or docs field missing"}), 404
 
         docList = list(entry['docs'])
+        print(entry)
         docList = [ObjectId(doc_id) for doc_id in docList]
 
         docs = list(mongoDocCollection.find({'_id': {'$in': docList}}, {'name': 1, '_id': 1}))

@@ -69,6 +69,8 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
                 console.log(res.data)
               }
         })
+    } else {
+      setCurFiles([])
     }
   }
 

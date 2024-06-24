@@ -75,6 +75,7 @@ TODO:
 
     const handleNewChat = () => {
         setCurrentChat("")
+        
     }
 
     const  handleDeleteFile = async (fid:string) => {
@@ -139,10 +140,11 @@ TODO:
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
+        }).then(()=>{
+            fetchCurrentChatFiles()
         })
         setBufferFiles([])
         setAddBufferFiles([])
-        fetchCurrentChatFiles()
 
     }
 
@@ -166,11 +168,11 @@ TODO:
 
 
     const chatHistoryComp =  
-    (<>
+    (<div className='chat-history-cont'>
     {chats.map((chat:ChatSnippets, index)=>{
         return <div onClick={()=>handleChatSelect(chat._id)} key={index} className='nav-chat-titles'>{chat.title}</div>
     })}
-</>)
+</div>)
 
     const filesComp = (
     <>
@@ -201,7 +203,6 @@ TODO:
 
         <div className='nav-files-cont'>
             
-            {/* TODO: Add File Buffer UI */}
                 {addBufferFiles.map((file, index) => {
                     return  <FileSnippetsComp file={file} index={index} delfunc={handleBufferDelete} type={'add'}/>
                 })}
@@ -247,13 +248,21 @@ TODO:
                 {!tab? filesComp : chatHistoryComp}
             </div>
 
+
+
             {!tab?
             
             <form className='nav-file-form' onSubmit={(e)=>handleConfirmAdd(e)}>
                 <input type="file" id="file-upload" multiple onChange={handleFileChange} ref={fileInputRef}></input>
                 <label  className="file-upload" htmlFor="file-upload"> F + </label>
                 <button className='file-send' type="submit">{'F >'}</button>
-            </form> : ""}
+            </form> 
+            : 
+            <div className='nav-new-chat-cont'>
+                <h3 onClick={()=>handleNewChat()} className='nav-new-chat'>New Chat</h3>
+            </div>}
+            
+
 
             
             <div onClick={()=> setTab(!tab)} className='nav-bottom-btn-group'>

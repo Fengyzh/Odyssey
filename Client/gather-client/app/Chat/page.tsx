@@ -134,9 +134,6 @@ export default function page() {
 
  const handleFileChange = (e:ChangeEvent<HTMLInputElement>) => {
 
-  /* TODO: Currently in order for the user to upload multiple files, they have to shift + click on the files
-    We want to make it so what we buffer the files whenever the user selects a file and we send all the files at
-    once when the user click send (Should wait until we finish the navbar files view) */
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
       console.log(newFiles)
