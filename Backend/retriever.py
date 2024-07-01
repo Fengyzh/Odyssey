@@ -16,17 +16,16 @@ emb = HuggingFaceBgeEmbeddings(
 )
 
 
-class chromaRetriever(BaseRetriever):
-    def __init__(self, collection):
-        super()
+class chromaRetriever():
+    def __init__(self, collection) -> None:
         self.collection = collection
 
     def preProcess(self, text):
         return text.split()
 
-    def _get_relevant_documents(self,query):
+    def query_documents(self,query, kwargs):
         q = self.preProcess(query)
-        results = self.collection.query(query_texts=q, n_results=2)
+        results = self.collection.query(query_texts=q, n_results=kwargs)
         print("\n\n", results, "\n\n")
         return results['documents'][0]
 
@@ -56,16 +55,29 @@ class RAG_Retriever():
         result = ""
 
         for i in documents:
-            collection = self.chromaClient.get_collection(name=i)
+            collection = self.chromaClient.get_collection(name=i, embedding_function=MyEmbeddingFunction())
             docs = collection.get(include=["documents"])
+            print(collection)
 
-            v = chromaRetriever(collection=collection)
-            bm25_retriever = BM25Retriever.from_documents(docs, kwargs=kwargs)
-            retriever = EnsembleRetriever(retrievers=[bm25_retriever, v], weights=weights)
-        
-            result = result + "\n\n" + retriever.invoke(query)
+            result = ""
+            v = chromaRetriever(collection)
+            
+            v.query_documents(query, kwargs)
+
+            bm25_retriever = BM25Retriever.from_texts(docs, kwargs=kwargs)
+            print(bm25_retriever.get_relevant_documents(query=query))
             
         return result
+
+
+rr = RAG_Retriever()
+with open('./docs/plain.txt', 'r', encoding='UTF-8') as file:
+    docs = file.read()
+
+rr.create_embeddings(docs, collection_name='test_emb')
+result = rr.hybrid_search('inode', ['test_emb'])
+print("Finished")
+print(result)
 
 
 
