@@ -4,7 +4,7 @@ from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.retrievers import BM25Retriever
 from langchain.retrievers import EnsembleRetriever
-from langchain_core.retrievers import BaseRetriever
+from rank_bm25 import BM25Okapi
 from chromadb import Documents, EmbeddingFunction, Embeddings
 
 
@@ -27,7 +27,7 @@ class chromaRetriever():
         q = self.preProcess(query)
         results = self.collection.query(query_texts=q, n_results=kwargs)
         print("\n\n", results, "\n\n")
-        return results['documents'][0]
+        return results['documents']
 
 
 class MyEmbeddingFunction(EmbeddingFunction):
@@ -56,16 +56,20 @@ class RAG_Retriever():
 
         for i in documents:
             collection = self.chromaClient.get_collection(name=i, embedding_function=MyEmbeddingFunction())
-            docs = collection.get(include=["documents"])
-            print(collection)
+            docs = collection.get(include=["documents"])['documents']
 
             result = ""
-            v = chromaRetriever(collection)
-            
-            v.query_documents(query, kwargs)
 
-            bm25_retriever = BM25Retriever.from_texts(docs, kwargs=kwargs)
-            print(bm25_retriever.get_relevant_documents(query=query))
+            tokenized_doc = [t.split(" ") for t in docs]
+            tokenized_query = query.split(" ")
+            bm25_search = BM25Okapi(tokenized_doc)
+            result = bm25_search.get_top_n(tokenized_query, docs, n=2)
+
+            v = chromaRetriever(collection)
+            vector_res = v.query_documents(query, kwargs)[0]
+
+            result += vector_res
+
             
         return result
 

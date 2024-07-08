@@ -3,13 +3,18 @@
 - [x] File Select and upload
 - [x] Navbar file view and file buffer
 - [x] Convo History
+- [] Convo Delete
+- [] Waiting for Response style change
 
 
 
 # Server
 
-- [ ] Initial RAG process
-
+- [x] Initial RAG process
+- [x] Vector DB setup
+- [] Hybrid Search
+- [] Reranker in Hybrid Search
+- [] Connect Backend to RAG service
 
 
 

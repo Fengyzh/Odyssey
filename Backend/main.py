@@ -66,12 +66,15 @@ from flask import Flask, Response, request, jsonify
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 import pymongo
+from retriever import RAG_Retriever
 
 
 mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
 mongoDB = mongoClient["Project-gather"]
 mongoCollection = mongoDB["LLM-Chats"]
 mongoDocCollection = mongoDB["LLM-Docs"]
+RAG_client = RAG_Retriever()
+
 
 
 def format_chunks(stream_res, isGenerate):
@@ -138,6 +141,10 @@ def stream():
             }})
     request_msg = request.get_json()
     
+    """ if request_msg and request_msg['id']:
+        chatId = request_msg['id']
+        entry = mongoCollection.find_one({"_id": ObjectId(chatId)}, {"_id":1, "docs":1}) 
+        RAG_client.hybrid_search(request_msg['message'], list(entry)) """
 
 
     #if request_msg and 'message' in request_msg:
