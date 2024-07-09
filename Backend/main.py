@@ -66,14 +66,14 @@ from flask import Flask, Response, request, jsonify
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 import pymongo
-#from retriever import RAG_Retriever
+from retriever import RAG_Retriever
 
 
 mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
 mongoDB = mongoClient["Project-gather"]
 mongoCollection = mongoDB["LLM-Chats"]
 mongoDocCollection = mongoDB["LLM-Docs"]
-#RAG_client = RAG_Retriever()
+RAG_client = RAG_Retriever()
 
 
 
@@ -144,7 +144,7 @@ def stream():
     """ if request_msg and request_msg['id']:
         chatId = request_msg['id']
         entry = mongoCollection.find_one({"_id": ObjectId(chatId)}, {"_id":1, "docs":1}) 
-        RAG_client.hybrid_search(request_msg['message'], list(entry)) """
+        rag_context = RAG_client.hybrid_search(request_msg['message'], list(entry)) """
 
 
     #if request_msg and 'message' in request_msg:
@@ -228,10 +228,17 @@ def upload():
             
             # File save as a doc (add collection_name later when vectorDB is setup)
             result = mongoDocCollection.insert_one({'name': file.filename, 'chats':[str(chatID)]})
+
+            
             mongoCollection.update_one(
                 {'_id': ObjectId(chatID)},
                 {'$push': {'docs': str(result.inserted_id)}}
             )
+
+            with open(file_path,"r") as f:
+                content = f.read()
+                RAG_client.create_embeddings(content, collection_name=str(result.inserted_id))
+            print("embedding created")
     
     return jsonify({'message': 'Files successfully uploaded'}), 200
 

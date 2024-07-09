@@ -24,6 +24,7 @@ TODO:
     const [allFiles, setAllFiles] = useState<FileSnippets[] | []>([])
     const [bufferFiles, setBufferFiles] = useState<FileList | [] | File[]>([]);
     const [addBufferFiles, setAddBufferFiles] = useState<[] | FileSnippets[]>([]);
+    const [fileLoading, setFileLoading] = useState<boolean>(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -114,7 +115,7 @@ TODO:
     const handleConfirmAdd = async (e: FormEvent) => {
         e.preventDefault()
         let createdEntryId;
-
+        setFileLoading(true)
 
         if (!currentChat) {
           const createResponse = await axios.get("http://localhost:5000/api/newchat")
@@ -143,6 +144,7 @@ TODO:
         }).then(()=>{
             fetchCurrentChatFiles()
             fetchAllFiles()
+            setFileLoading(false)
         })
         setBufferFiles([])
         setAddBufferFiles([])
@@ -199,6 +201,7 @@ TODO:
 
         <div className='file-section-cont'>
             <h2>Files in Chat</h2>
+            {fileLoading? <h2>Processing files</h2> : ""}
         </div>
 
 

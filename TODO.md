@@ -21,7 +21,7 @@
 
 # Decisions
 
-- Not to implement any MongoDB id trashing
+- Not to implement any MongoDB doc id trashing
     - Reason: Deleting docs in the doc repo doesn't result in the deleted doc showing in the front-end. Cleaning chats list in doc collection is unless since no service depends on that list.
 
 

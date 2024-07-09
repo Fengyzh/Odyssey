@@ -30,6 +30,7 @@ class chromaRetriever():
         return results['documents']
 
 
+
 class MyEmbeddingFunction(EmbeddingFunction):
     def __call__(self, input: Documents) -> Embeddings:
         r = emb.embed_documents(input)
@@ -40,8 +41,8 @@ class RAG_Retriever():
     def __init__(self):
         self.chromaClient = chromadb.PersistentClient(path="./chromadir")
         self.embedding = emb
-        self.text_spliter = RecursiveCharacterTextSplitter(chunk_size = 200, chunk_overlap=0)
-
+        self.text_spliter = RecursiveCharacterTextSplitter(chunk_size = 500, chunk_overlap=0)
+    
         
     def create_embeddings(self, docs, *, collection_name):
         splits = self.text_spliter.split_text(docs)
@@ -55,8 +56,13 @@ class RAG_Retriever():
         result = ""
 
         for i in documents:
-            collection = self.chromaClient.get_collection(name=i, embedding_function=MyEmbeddingFunction())
-            docs = collection.get(include=["documents"])['documents']
+            try:
+                collection = self.chromaClient.get_collection(name=i, embedding_function=MyEmbeddingFunction())
+                docs = collection.get(include=["documents"])['documents']
+            except:
+                print(f"{i} doesn't exist as one of the collections")
+                continue
+
 
             result = ""
 
@@ -73,6 +79,9 @@ class RAG_Retriever():
             
         return result
 
+    def getClient(self):
+        return self.chromaClient
+
 
 """ rr = RAG_Retriever()
 with open('./docs/plain.txt', 'r', encoding='UTF-8') as file:
@@ -84,4 +93,8 @@ print("Finished")
 print(result) """
 
 
+""" rr = RAG_Retriever()
+client = rr.getClient()
+print(client.list_collections())
+print(client.get_collection("668d722dcd1a12d62d1336f7").get()['documents']) """
 
