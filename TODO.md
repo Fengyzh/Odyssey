@@ -15,11 +15,23 @@
 - [] Hybrid Search
 - [] Reranker in Hybrid Search
 - [] Connect Backend to RAG service
+- [] Add HyDE before RAG retrieval
+
+
+
+# Decisions
+
+- Not to implement any MongoDB id trashing
+    - Reason: Deleting docs in the doc repo doesn't result in the deleted doc showing in the front-end. Cleaning chats list in doc collection is unless since no service depends on that list.
 
 
 
 
 # Drawing Board
+
+
+
+
 
 docs: {
     _id,

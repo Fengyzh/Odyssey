@@ -142,6 +142,7 @@ TODO:
             },
         }).then(()=>{
             fetchCurrentChatFiles()
+            fetchAllFiles()
         })
         setBufferFiles([])
         setAddBufferFiles([])

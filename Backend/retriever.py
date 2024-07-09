@@ -74,14 +74,14 @@ class RAG_Retriever():
         return result
 
 
-rr = RAG_Retriever()
+""" rr = RAG_Retriever()
 with open('./docs/plain.txt', 'r', encoding='UTF-8') as file:
     docs = file.read()
 
 rr.create_embeddings(docs, collection_name='test_emb')
 result = rr.hybrid_search('inode', ['test_emb'])
 print("Finished")
-print(result)
+print(result) """
 
 
 

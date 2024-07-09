@@ -66,14 +66,14 @@ from flask import Flask, Response, request, jsonify
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 import pymongo
-from retriever import RAG_Retriever
+#from retriever import RAG_Retriever
 
 
 mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
 mongoDB = mongoClient["Project-gather"]
 mongoCollection = mongoDB["LLM-Chats"]
 mongoDocCollection = mongoDB["LLM-Docs"]
-RAG_client = RAG_Retriever()
+#RAG_client = RAG_Retriever()
 
 
 
@@ -207,10 +207,14 @@ def upload():
     """ for file in files:
         print(file.filename) """
     print('\n\n', addToCur, '\n\n')
-    for i in addToCur:
+    for docID in addToCur:
         mongoCollection.update_one(
                 {'_id': ObjectId(chatID)},
-                {'$push': {'docs': str(i)}}
+                {'$push': {'docs': str(docID)}}
+            )
+        mongoDocCollection.update_one(
+                {'_id': ObjectId(docID)},
+                {'$push': {'chats': str(chatID)}}
             )
 
 
@@ -300,10 +304,23 @@ def getCurFiles(chatId):
 
         docList = list(entry['docs'])
         docList = [ObjectId(doc_id) for doc_id in docList]
+        entrySet = set(entry['docs'])
 
         docs = list(mongoDocCollection.find({'_id': {'$in': docList}}, {'name': 1, '_id': 1}))
+
         for i in docs:
             i["_id"] = str(i["_id"])
+                
+        docsIdList = [i['_id'] for i in docs]
+        foundSet = set(docsIdList)
+
+        if entrySet != foundSet:
+            mongoCollection.update_one(
+                    {'_id': ObjectId(chatId)},
+                    {'$set': {'docs': list(foundSet)}}
+                )
+
+
 
         return jsonify(docs)
     
