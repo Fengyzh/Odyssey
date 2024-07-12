@@ -6,6 +6,7 @@ import ollama
 text_stream = []
 
 
+
 class LLM_controller():
     def __init__(self):
         self.text_stream = []
@@ -15,7 +16,8 @@ class LLM_controller():
         response = ollama.chat(
         model='dolphin-mistral',
         messages=self.text_stream,
-        stream=stream)
+        stream=stream,
+        options={})
 
         return response
     

@@ -2,8 +2,6 @@ import os
 import chromadb
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.retrievers import BM25Retriever
-from langchain.retrievers import EnsembleRetriever
 from rank_bm25 import BM25Okapi
 from chromadb import Documents, EmbeddingFunction, Embeddings
 
@@ -52,8 +50,11 @@ class RAG_Retriever():
             collection.add(documents=splits, ids=[str(i) for i in range(len(splits))])
 
 
-    def hybrid_search(self, query, documents, kwargs=2, weights=[0.5,0.5]):
-        result = ""
+    def hybrid_search(self, query, documents, kwargs=2, weights=[0.5,0.5], fweights=None):
+        rag_context = []
+        sparse_vector_weight = [int(kwargs*weights[0]), int(kwargs*weights[1])]
+        if fweights:
+            sparse_vector_weight = fweights
 
         for i in documents:
             try:
@@ -63,24 +64,28 @@ class RAG_Retriever():
                 print(f"{i} doesn't exist as one of the collections")
                 continue
 
-
-            result = ""
-
-            tokenized_doc = [t.split(" ") for t in docs]
-            tokenized_query = query.split(" ")
+            tokenized_doc = [t.split() for t in docs]
+            tokenized_query = query.split()
             bm25_search = BM25Okapi(tokenized_doc)
-            result = bm25_search.get_top_n(tokenized_query, docs, n=2)
+            sparse_res = bm25_search.get_top_n(tokenized_query, docs, n=sparse_vector_weight[0])
+            sparse_res += "\n BM25"
+
 
             v = chromaRetriever(collection)
-            vector_res = v.query_documents(query, kwargs)[0]
-
-            result += vector_res
-
             
-        return result
+            vector_res = v.query_documents(query, sparse_vector_weight[1])[0]
+
+            rag_context.append(sparse_res)
+            rag_context.append(vector_res)
+
+        return rag_context
+
 
     def getClient(self):
         return self.chromaClient
+
+
+
 
 
 """ rr = RAG_Retriever()
@@ -88,7 +93,9 @@ with open('./docs/plain.txt', 'r', encoding='UTF-8') as file:
     docs = file.read()
 
 rr.create_embeddings(docs, collection_name='test_emb')
-result = rr.hybrid_search('inode', ['test_emb'])
+result = rr.hybrid_search('inode', ['test_emb'], kwargs=4)
+
+
 print("Finished")
 print(result) """
 
