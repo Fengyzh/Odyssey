@@ -23,10 +23,13 @@
 - Currently the LLM does not know what the current chat's context is, so no matter which chat you swtich to, it will be using a "global" context in the self.text_stream = [], and since LLM_Controller only init once, that variable will stay the same no matter what chat you changed into.
     - Fix: Add current chat history into the self.text_stream = [] to provide the current chat's context. Also move the self.text_stream = [] into the chat_llm function so it gets a fresh variable every call and we will just populate it with the current chat history right under
     - Task No: Client -> Add chat history into LLM response so the LLM knows the current chat's context
+    - Please change all the {role:xxxx, msg:xxx} to {role:xxxx, content:xxxx} so the backend don't have to replace all the msg with content for the LLM call
+
 
 
 # Notes
 - Don't change from ollam.chat to ollama.generate, because generate only takes in a string while chat takes in a list. Also, chat does not store the history, you have to provide the history as part of the "messages" field
+- The curContext in Chat.tsx (line 69 - 70) has a logic where the newest user message will be added to the context making the "message" field of the request to the backend kind of redundant. But there should be more thoughts on whether we should keep it this way or not
 
 
 
