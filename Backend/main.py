@@ -239,7 +239,7 @@ def upload():
 
             with open(file_path,"r") as f:
                 content = f.read()
-                RAG_client.create_embeddings(content, collection_name=str(result.inserted_id))
+                #RAG_client.create_embeddings(content, collection_name=str(result.inserted_id))
             print("embedding created")
     
     return jsonify({'message': 'Files successfully uploaded'}), 200
