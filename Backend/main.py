@@ -9,8 +9,7 @@ text_stream = []
 
 class LLM_controller():
     
-    def chat_llm(self, prompt, context="", stream=True):
-        print(context)
+    def chat_llm(self, context="", stream=True):
         text_stream = []
         if context:
             text_stream = context
@@ -69,14 +68,14 @@ from flask import Flask, Response, request, jsonify
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 import pymongo
-#from retriever import RAG_Retriever
+#from retriever import RAGRetriever
 
 
 mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
 mongoDB = mongoClient["Project-gather"]
 mongoCollection = mongoDB["LLM-Chats"]
 mongoDocCollection = mongoDB["LLM-Docs"]
-#RAG_client = RAG_Retriever()
+#RAG_client = RAGRetriever()
 
 
 

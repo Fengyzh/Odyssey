@@ -4,6 +4,8 @@ from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from rank_bm25 import BM25Okapi
 from chromadb import Documents, EmbeddingFunction, Embeddings
+import requests
+import json
 
 
 
@@ -35,7 +37,8 @@ class MyEmbeddingFunction(EmbeddingFunction):
         return r
 
 
-class RAG_Retriever():
+
+class RAGRetriever():
     def __init__(self):
         self.chromaClient = chromadb.PersistentClient(path="./chromadir")
         self.embedding = emb
@@ -85,10 +88,31 @@ class RAG_Retriever():
         return self.chromaClient
 
 
+from langchain_community.utilities import SearxSearchWrapper
+
+class Web_Retriever:
+    def __init__(self):
+        self.searXNGURL = "http://localhost:8080"
+
+    def webSearch(self, query="jokes", num_results=5, format='json', engine=['google, brave']):
+        search = requests.get(self.searXNGURL, params={'q':query, 'format':format, 'engines':engine})
+        results_json = json.loads(search.text)
+        limited_results = results_json['results'][:num_results]
+
+        print(limited_results)
 
 
 
-""" rr = RAG_Retriever()
+
+if __name__ == '__main__':
+    wr = Web_Retriever()
+    wr.webSearch()
+
+
+
+
+
+""" rr = RAGRetriever()
 with open('./docs/plain.txt', 'r', encoding='UTF-8') as file:
     docs = file.read()
 
