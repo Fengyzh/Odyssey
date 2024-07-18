@@ -50,9 +50,9 @@ export default function page() {
 
   const sendPrompt = async () => {
 
-    let userMessage = {role:'user', msg:prompt}
+    let userMessage = {role:'user', content:prompt}
     setWait(prev => !prev)
-    setChat(prevChat => [...prevChat, userMessage, { role: 'assistant', msg: "" }]);
+    setChat(prevChat => [...prevChat, userMessage, { role: 'assistant', content: "" }]);
     let createdEntryId;
 
     if (!currentChat) {
@@ -65,7 +65,7 @@ export default function page() {
     }
 
 
-    //setChat((prevChat) => [...prevChat, { role: 'assistant', msg: "" }])
+    //setChat((prevChat) => [...prevChat, { role: 'assistant', content: "" }])
     let curContext = [...chat]
     curContext.push(userMessage)
     console.log(createdEntryId)
@@ -96,11 +96,11 @@ export default function page() {
         }
         setChat((prevChat) => {      
           if (prevChat.length === 0) {
-            return [{ role: 'assistant', msg: a }];
+            return [{ role: 'assistant', content: a }];
           } else {
             const updatedChat = [...prevChat];
             const lastMessage = updatedChat[updatedChat.length - 1];
-            updatedChat[updatedChat.length - 1] = { ...lastMessage, msg: lastMessage.msg + a };          
+            updatedChat[updatedChat.length - 1] = { ...lastMessage, content: lastMessage.content + a };          
             return updatedChat;
           }
         });    
@@ -120,7 +120,7 @@ export default function page() {
 
 /*     .then((res) => {
       console.log(res.data);
-      let llmMessage = { role: 'assistant', msg: res.data.data };
+      let llmMessage = { role: 'assistant', content: res.data.data };
       
 
       setChat(prevChat => [...prevChat, llmMessage]);
@@ -219,11 +219,11 @@ const handleBufferDelete = (index:number) => {
         {chat.map((item, index)=> {
           //console.log(chat)
           if (item.role == 'assistant') {
-            return <StaggerText className="chat-bubble chat-ai" key={index} text={item.msg}></StaggerText>
+            return <StaggerText className="chat-bubble chat-ai" key={index} text={item.content}></StaggerText>
           }
           return (
           
-          <div key={index} className={`chat-bubble ${item.role =='assistant'? "chat-ai" : "chat-client"}`}>{item.msg}</div>) 
+          <div key={index} className={`chat-bubble ${item.role =='assistant'? "chat-ai" : "chat-client"}`}>{item.content}</div>) 
         })}
         
 

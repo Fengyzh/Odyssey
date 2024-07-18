@@ -8,14 +8,14 @@ text_stream = []
 
 
 class LLM_controller():
-    def __init__(self):
-        self.text_stream = []
     
-    def chat_llm(self, prompt, stream=True):
-        self.text_stream.append({'role': 'user', 'content': prompt})
+    def chat_llm(self, context="", stream=True):
+        text_stream = []
+        if context:
+            text_stream = context
         response = ollama.chat(
         model='dolphin-mistral',
-        messages=self.text_stream,
+        messages=text_stream,
         stream=stream,
         options={})
 
@@ -68,14 +68,14 @@ from flask import Flask, Response, request, jsonify
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 import pymongo
-from retriever import RAG_Retriever
+#from retriever import RAGRetriever
 
 
 mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
 mongoDB = mongoClient["Project-gather"]
 mongoCollection = mongoDB["LLM-Chats"]
 mongoDocCollection = mongoDB["LLM-Docs"]
-RAG_client = RAG_Retriever()
+#RAG_client = RAGRetriever()
 
 
 
@@ -123,9 +123,10 @@ def handle_post():
 def stream():
 
     def get_data():
+        chat_context = request_msg['context']
         complete_text = ""
         #print(request_msg['context'])
-        llm_res = llm.chat_llm(request_msg['message'])
+        llm_res = llm.chat_llm(request_msg['message'], context=chat_context)
         for chunk in llm_res:
             #print(chunk)
             complete_text += chunk['message']['content']
@@ -133,13 +134,12 @@ def stream():
             yield f'{content}'
         
         """ Complete Current Chat history """
-        temp = request_msg['context']
-        temp.append({'role':'assistant', 'msg':complete_text})
-        #print(temp)
+        chat_context.append({'role':'assistant', 'content':complete_text})
+        print("context", chat_context)
         if (request_msg['id']):
             object_id = ObjectId(request_msg['id'])
             mongoCollection.update_one({'_id':object_id}, {'$set':{
-                'history': temp
+                'history': chat_context
             }})
     request_msg = request.get_json()
     
@@ -239,7 +239,7 @@ def upload():
 
             with open(file_path,"r") as f:
                 content = f.read()
-                RAG_client.create_embeddings(content, collection_name=str(result.inserted_id))
+                #RAG_client.create_embeddings(content, collection_name=str(result.inserted_id))
             print("embedding created")
     
     return jsonify({'message': 'Files successfully uploaded'}), 200
