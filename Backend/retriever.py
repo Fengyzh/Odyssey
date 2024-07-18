@@ -95,11 +95,21 @@ class Web_Retriever:
         self.searXNGURL = "http://localhost:8080"
 
     def webSearch(self, query="jokes", num_results=5, format='json', engine=['google, brave']):
+        if not query:
+            return 
         search = requests.get(self.searXNGURL, params={'q':query, 'format':format, 'engines':engine})
+        if not search:
+            return 
         results_json = json.loads(search.text)
         limited_results = results_json['results'][:num_results]
+        web_links = [res['url'] for res in limited_results]
 
         print(limited_results)
+        print(web_links)
+    
+    def webScraper(self, links):
+        pass
+
 
 
 

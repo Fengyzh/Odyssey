@@ -5,7 +5,6 @@
 - [x] Convo History
 - [] Convo Delete
 - [] Waiting for Response style change
-- [] Add chat history into LLM response so the LLM knows the current chat's context
 
 
 
@@ -13,10 +12,13 @@
 
 - [x] Initial RAG process
 - [x] Vector DB setup
-- [] Hybrid Search
+- [x] Hybrid Search
 - [] Reranker in Hybrid Search
 - [] Connect Backend to RAG service
 - [] Add HyDE before RAG retrieval
+- [x] Add chat history into LLM response so the LLM knows the current chat's context
+- [] Web Scraping
+
 
 
 # Bugs
