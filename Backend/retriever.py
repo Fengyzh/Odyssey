@@ -2,6 +2,7 @@ import os
 import chromadb
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders import SeleniumURLLoader
 from rank_bm25 import BM25Okapi
 from chromadb import Documents, EmbeddingFunction, Embeddings
 import requests
@@ -93,8 +94,14 @@ from langchain_community.utilities import SearxSearchWrapper
 class Web_Retriever:
     def __init__(self):
         self.searXNGURL = "http://localhost:8080"
+    
 
-    def webSearch(self, query="jokes", num_results=5, format='json', engine=['google, brave']):
+    def q_web_format(self, web):
+        temp = web.split("\\n")
+        doc = "".join(temp)
+        return doc.replace("\n", " ")
+
+    def webSearch(self, query="jokes", num_results=2, format='json', engine=['google, brave']):
         if not query:
             return 
         search = requests.get(self.searXNGURL, params={'q':query, 'format':format, 'engines':engine})
@@ -104,11 +111,19 @@ class Web_Retriever:
         limited_results = results_json['results'][:num_results]
         web_links = [res['url'] for res in limited_results]
 
-        print(limited_results)
+        #print(limited_results)
+        self.webScraper(web_links)
         print(web_links)
     
-    def webScraper(self, links):
-        pass
+    def webScraper(self, urls):
+        url_loader = SeleniumURLLoader(urls=urls)
+        data = url_loader.load()
+
+        for i in range(len(data)):
+            print(f"\n\n ------- No.{i+1} Doc ------- \n\n")
+            print("Content Sources: ", data[i].metadata['source'])
+            print(self.q_web_format(data[i].page_content))
+
 
 
 
