@@ -2,10 +2,12 @@ import os
 import chromadb
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders import SeleniumURLLoader
 from rank_bm25 import BM25Okapi
 from chromadb import Documents, EmbeddingFunction, Embeddings
 import requests
 import json
+from bs4 import BeautifulSoup
 
 
 
@@ -88,18 +90,59 @@ class RAGRetriever():
         return self.chromaClient
 
 
-from langchain_community.utilities import SearxSearchWrapper
+""" 
+TODO:
+    Use playwright to scrape HTML element from a webpage and use BS4 to remove all HTML tags to get the clean
+    content. Then pass the content to LLM for processing then return the processed info for RAG
+ """
+
+from main import LLM_controller
+
 
 class Web_Retriever:
     def __init__(self):
         self.searXNGURL = "http://localhost:8080"
+    
 
-    def webSearch(self, query="jokes", num_results=5, format='json', engine=['google, brave']):
+    def q_web_format(self, web):
+        temp = web.split("\\n")
+        doc = "".join(temp)
+        return doc
+
+    """ 
+        use LLM to generate the appro. search query and pass that as the query field in this function
+    """
+    def webSearch(self, query="jokes", num_results=2, format='json', engine=['google, brave']):
+        if not query:
+            return 
         search = requests.get(self.searXNGURL, params={'q':query, 'format':format, 'engines':engine})
+        if not search:
+            return 
+        
         results_json = json.loads(search.text)
         limited_results = results_json['results'][:num_results]
+        web_links = [res['url'] for res in limited_results]
+        return self.webScraper(web_links, query)
+    
+    def webScraper(self, urls, search_query):
+        html_summarizer = LLM_controller()
+        extracted_htmls = [] 
 
-        print(limited_results)
+        for url in urls:
+            search_result = requests.get(url)
+            soup = BeautifulSoup(search_result.content)
+            soup_text = soup.get_text()
+            p_st = soup_text.replace("\n", "")
+            cont = f"This is a website raw HTML text information, extract and list the necessary infomation out based on the search query. You can also include information that you find fit or related to the user prompt. Search query: {search_query} \n\n Raw HTML text: {p_st}"
+            convo = html_summarizer.buildConversationBlock(cont, 'system')
+            extracted_info = html_summarizer.chat_llm([convo])
+            extracted_htmls.append(extracted_info)
+            html_summarizer.printStream(extracted_info)
+
+        return [extracted_htmls, urls]
+        
+
+
 
 
 
