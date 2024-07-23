@@ -21,9 +21,9 @@ class LLM_controller():
 
         return response
     
-    def append_text_stream(self, text):
-        self.text_stream.append(text)
     
+    def buildConversationBlock(self, content, role):
+        return {'role':role, 'content':content}
 
     def gen_llm(self, p, c=""):
         response = ollama.generate(
@@ -32,19 +32,24 @@ class LLM_controller():
         stream=True)
 
         return response
+    
+    def printStream(self, result):
+        for chunk in result:
+            print(chunk['message']['content'], end='', flush=True)
+        return
 
-def chat_llm_request(p, c=""):
+    def chat_llm_request(p, c=""):
 
-    text_stream.append({'role': 'user', 'content': p})
-    if c:
-        text_stream.insert(0, c)
-        
-    response = ollama.chat(
-    model='dolphin-mistral',
-    messages=text_stream,
-    stream=True)
+        text_stream.append({'role': 'user', 'content': p})
+        if c:
+            text_stream.insert(0, c)
+            
+        response = ollama.chat(
+        model='dolphin-mistral',
+        messages=text_stream,
+        stream=True)
 
-    return response
+        return response
 
 
 
@@ -350,7 +355,7 @@ def deleteCurFiles(chatId):
 
         return jsonify({"success":"File Deleted"}), 200
 
-
-app.run()
+if __name__ == '__main__':
+    app.run()
 #socketio.run(app)
 
