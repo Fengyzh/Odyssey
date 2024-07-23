@@ -363,6 +363,14 @@ def deleteCurFiles(chatId):
 
         return jsonify({"success":"File Deleted"}), 200
 
+
+@app.route('/api/LLM/list', methods=["GET"])
+def getLLMList():
+    return jsonify
+
+
+
+
 if __name__ == '__main__':
     app.run()
 #socketio.run(app)

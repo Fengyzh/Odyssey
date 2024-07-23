@@ -12,3 +12,10 @@ export interface ChatSnippets {
     _id:string;
     title:string;
   }
+
+  export interface ChatMetaData {
+    title:string;
+    dateCreate:string;
+    dataChanged:string;
+    currentModel:string;
+  }

@@ -5,6 +5,10 @@
 - [x] Convo History
 - [] Convo Delete
 - [] Waiting for Response style change
+- [] LLM settings and LLM select
+    - [] Fetch Model list and put it in a useState to store the list
+    - [] Add Chat MetaData to store in DB
+    - [] Change title to fetch from Chat MetaData instead of its own useState vairable
 
 
 
@@ -17,7 +21,7 @@
 - [] Connect Backend to RAG service
 - [] Add HyDE before RAG retrieval
 - [x] Add chat history into LLM response so the LLM knows the current chat's context
-- [] Web Scraping
+- [x] Web Scraping
 
 
 

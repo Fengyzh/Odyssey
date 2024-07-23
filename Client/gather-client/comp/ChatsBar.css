@@ -1,6 +1,6 @@
 .ChatsBar-cont {
     height: 100%;
-    width: 12%;
+    width: 0%;
     position: fixed;
     background-color: var(--deep-background-color-dark);
     top: auto;

@@ -6,46 +6,70 @@ import axios from 'axios'
 import StaggerText from '@/comp/StaggerText'
 import { useSidebar } from '../context/sidebarContext';
 import NavLayout from '@/app/navLayout'
-import { ChatResponse } from '@/comp/Types';
+import { ChatResponse, ChatMetaData } from '@/comp/Types';
 
 export default function page() {
 
-
+  const DEFAULT_CHAT_METADATA = {title:'Chat Title', dateCreate:'', dataChanged:'', currentModel:'llama3:instruct'}
   /* Chat looks like:
     [{role:xxxx, message:xxxx}, {role:xxxx, message:xxxx}...]
   */
   
   const [prompt, setPrompt] = useState("")
   const [chat, setChat] = useState<ChatResponse[] | any[]>([])
+  const [chatMeta, setChatMeta] = useState<ChatMetaData>(DEFAULT_CHAT_METADATA)
   const [wait, setWait] = useState(false)
   const [title, setTitle] = useState('Chat Title')
   const [files, setFiles] = useState<FileList | [] | File[]>([]);
   const [bufferFiles, setBufferFiles] = useState<FileList | [] | File[]>([]);
+  const [isModelSelect, setIsModelSelect] = useState<boolean>(false)
 
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const modelSelectRef = useRef<HTMLDivElement>(null);
+  const titleContRef = useRef<HTMLDivElement>(null);
 
 
-
-  const { toggleSidebar, currentChat, setCurrentChat, fetchChatSnippets, fetchCurrentChatFiles } = useSidebar();
+  const { toggleSidebar, currentChat, setCurrentChat, fetchChatSnippets, fetchCurrentChatFiles, isSidebarToggled } = useSidebar();
 
 
   useEffect(() => {
     if (currentChat) {
       axios.get("http://localhost:5000/api/chat/" + currentChat).then((res)=>{
           setChat(res.data.history)
+
+          //TODO: Add set chatMeta when Meta is implemented in backend storage
           setTitle(res.data.title)
         
       })
     } else {
       setChat([])
+      setChatMeta(DEFAULT_CHAT_METADATA)
       setTitle('Chat Title')
     }
 
   }, [currentChat])
-  
 
 
+/*   useEffect(() => {
+    axios.get("http://localhost:5000/api/LLM/list").then((res)=> {
+
+    })
+
+  }, []) */
+
+
+  useEffect(() => {
+    if (titleContRef && titleContRef.current) {
+      if (isSidebarToggled) {
+        titleContRef.current.style.marginLeft='10%'
+      } else {
+        titleContRef.current.style.marginLeft='0%'
+
+      }
+    }
+
+  }, [isSidebarToggled]) 
 
 
   const sendPrompt = async () => {
@@ -107,27 +131,6 @@ export default function page() {
       }
 }
 
-
-/*     axios.post("http://localhost:5000/api/stream", {
-      message: prompt,
-      context: chat
-    }).then((res)=>{
-      console.log(res.data)
-    }) */
-
-    //console.log("client started streaming")
-    //console.log(chat)
-
-/*     .then((res) => {
-      console.log(res.data);
-      let llmMessage = { role: 'assistant', content: res.data.data };
-      
-
-      setChat(prevChat => [...prevChat, llmMessage]);
-      setWait(prev => !prev)
-
-
-    }) */;
 
   }
 
@@ -200,9 +203,29 @@ const handleBufferDelete = (index:number) => {
   let t = Array.from(bufferFiles)
    t.splice(index, 1);
   setBufferFiles([...t])
-
-
 }
+
+
+const handleExtentModelSelect = () => {
+  setIsModelSelect(!isModelSelect)
+
+  // TODO: Fetch Model list and put it in a useState to store the list
+}
+
+
+
+
+
+
+
+
+
+  const modelSelectBox = (<div ref={modelSelectRef} className='chat-model-select'>
+  <h3 className='chat-model-select-models'>MODEL 1</h3>
+  <h3 className='chat-model-select-models'>MODEL 1</h3>
+  <h3 className='chat-model-select-models'>MODEL 1</h3>
+</div>)
+
 
 
   return (
@@ -210,12 +233,19 @@ const handleBufferDelete = (index:number) => {
     <div className='chat-page'>
       <div className='chat-page-title-cont'>
         <h2 className='sidebar-toggle' onClick={()=>toggleSidebar()}>O</h2>
-        <h2 className='chat-page-title'> {title} </h2>
+
+        <div ref={titleContRef} className='chat-title-func-cont'>
+          <h2 className='chat-page-title'> {title} </h2>
+          <div className='chat-model-cont'>
+            <button onClick={()=>handleExtentModelSelect()} className='chat-model-btn'>{chatMeta.currentModel} {'>'}</button>
+            {isModelSelect? modelSelectBox : ""}
+            
+          </div>
+        </div>
       </div>
 
       <div className='chat-box'> 
         <h3> {chat.length === 0? "New Chat?" : ""} </h3>
-
         {chat.map((item, index)=> {
           //console.log(chat)
           if (item.role == 'assistant') {
