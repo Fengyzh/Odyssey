@@ -122,10 +122,11 @@ class Web_Retriever:
         results_json = json.loads(search.text)
         limited_results = results_json['results'][:num_results]
         web_links = [res['url'] for res in limited_results]
-        self.webScraper(web_links, query)
+        return self.webScraper(web_links, query)
     
     def webScraper(self, urls, search_query):
         html_summarizer = LLM_controller()
+        extracted_htmls = [] 
 
         for url in urls:
             search_result = requests.get(url)
@@ -134,7 +135,12 @@ class Web_Retriever:
             p_st = soup_text.replace("\n", "")
             cont = f"This is a website raw HTML text information, extract and list the necessary infomation out based on the search query. You can also include information that you find fit or related to the user prompt. Search query: {search_query} \n\n Raw HTML text: {p_st}"
             convo = html_summarizer.buildConversationBlock(cont, 'system')
-            html_summarizer.printStream(html_summarizer.chat_llm([convo]))
+            extracted_info = html_summarizer.chat_llm([convo])
+            extracted_htmls.append(extracted_info)
+            html_summarizer.printStream(extracted_info)
+
+        return [extracted_htmls, urls]
+        
 
 
 

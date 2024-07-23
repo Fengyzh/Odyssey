@@ -20,7 +20,15 @@ class LLM_controller():
         options={})
 
         return response
-    
+
+    def gen_llm(self, message="", systemMsg=""):
+        response = ollama.generate(
+        model='dolphin-mistral',
+        system=systemMsg,
+        prompt=message,
+        options={})
+
+        return response
     
     def buildConversationBlock(self, content, role):
         return {'role':role, 'content':content}
