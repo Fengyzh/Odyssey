@@ -1,6 +1,7 @@
 import os
 from bson import ObjectId
 import ollama
+from constants import DEFAULT_CHAT_METADATA
 
 
 text_stream = []
@@ -9,21 +10,21 @@ text_stream = []
 
 class LLM_controller():
     
-    def chat_llm(self, context="", stream=True):
+    def chat_llm(self, context="", stream=True, model='llama3:instruct'):
         text_stream = []
         if context:
             text_stream = context
         response = ollama.chat(
-        model='dolphin-mistral',
+        model=model,
         messages=text_stream,
         stream=stream,
         options={})
 
         return response
 
-    def gen_llm(self, message="", systemMsg=""):
+    def gen_llm(self, message="", systemMsg="", model='llama3:instruct'):
         response = ollama.generate(
-        model='dolphin-mistral',
+        model=model,
         system=systemMsg,
         prompt=message,
         options={})
@@ -137,11 +138,10 @@ def stream():
 
     def get_data():
         chat_context = request_msg['context']
+        chat_meta = request_msg['meta']
         complete_text = ""
-        #print(request_msg['context'])
-        llm_res = llm.chat_llm(request_msg['message'], context=chat_context)
+        llm_res = llm.chat_llm(context=chat_context, model='dolphin-mistral')
         for chunk in llm_res:
-            #print(chunk)
             complete_text += chunk['message']['content']
             content = chunk['message']['content']
             yield f'{content}'
@@ -152,7 +152,8 @@ def stream():
         if (request_msg['id']):
             object_id = ObjectId(request_msg['id'])
             mongoCollection.update_one({'_id':object_id}, {'$set':{
-                'history': chat_context
+                'history': chat_context,
+                'meta':chat_meta
             }})
     request_msg = request.get_json()
     
@@ -262,7 +263,7 @@ def upload():
 
 @app.route('/api/newchat', methods=["GET"])
 def newChat():
-    result = mongoCollection.insert_one({'title': "New Chat", 'history':[], 'docs':[]})
+    result = mongoCollection.insert_one({'title': "New Chat", 'history':[], 'docs':[], 'meta':DEFAULT_CHAT_METADATA})
     result_id = result.inserted_id
     return jsonify({'id': str(result_id)})
 
@@ -366,7 +367,8 @@ def deleteCurFiles(chatId):
 
 @app.route('/api/LLM/list', methods=["GET"])
 def getLLMList():
-    return jsonify
+    modelList = ollama.list()
+    return jsonify({'models':modelList})
 
 
 

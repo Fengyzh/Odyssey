@@ -97,7 +97,7 @@
 }
 
 .chat-send:hover {
-    border-color: rgb(161, 161, 161);
+    background-color: var(--accent-color);
 
 }
 
@@ -153,13 +153,25 @@
 
 .chat-model-select-models {
     margin-top: 0.5rem;
-    margin-bottom: 0;
+    margin-bottom: 0.5rem;
     margin-left: 0.5rem;
+    font-size: 100%;
     color: rgba(255, 255, 255, 0.6);
-    
+    cursor: pointer;
+    transition: 0.3s ease;
+    border-radius: 5px;
+    padding-left: 0.5rem;
+}
+
+.chat-model-select-models:hover {
+    background-color: var(--accent-color);
+    color:black
 }
 
 
+.sidebar-toggle {
+    cursor: pointer;
+}
 
 
 
