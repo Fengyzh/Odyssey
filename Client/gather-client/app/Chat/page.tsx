@@ -38,16 +38,17 @@ export default function page() {
           setChat(res.data.history)
 
           //TODO: Add set chatMeta when Meta is implemented in backend storage
-          if (res.data.meta) {
-            setChatMeta(res.data.ChatMeta)
+        if (res.data.meta != undefined) {
+            console.log(res.data.meta)
+            setChatMeta(res.data.meta)
           }
-          setTitle(res.data.title)
+          //setTitle(res.data.title)
         
       })
     } else {
       setChat([])
       setChatMeta(DEFAULT_CHAT_METADATA)
-      setTitle('Chat Title')
+      //setTitle('Chat Title')
     }
 
   }, [currentChat])
@@ -168,7 +169,7 @@ const handleModelSelect = (modelName:string) => {
         <h2 className='sidebar-toggle' onClick={()=>toggleSidebar()}>O</h2>
 
         <div ref={titleContRef} className='chat-title-func-cont'>
-          <h2 className='chat-page-title'> {title} </h2>
+          <h2 className='chat-page-title'> {chatMeta.title} </h2>
           <div className='chat-model-cont'>
             <button onClick={()=>handleExtentModelSelect()} className='chat-model-btn'>{chatMeta.currentModel} {'>'}</button>
             {isModelSelect? modelSelectBox : ""}

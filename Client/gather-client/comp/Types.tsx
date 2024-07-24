@@ -11,6 +11,7 @@ export interface FileSnippets {
 export interface ChatSnippets {
     _id:string;
     title:string;
+    meta: ChatMetaData;
   }
 
 export interface ChatMetaData {

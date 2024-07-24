@@ -2,6 +2,7 @@ import os
 from bson import ObjectId
 import ollama
 from constants import DEFAULT_CHAT_METADATA
+import datetime
 
 
 text_stream = []
@@ -139,6 +140,7 @@ def stream():
     def get_data():
         chat_context = request_msg['context']
         chat_meta = request_msg['meta']
+        print(chat_meta)
         complete_text = ""
         llm_res = llm.chat_llm(context=chat_context, model='dolphin-mistral')
         for chunk in llm_res:
@@ -263,14 +265,17 @@ def upload():
 
 @app.route('/api/newchat', methods=["GET"])
 def newChat():
-    result = mongoCollection.insert_one({'title': "New Chat", 'history':[], 'docs':[], 'meta':DEFAULT_CHAT_METADATA})
+    updated_meta = DEFAULT_CHAT_METADATA
+    updated_meta['dateCreate'] = datetime.datetime.now()
+    updated_meta['dataChanged'] = datetime.datetime.now()
+    result = mongoCollection.insert_one({'title': "New Chat", 'history':[], 'docs':[], 'meta':updated_meta})
     result_id = result.inserted_id
     return jsonify({'id': str(result_id)})
 
 
 @app.route('/api/chats', methods=["GET"])
 def getChats():
-    entries = list(mongoCollection.find({}, {"_id": 1, "title": 1}))  # Retrieve all entries and convert cursor to a list
+    entries = list(mongoCollection.find({}, {"_id": 1, "title": 1, "meta": 1}))  # Retrieve all entries and convert cursor to a list
     for entry in entries:
         entry['_id'] = str(entry['_id'])  # Convert ObjectId to string for JSON serialization
     #print(entries)

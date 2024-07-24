@@ -1,5 +1,5 @@
 'use client'
-import React, { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react'
+import React, { ChangeEvent, FormEvent, ReactElement, useEffect, useRef, useState } from 'react'
 import './ChatsBar.css'
 import { useSidebar } from '@/app/context/sidebarContext';
 import { usePathname } from 'next/navigation'
@@ -25,6 +25,7 @@ TODO:
     const [bufferFiles, setBufferFiles] = useState<FileList | [] | File[]>([]);
     const [addBufferFiles, setAddBufferFiles] = useState<[] | FileSnippets[]>([]);
     const [fileLoading, setFileLoading] = useState<boolean>(false);
+    const [currentSelected, setCurrentSelected] = useState<number | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -44,10 +45,11 @@ TODO:
 
     useEffect(() => {
         let bar = document.getElementsByClassName('ChatsBar-cont')[0] as HTMLElement
+        console.log(11111, isSidebarToggled)
         if (!isSidebarToggled) {
-            bar.style.width = '0'
+            bar.style.transform = 'translateX(-200%)'
         } else {
-            bar.style.width = '12%'
+            bar.style.transform = 'translateX(0)'
         }
     
 
@@ -70,7 +72,8 @@ TODO:
 
 
 
-    const handleChatSelect = (chatId:string) => {
+    const handleChatSelect = (chatId:string, index:number) => {
+        setCurrentSelected(index)
         setCurrentChat(chatId)
     }
 
@@ -167,15 +170,19 @@ TODO:
         setAddBufferFiles((prev) => [...prev, {_id:fid, name:fname}])
     }
 
-    
+
 
 
     const chatHistoryComp =  
     (<div className='chat-history-cont'>
     {chats.map((chat:ChatSnippets, index)=>{
-        return <div onClick={()=>handleChatSelect(chat._id)} key={index} className='nav-chat-titles'>{chat.title}</div>
+        return (
+        <div className='nav-chat-cont'>
+            <div onClick={()=>handleChatSelect(chat._id, index)} key={index} className={`nav-chat-titles ${currentSelected === index? 'selected' : ''}`}>{chat.meta.title} 
+            </div>
+        </div>)
     })}
-</div>)
+    </div>)
 
     const filesComp = (
     <>

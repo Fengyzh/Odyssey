@@ -6,8 +6,8 @@
 - [] Convo Delete
 - [] Waiting for Response style change
 - [] LLM settings and LLM select
-    - [] Fetch Model list and put it in a useState to store the list
-    - [] Add Chat MetaData to store in DB
+    - [x] Fetch Model list and put it in a useState to store the list
+    - [x] Add Chat MetaData to store in DB
     - [] Change title to fetch from Chat MetaData instead of its own useState vairable
 
 
