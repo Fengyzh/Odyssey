@@ -47,6 +47,7 @@ export default function page() {
         
       })
     } else {
+      console.log("reset")
       setChat([])
       setChatMeta(DEFAULT_CHAT_METADATA)
       //setTitle('Chat Title')
@@ -62,7 +63,6 @@ export default function page() {
         titleContRef.current.style.transform='translateX(10%)'
       } else {
         titleContRef.current.style.transform='translateX(0)'
-
       }
     }
 
@@ -148,6 +148,11 @@ const handleModelSelect = (modelName:string) => {
   setChatMeta(newMeta)
 }
 
+const handleChatDelete = () => {
+  axios.get("http://localhost:5000/api/chat/delete/" + currentChat)
+  setCurrentChat('')
+  fetchChatSnippets()
+}
 
 
 
@@ -171,9 +176,12 @@ const chatOptionPanel = (<div className='chat-option-panel'>
     <p>Temperature</p>
     <input className='chat-options-input'/>
   </div>
+
+  {currentChat?   
   <div className='chat-delete-btn-cont'>
-    <button className='chat-delete-btn'> Delete Chat</button>
-  </div>
+    <button className='chat-delete-btn' onClick={()=>handleChatDelete()}> Delete Chat</button>
+  </div> : ''}
+
 </div>)
 
 
@@ -200,7 +208,7 @@ const chatOptionPanel = (<div className='chat-option-panel'>
       </div>
 
       <div className='chat-box'> 
-        <h3> {chat.length === 0? "New Chat?" : ""} </h3>
+        <h3> {chat.length === 0 && !wait? "New Chat?" : ""} </h3>
         {chat.map((item, index)=> {
           //console.log(chat)
           if (item.role == 'assistant') {

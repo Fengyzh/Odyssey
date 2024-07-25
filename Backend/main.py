@@ -294,6 +294,16 @@ def getChat(chatId):
             return jsonify({"error": "Entry not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+    
+
+@app.route('/api/chat/delete/<chatId>', methods=["GET"])
+def deleteChat(chatId):
+    try:
+        entry = mongoCollection.delete_one({"_id": ObjectId(chatId)})  # Retrieve the entry with specified fields
+        if entry.deleted_count == 1:
+            return jsonify({"message": "Entry Deleted Successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 
 @app.route('/api/files/all', methods=["GET"])
