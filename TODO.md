@@ -4,11 +4,13 @@
 - [x] Navbar file view and file buffer
 - [x] Convo History
 - [] Convo Delete
+    - [] Implement Chat Delete logic in chat page with the delete button
 - [] Waiting for Response style change
 - [] LLM settings and LLM select
     - [x] Fetch Model list and put it in a useState to store the list
     - [x] Add Chat MetaData to store in DB
-    - [] Change title to fetch from Chat MetaData instead of its own useState vairable
+    - [x] Change title to fetch from Chat MetaData instead of its own useState vairable
+    - [] LLM settings panel
 
 
 

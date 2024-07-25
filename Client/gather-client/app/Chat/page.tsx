@@ -22,6 +22,7 @@ export default function page() {
   const [title, setTitle] = useState('Chat Title')
   const [modelList, setModelList] = useState<IOllamaList[] | []>([])
   const [isModelSelect, setIsModelSelect] = useState<boolean>(false)
+  const [isOptionPanel, setIsOptionPanel] = useState<boolean>(true)
 
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -58,9 +59,9 @@ export default function page() {
   useEffect(() => {
     if (titleContRef && titleContRef.current) {
       if (isSidebarToggled) {
-        titleContRef.current.style.marginLeft='10%'
+        titleContRef.current.style.transform='translateX(10%)'
       } else {
-        titleContRef.current.style.marginLeft='0%'
+        titleContRef.current.style.transform='translateX(0)'
 
       }
     }
@@ -153,13 +154,27 @@ const handleModelSelect = (modelName:string) => {
 /* model.name, model.details.parameter_size */
 
 
-  const modelSelectBox = (<div ref={modelSelectRef} className='chat-model-select'>
+const modelSelectBox = (<div ref={modelSelectRef} className='chat-model-select'>
   {modelList.map((model, index) => {
     return <h3 key={index} onClick={()=>handleModelSelect(model.name)} className='chat-model-select-models'>{model.name}  {model.details.parameter_size}</h3>
   })}
 
 </div>)
 
+
+const chatOptionPanel = (<div className='chat-option-panel'>
+  <div className='chat-options-cont'>
+    <p>Top K</p>
+    <input className='chat-options-input'/>
+  </div>
+  <div className='chat-options-cont'>
+    <p>Temperature</p>
+    <input className='chat-options-input'/>
+  </div>
+  <div className='chat-delete-btn-cont'>
+    <button className='chat-delete-btn'> Delete Chat</button>
+  </div>
+</div>)
 
 
   return (
@@ -176,6 +191,12 @@ const handleModelSelect = (modelName:string) => {
             
           </div>
         </div>
+        <div className='chat-options'>
+          <button onClick={()=>{setIsOptionPanel(!isOptionPanel)}} className='chat-options-btn'> === </button>
+
+          {isOptionPanel? chatOptionPanel : ''}
+        </div>
+
       </div>
 
       <div className='chat-box'> 
