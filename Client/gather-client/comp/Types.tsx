@@ -19,6 +19,7 @@ export interface ChatMetaData {
     dateCreate:string;
     dataChanged:string;
     currentModel:string;
+    modelOptions: IModelOptions
 }
 
 export interface IOllamaListDetails {
@@ -38,5 +39,11 @@ export interface IOllamaList {
   modified_at:string;
   name:string;
   size:string;
+}
+
+export interface IModelOptions {
+  top_k: string;
+  top_p: string;
+  temperature: string;
 }
 

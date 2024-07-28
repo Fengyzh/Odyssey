@@ -11,7 +11,7 @@ text_stream = []
 
 class LLM_controller():
     
-    def chat_llm(self, context="", stream=True, model='llama3:instruct'):
+    def chat_llm(self, context="", stream=True, model='llama3:instruct', options={}):
         text_stream = []
         if context:
             text_stream = context
@@ -60,6 +60,15 @@ class LLM_controller():
         stream=True)
 
         return response
+
+    def convertOptions(options):
+        convertedOptions = {}
+        convertedOptions['temperature'] = float(options['temperature'])
+        convertedOptions['top_k'] = int(options['top_k'])
+        convertedOptions['top_p'] = float(options['top_p'])
+        return convertedOptions
+
+
 
 
 
@@ -142,7 +151,7 @@ def stream():
         chat_meta = request_msg['meta']
         print(chat_meta)
         complete_text = ""
-        llm_res = llm.chat_llm(context=chat_context, model='dolphin-mistral')
+        llm_res = llm.chat_llm(context=chat_context, model=chat_meta['currentModel'], options=LLM_controller.convertOptions(chat_meta['modelOptions']))
         for chunk in llm_res:
             complete_text += chunk['message']['content']
             content = chunk['message']['content']

@@ -6,11 +6,13 @@ import axios from 'axios'
 import StaggerText from '@/comp/StaggerText'
 import { useSidebar } from '../context/sidebarContext';
 import NavLayout from '@/app/navLayout'
-import { ChatResponse, ChatMetaData, IOllamaList } from '@/comp/Types';
+import { ChatResponse, ChatMetaData, IOllamaList, IModelOptions } from '@/comp/Types';
 
 export default function page() {
 
-  const DEFAULT_CHAT_METADATA = {title:'Chat Title', dateCreate:'', dataChanged:'', currentModel:'llama3:instruct'}
+  const DEFAULT_MODEL_OPTIONS = {top_k:'40', top_p:'0.9', temperature: '0.8'}
+  const DEFAULT_CHAT_METADATA = {title:'Chat Title', dateCreate:'', dataChanged:'', currentModel:'llama3:instruct', modelOptions:DEFAULT_MODEL_OPTIONS}
+
   /* Chat looks like:
     [{role:xxxx, message:xxxx}, {role:xxxx, message:xxxx}...]
   */
@@ -19,7 +21,6 @@ export default function page() {
   const [chat, setChat] = useState<ChatResponse[] | any[]>([])
   const [chatMeta, setChatMeta] = useState<ChatMetaData>(DEFAULT_CHAT_METADATA)
   const [wait, setWait] = useState(false)
-  const [title, setTitle] = useState('Chat Title')
   const [modelList, setModelList] = useState<IOllamaList[] | []>([])
   const [isModelSelect, setIsModelSelect] = useState<boolean>(false)
   const [isOptionPanel, setIsOptionPanel] = useState<boolean>(true)
@@ -169,13 +170,19 @@ const modelSelectBox = (<div ref={modelSelectRef} className='chat-model-select'>
 
 const chatOptionPanel = (<div className='chat-option-panel'>
   <div className='chat-options-cont'>
+    <p>Top P</p>
+    <input onChange={(e)=>{setChatMeta((prev)=>({...prev, modelOptions: {...prev.modelOptions, top_p:e.target.value}}))}} className='chat-options-input' value={chatMeta.modelOptions.top_p}/>
+  </div>
+  <div className='chat-options-cont'>
     <p>Top K</p>
-    <input className='chat-options-input'/>
+    <input onChange={(e)=>{setChatMeta((prev)=>({...prev, modelOptions: {...prev.modelOptions, top_k:e.target.value}}))}} className='chat-options-input' value={chatMeta.modelOptions.top_k}/>
   </div>
   <div className='chat-options-cont'>
     <p>Temperature</p>
-    <input className='chat-options-input'/>
+    <input onChange={(e)=>{setChatMeta((prev)=>({...prev, modelOptions: {...prev.modelOptions, temperature:e.target.value}}))}} className='chat-options-input' value={chatMeta.modelOptions.temperature}/>
   </div>
+
+  <button onClick={()=>{console.log(chatMeta)}}>Test</button>
 
   {currentChat?   
   <div className='chat-delete-btn-cont'>
