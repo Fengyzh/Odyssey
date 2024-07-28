@@ -19,6 +19,8 @@
     display: flex;
     margin-left: 0;
     transition: 0.3s ease;
+    position: relative;
+    z-index: 999;
 }
 
 .chat-page-title {
@@ -122,6 +124,7 @@
     display: flex;
     flex-direction: column;
     transition: 0.2s ease-in-out;
+    z-index: 1;
 }
 
 .chat-ai {
@@ -185,7 +188,6 @@
 
 
 .chatbox-cont {
-   
     width: 100%;
     height: 4rem;
     bottom: 0;
@@ -199,6 +201,7 @@
     height: 100%;
     align-items: center;
     display: flex;
+    z-index: 999;
 }
 
 

@@ -47,3 +47,9 @@ export interface IModelOptions {
   temperature: string;
 }
 
+export interface IChatEndpoints {
+  getCurrentChat: string;
+  newChat: string;
+  stream: string;
+  delete: string;
+}

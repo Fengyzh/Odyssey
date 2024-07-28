@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 import React, { createContext, useState, useContext, ReactNode, Dispatch, SetStateAction, useEffect } from 'react';
-import { ChatSnippets, FileSnippets } from '@/comp/Types';
+import { ChatSnippets, FileSnippets, ChatMetaData } from '@/comp/Types';
 
 
 interface SidebarContextType {
@@ -17,6 +17,8 @@ interface SidebarContextType {
   setTab:Dispatch<SetStateAction<boolean>>;
   curFiles: FileSnippets[]
   fetchCurrentChatFiles: () => void;
+  chatMeta: ChatMetaData;
+  setChatMeta: Dispatch<SetStateAction<ChatMetaData>>
 
 }
 
@@ -28,7 +30,8 @@ interface SidebarProviderProps {
 }
 
 
-
+const DEFAULT_MODEL_OPTIONS = {top_k:'40', top_p:'0.9', temperature: '0.8'}
+const DEFAULT_CHAT_METADATA = {title:'Chat Title', dateCreate:'', dataChanged:'', currentModel:'llama3:instruct', modelOptions:DEFAULT_MODEL_OPTIONS}
 
 // Create the provider component
 export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) => {
@@ -37,6 +40,7 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
   const [chats, setChats] = useState<ChatSnippets[]>([])
   const [tab, setTab] = useState<boolean>(true)
   const [curFiles, setCurFiles] = useState([])
+  const [chatMeta, setChatMeta] = useState<ChatMetaData>(DEFAULT_CHAT_METADATA)
 
 
 
@@ -77,8 +81,21 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
   
 
   return (
-    <SidebarContext.Provider value={{ isSidebarToggled, setIsSidebarToggled, toggleSidebar, currentChat, setCurrentChat, chats, fetchChatSnippets, tab, setTab, fetchCurrentChatFiles, curFiles}}>
-      {children}
+    <SidebarContext.Provider value={{ isSidebarToggled, 
+      setIsSidebarToggled, 
+      toggleSidebar, 
+      currentChat, 
+      setCurrentChat, 
+      chats, 
+      fetchChatSnippets, 
+      tab, 
+      setTab, 
+      fetchCurrentChatFiles, 
+      curFiles,
+      chatMeta,
+      setChatMeta
+      }}>
+        {children}
     </SidebarContext.Provider>
   );
 };
