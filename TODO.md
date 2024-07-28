@@ -3,8 +3,14 @@
 - [x] File Select and upload
 - [x] Navbar file view and file buffer
 - [x] Convo History
-- [] Convo Delete
+- [x] Convo Delete
+    - [x] Implement Chat Delete logic in chat page with the delete button
 - [] Waiting for Response style change
+- [] LLM settings and LLM select
+    - [x] Fetch Model list and put it in a useState to store the list
+    - [x] Add Chat MetaData to store in DB
+    - [x] Change title to fetch from Chat MetaData instead of its own useState vairable
+    - [] LLM settings panel
 
 
 
@@ -17,12 +23,17 @@
 - [] Connect Backend to RAG service
 - [] Add HyDE before RAG retrieval
 - [x] Add chat history into LLM response so the LLM knows the current chat's context
-- [] Web Scraping
+- [x] Web Scraping
+
+
+# General
+
+- [] Phase I refactor
 
 
 
-# Bugs
-- Currently the LLM does not know what the current chat's context is, so no matter which chat you swtich to, it will be using a "global" context in the self.text_stream = [], and since LLM_Controller only init once, that variable will stay the same no matter what chat you changed into.
+# Issues
+- (Solved) Currently the LLM does not know what the current chat's context is, so no matter which chat you swtich to, it will be using a "global" context in the self.text_stream = [], and since LLM_Controller only init once, that variable will stay the same no matter what chat you changed into.
     - Fix: Add current chat history into the self.text_stream = [] to provide the current chat's context. Also move the self.text_stream = [] into the chat_llm function so it gets a fresh variable every call and we will just populate it with the current chat history right under
     - Task No: Client -> Add chat history into LLM response so the LLM knows the current chat's context
     - Please change all the {role:xxxx, msg:xxx} to {role:xxxx, content:xxxx} so the backend don't have to replace all the msg with content for the LLM call

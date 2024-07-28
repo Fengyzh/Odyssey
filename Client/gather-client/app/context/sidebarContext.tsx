@@ -32,7 +32,7 @@ interface SidebarProviderProps {
 
 // Create the provider component
 export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) => {
-  const [isSidebarToggled, setIsSidebarToggled] = useState<boolean>(true);
+  const [isSidebarToggled, setIsSidebarToggled] = useState<boolean>(false);
   const [currentChat, setCurrentChat] = useState<string>("")
   const [chats, setChats] = useState<ChatSnippets[]>([])
   const [tab, setTab] = useState<boolean>(true)

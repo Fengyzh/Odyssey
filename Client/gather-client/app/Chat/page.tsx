@@ -6,10 +6,12 @@ import axios from 'axios'
 import StaggerText from '@/comp/StaggerText'
 import { useSidebar } from '../context/sidebarContext';
 import NavLayout from '@/app/navLayout'
-import { ChatResponse } from '@/comp/Types';
+import { ChatResponse, ChatMetaData, IOllamaList, IModelOptions } from '@/comp/Types';
 
 export default function page() {
 
+  const DEFAULT_MODEL_OPTIONS = {top_k:'40', top_p:'0.9', temperature: '0.8'}
+  const DEFAULT_CHAT_METADATA = {title:'Chat Title', dateCreate:'', dataChanged:'', currentModel:'llama3:instruct', modelOptions:DEFAULT_MODEL_OPTIONS}
 
   /* Chat looks like:
     [{role:xxxx, message:xxxx}, {role:xxxx, message:xxxx}...]
@@ -17,35 +19,55 @@ export default function page() {
   
   const [prompt, setPrompt] = useState("")
   const [chat, setChat] = useState<ChatResponse[] | any[]>([])
+  const [chatMeta, setChatMeta] = useState<ChatMetaData>(DEFAULT_CHAT_METADATA)
   const [wait, setWait] = useState(false)
-  const [title, setTitle] = useState('Chat Title')
-  const [files, setFiles] = useState<FileList | [] | File[]>([]);
-  const [bufferFiles, setBufferFiles] = useState<FileList | [] | File[]>([]);
+  const [modelList, setModelList] = useState<IOllamaList[] | []>([])
+  const [isModelSelect, setIsModelSelect] = useState<boolean>(false)
+  const [isOptionPanel, setIsOptionPanel] = useState<boolean>(true)
 
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const modelSelectRef = useRef<HTMLDivElement>(null);
+  const titleContRef = useRef<HTMLDivElement>(null);
 
 
-
-  const { toggleSidebar, currentChat, setCurrentChat, fetchChatSnippets, fetchCurrentChatFiles } = useSidebar();
+  const { toggleSidebar, currentChat, setCurrentChat, fetchChatSnippets, fetchCurrentChatFiles, isSidebarToggled } = useSidebar();
 
 
   useEffect(() => {
     if (currentChat) {
       axios.get("http://localhost:5000/api/chat/" + currentChat).then((res)=>{
           setChat(res.data.history)
-          setTitle(res.data.title)
+
+          //TODO: Add set chatMeta when Meta is implemented in backend storage
+        if (res.data.meta != undefined) {
+            console.log(res.data.meta)
+            setChatMeta(res.data.meta)
+          }
+          //setTitle(res.data.title)
         
       })
     } else {
+      console.log("reset")
       setChat([])
-      setTitle('Chat Title')
+      setChatMeta(DEFAULT_CHAT_METADATA)
+      //setTitle('Chat Title')
     }
 
   }, [currentChat])
-  
 
 
+
+  useEffect(() => {
+    if (titleContRef && titleContRef.current) {
+      if (isSidebarToggled) {
+        titleContRef.current.style.transform='translateX(10%)'
+      } else {
+        titleContRef.current.style.transform='translateX(0)'
+      }
+    }
+
+  }, [isSidebarToggled]) 
 
 
   const sendPrompt = async () => {
@@ -77,6 +99,7 @@ export default function page() {
       body: JSON.stringify({
         message: prompt, 
         context:curContext,
+        meta:chatMeta,
         id:currentChat? currentChat : createdEntryId
       })
 
@@ -108,101 +131,65 @@ export default function page() {
 }
 
 
-/*     axios.post("http://localhost:5000/api/stream", {
-      message: prompt,
-      context: chat
-    }).then((res)=>{
-      console.log(res.data)
-    }) */
-
-    //console.log("client started streaming")
-    //console.log(chat)
-
-/*     .then((res) => {
-      console.log(res.data);
-      let llmMessage = { role: 'assistant', content: res.data.data };
-      
-
-      setChat(prevChat => [...prevChat, llmMessage]);
-      setWait(prev => !prev)
-
-
-    }) */;
-
-  }
-
-
- const handleFileChange = (e:ChangeEvent<HTMLInputElement>) => {
-
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      console.log(newFiles)
-      //setFiles((prevFiles) => [...prevFiles, ...newFiles]);
-      setBufferFiles((prevFiles) => [...prevFiles, ...newFiles]);
-      //console.log(e.target.files)
-    }
- }
-
-
- // Tempoary file upload control
- // Can refactor this out as its own comp for other modes too
-const sendFiles = async (e: FormEvent) => {
-  e.preventDefault()
-  let createdEntryId;
-
-
-  if (!currentChat) {
-    const createResponse = await axios.get("http://localhost:5000/api/newchat")
-    const entryId = createResponse.data.id
-    //console.log(entryId)
-    setCurrentChat(entryId)
-    createdEntryId = entryId
-    fetchChatSnippets()
   }
 
 
 
-  if (!bufferFiles) {
-    console.log("No files selected")
-    return
-  }
-
-  const formData = new FormData()
-  for (let i = 0; i < bufferFiles.length; i++) {
-    console.log(bufferFiles[i])
-    formData.append('files', bufferFiles[i])
-  }
-
-  formData.append('chatID', currentChat? currentChat : createdEntryId)
-
-
-  try {
-    const response = await axios.post('http://localhost:5000/api/upload', formData, {
-      headers: {
-          'Content-Type': 'multipart/form-data',
-      },
+const handleExtentModelSelect = () => {
+  setIsModelSelect(!isModelSelect)
+  axios.get("http://localhost:5000/api/LLM/list").then((res)=> {
+    setModelList(res.data?.models.models)
+    console.log(res.data.models.models)
   })
-  setBufferFiles([])
-  console.log(response.data)
-  } catch (err) {
-    console.log(err)
-  }
-  fetchCurrentChatFiles()
 
 }
 
-
-const handleBufferDelete = (index:number) => {
-  if (fileInputRef.current) {
-    fileInputRef.current.value = '';
-  }
-
-  let t = Array.from(bufferFiles)
-   t.splice(index, 1);
-  setBufferFiles([...t])
-
-
+const handleModelSelect = (modelName:string) => {
+  const newMeta = {...chatMeta, currentModel:modelName}
+  setChatMeta(newMeta)
 }
+
+const handleChatDelete = () => {
+  axios.get("http://localhost:5000/api/chat/delete/" + currentChat)
+  setCurrentChat('')
+  fetchChatSnippets()
+}
+
+
+
+/* model.name, model.details.parameter_size */
+
+
+const modelSelectBox = (<div ref={modelSelectRef} className='chat-model-select'>
+  {modelList.map((model, index) => {
+    return <h3 key={index} onClick={()=>handleModelSelect(model.name)} className='chat-model-select-models'>{model.name}  {model.details.parameter_size}</h3>
+  })}
+
+</div>)
+
+
+const chatOptionPanel = (<div className='chat-option-panel'>
+  <div className='chat-options-cont'>
+    <p>Top P</p>
+    <input onChange={(e)=>{setChatMeta((prev)=>({...prev, modelOptions: {...prev.modelOptions, top_p:e.target.value}}))}} className='chat-options-input' value={chatMeta.modelOptions.top_p}/>
+  </div>
+  <div className='chat-options-cont'>
+    <p>Top K</p>
+    <input onChange={(e)=>{setChatMeta((prev)=>({...prev, modelOptions: {...prev.modelOptions, top_k:e.target.value}}))}} className='chat-options-input' value={chatMeta.modelOptions.top_k}/>
+  </div>
+  <div className='chat-options-cont'>
+    <p>Temperature</p>
+    <input onChange={(e)=>{setChatMeta((prev)=>({...prev, modelOptions: {...prev.modelOptions, temperature:e.target.value}}))}} className='chat-options-input' value={chatMeta.modelOptions.temperature}/>
+  </div>
+
+  <button onClick={()=>{console.log(chatMeta)}}>Test</button>
+
+  {currentChat?   
+  <div className='chat-delete-btn-cont'>
+    <button className='chat-delete-btn' onClick={()=>handleChatDelete()}> Delete Chat</button>
+  </div> : ''}
+
+</div>)
 
 
   return (
@@ -210,12 +197,25 @@ const handleBufferDelete = (index:number) => {
     <div className='chat-page'>
       <div className='chat-page-title-cont'>
         <h2 className='sidebar-toggle' onClick={()=>toggleSidebar()}>O</h2>
-        <h2 className='chat-page-title'> {title} </h2>
+
+        <div ref={titleContRef} className='chat-title-func-cont'>
+          <h2 className='chat-page-title'> {chatMeta.title} </h2>
+          <div className='chat-model-cont'>
+            <button onClick={()=>handleExtentModelSelect()} className='chat-model-btn'>{chatMeta.currentModel} {'>'}</button>
+            {isModelSelect? modelSelectBox : ""}
+            
+          </div>
+        </div>
+        <div className='chat-options'>
+          <button onClick={()=>{setIsOptionPanel(!isOptionPanel)}} className='chat-options-btn'> === </button>
+
+          {isOptionPanel? chatOptionPanel : ''}
+        </div>
+
       </div>
 
       <div className='chat-box'> 
-        <h3> {chat.length === 0? "New Chat?" : ""} </h3>
-
+        <h3> {chat.length === 0 && !wait? "New Chat?" : ""} </h3>
         {chat.map((item, index)=> {
           //console.log(chat)
           if (item.role == 'assistant') {
@@ -234,24 +234,6 @@ const handleBufferDelete = (index:number) => {
 
 
       <div className='chatbox-cont'>
-
-        <div className='file-cont'>
-          <div className='files-buffer'>
-            {Array.from(bufferFiles).map((file, index)=>{
-              return (
-                <div key={index}>
-                  <span>{file.name + "|"}</span>
-                  <span onClick={()=>handleBufferDelete(index)}>x</span>
-                </div>
-              )
-            })}
-          </div>
-          <form className='file-form' onSubmit={(e)=>sendFiles(e)}>
-            <input type="file" multiple onChange={handleFileChange} ref={fileInputRef}></input>
-            <button className='chat-send' type="submit"> {'F>'} </button>
-          </form>
-        </div>
-
         <input className='chat-input' type='text' onChange={(e)=>{setPrompt(e.target.value)}}></input>
         <button className='chat-send' onClick={()=>sendPrompt()}> {'>'} </button>
       </div>

@@ -1,6 +1,8 @@
 import os
 from bson import ObjectId
 import ollama
+from constants import DEFAULT_CHAT_METADATA
+import datetime
 
 
 text_stream = []
@@ -9,21 +11,21 @@ text_stream = []
 
 class LLM_controller():
     
-    def chat_llm(self, context="", stream=True):
+    def chat_llm(self, context="", stream=True, model='llama3:instruct', options={}):
         text_stream = []
         if context:
             text_stream = context
         response = ollama.chat(
-        model='dolphin-mistral',
+        model=model,
         messages=text_stream,
         stream=stream,
         options={})
 
         return response
 
-    def gen_llm(self, message="", systemMsg=""):
+    def gen_llm(self, message="", systemMsg="", model='llama3:instruct'):
         response = ollama.generate(
-        model='dolphin-mistral',
+        model=model,
         system=systemMsg,
         prompt=message,
         options={})
@@ -58,6 +60,15 @@ class LLM_controller():
         stream=True)
 
         return response
+
+    def convertOptions(options):
+        convertedOptions = {}
+        convertedOptions['temperature'] = float(options['temperature'])
+        convertedOptions['top_k'] = int(options['top_k'])
+        convertedOptions['top_p'] = float(options['top_p'])
+        return convertedOptions
+
+
 
 
 
@@ -137,11 +148,11 @@ def stream():
 
     def get_data():
         chat_context = request_msg['context']
+        chat_meta = request_msg['meta']
+        print(chat_meta)
         complete_text = ""
-        #print(request_msg['context'])
-        llm_res = llm.chat_llm(request_msg['message'], context=chat_context)
+        llm_res = llm.chat_llm(context=chat_context, model=chat_meta['currentModel'], options=LLM_controller.convertOptions(chat_meta['modelOptions']))
         for chunk in llm_res:
-            #print(chunk)
             complete_text += chunk['message']['content']
             content = chunk['message']['content']
             yield f'{content}'
@@ -152,7 +163,8 @@ def stream():
         if (request_msg['id']):
             object_id = ObjectId(request_msg['id'])
             mongoCollection.update_one({'_id':object_id}, {'$set':{
-                'history': chat_context
+                'history': chat_context,
+                'meta':chat_meta
             }})
     request_msg = request.get_json()
     
@@ -262,14 +274,17 @@ def upload():
 
 @app.route('/api/newchat', methods=["GET"])
 def newChat():
-    result = mongoCollection.insert_one({'title': "New Chat", 'history':[], 'docs':[]})
+    updated_meta = DEFAULT_CHAT_METADATA
+    updated_meta['dateCreate'] = datetime.datetime.now()
+    updated_meta['dataChanged'] = datetime.datetime.now()
+    result = mongoCollection.insert_one({'title': "New Chat", 'history':[], 'docs':[], 'meta':updated_meta})
     result_id = result.inserted_id
     return jsonify({'id': str(result_id)})
 
 
 @app.route('/api/chats', methods=["GET"])
 def getChats():
-    entries = list(mongoCollection.find({}, {"_id": 1, "title": 1}))  # Retrieve all entries and convert cursor to a list
+    entries = list(mongoCollection.find({}, {"_id": 1, "title": 1, "meta": 1}))  # Retrieve all entries and convert cursor to a list
     for entry in entries:
         entry['_id'] = str(entry['_id'])  # Convert ObjectId to string for JSON serialization
     #print(entries)
@@ -286,6 +301,16 @@ def getChat(chatId):
             return jsonify(entry)
         else:
             return jsonify({"error": "Entry not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+    
+
+@app.route('/api/chat/delete/<chatId>', methods=["GET"])
+def deleteChat(chatId):
+    try:
+        entry = mongoCollection.delete_one({"_id": ObjectId(chatId)})  # Retrieve the entry with specified fields
+        if entry.deleted_count == 1:
+            return jsonify({"message": "Entry Deleted Successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -362,6 +387,15 @@ def deleteCurFiles(chatId):
         )
 
         return jsonify({"success":"File Deleted"}), 200
+
+
+@app.route('/api/LLM/list', methods=["GET"])
+def getLLMList():
+    modelList = ollama.list()
+    return jsonify({'models':modelList})
+
+
+
 
 if __name__ == '__main__':
     app.run()

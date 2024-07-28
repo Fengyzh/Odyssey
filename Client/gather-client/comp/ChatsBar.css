@@ -5,13 +5,13 @@
     background-color: var(--deep-background-color-dark);
     top: auto;
     transition: 0.3s ease;
-    overflow: hidden;
-    z-index: 999;
     white-space: nowrap;
     display: flex;
     flex-direction: column;
-
+    z-index: 999;
+    transform: translateX(-100%);
 }
+
 
 .chat-history-cont {
     margin-top: 0.5rem;
@@ -35,18 +35,27 @@
 
 .nav-chat-titles {
     color: white;
-    margin-bottom: 0.5rem;
     padding-left: 1rem;
-    font-size: x-large;
-    font-weight: bolder;
+    font-size: medium;
+    font-weight: 300;
+    margin-bottom: 0.5rem;
     background-color: transparent;
     transition: 0.3s ease-in-out;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.selected {
+    background-color: var(--accent-color);
 }
 
 .nav-chat-titles:hover {
     background-color: var(--accent-color);
 }
+
+
 
 .nav-tab-comp-cont {
     height: 90%;
