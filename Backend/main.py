@@ -3,98 +3,15 @@ from bson import ObjectId
 import ollama
 from constants import DEFAULT_CHAT_METADATA
 import datetime
+from LLM import LLM_controller
+from utils import format_chunks
 
-
-text_stream = []
-
-
-
-class LLM_controller():
-    
-    def chat_llm(self, context="", stream=True, model='llama3:instruct', options={}):
-        text_stream = []
-        if context:
-            text_stream = context
-        response = ollama.chat(
-        model=model,
-        messages=text_stream,
-        stream=stream,
-        options={})
-
-        return response
-
-    def gen_llm(self, message="", systemMsg="", model='llama3:instruct'):
-        response = ollama.generate(
-        model=model,
-        system=systemMsg,
-        prompt=message,
-        options={})
-
-        return response
-    
-    def buildConversationBlock(self, content, role):
-        return {'role':role, 'content':content}
-
-    def gen_llm(self, p, c=""):
-        response = ollama.generate(
-        model='dolphin-mistral',
-        prompt=p,
-        stream=True)
-
-        return response
-    
-    def printStream(self, result):
-        for chunk in result:
-            print(chunk['message']['content'], end='', flush=True)
-        return
-
-    def chat_llm_request(p, c=""):
-
-        text_stream.append({'role': 'user', 'content': p})
-        if c:
-            text_stream.insert(0, c)
-            
-        response = ollama.chat(
-        model='dolphin-mistral',
-        messages=text_stream,
-        stream=True)
-
-        return response
-
-    def convertOptions(options):
-        convertedOptions = {}
-        convertedOptions['temperature'] = float(options['temperature'])
-        convertedOptions['top_k'] = int(options['top_k'])
-        convertedOptions['top_p'] = float(options['top_p'])
-        return convertedOptions
-
-
-
-
-
-#u = input('q: ')
-result = ""
-llm = LLM_controller()
-
-""" while u != "bye":
-    #result = chat_llm_request(u)
-    result = llm.chat_llm(u)
-    complete_text = ""
-    #print(result)
-    for chunk in result:
-        print(chunk['message']['content'], end='', flush=True)
-        complete_text += chunk['message']['content']
-    llm.append_text_stream({'role':'assistant', 'content':complete_text})
-    u = input('\nq: ') """
-
-
-from flask import Flask, Response, request, jsonify
-from flask_socketio import SocketIO, emit
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pymongo
-#from retriever import RAGRetriever
 
 
+llm = LLM_controller()
 mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
 mongoDB = mongoClient["Project-gather"]
 mongoCollection = mongoDB["LLM-Chats"]
@@ -103,25 +20,12 @@ mongoDocCollection = mongoDB["LLM-Docs"]
 
 
 
-def format_chunks(stream_res, isGenerate):
-    complete_text = []
-    for chunk in stream_res:
-        if isGenerate:
-            #print(chunk, end='', flush=True)
-            complete_text.append(chunk['response'])
-        else:
-            print(chunk['message']['content'], end='', flush=True)
-            complete_text += chunk['message']['content']
-
-    return complete_text
 
 
 app = Flask(__name__)
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
 
 
-llm_res = []
 
 @app.route('/api/chat', methods=['POST'])
 def handle_post():
@@ -131,11 +35,7 @@ def handle_post():
     request_msg = request.get_json()
     response = {"message": "No message"}
     if request_msg and 'message' in request_msg:
-        #print(11111)
-        #llm.chat_llm(request_msg['message'])
         data = format_chunks(llm.chat_llm(request_msg['message']))
-        #data = llm.chat_llm(request_msg['message'])['message']['content']
-        #print(data)
         response = {
             "message": "Data received successfully",
             "data": data
@@ -181,44 +81,23 @@ def stream():
 
 
 
-@app.route('/api/stream2', methods=["POST"])
-def streamPost():
-    request_msg = request.get_json()
-    if request_msg and 'message' in request_msg:
-        q = request_msg['message']
-    else:
-        q = "hello"
-    
-    def fetch_stream(q):
-        socketio.emit('start_response', {'data':'Start Response'})
-        stream = llm.chat_llm(q)
-        for chunk in stream:
-            #print(chunk['message']['content'])
-            socketio.emit('text_stream', {'data':chunk['message']['content']})
-        socketio.emit('end_response', {'data': 'End Response'})
-    socketio.start_background_task(target=fetch_stream, q=q)
-    return jsonify({'status': 'streaming started'})
 
 
-@socketio.on('connect')
-def handle_connect(data):
-    emit('response', {'data': 'Connected!'})
 
-
-@app.route('/api/summary', methods=["POST"])
-def summary():
+@app.route('/api/chat/title', methods=["POST"])
+def getChatTitle():
     request_msg = request.get_json()
     if request_msg and 'context' in request_msg:
-        q = f"Summarize the following in a few words for the title of a document: {request_msg['context']}"
-        response = format_chunks(llm.gen_llm(q), True)
+        q = "You are a professtional title creator for a conversation summarize the following conversation in a few words for the title of this conversation: "
+        response = format_chunks(llm.gen_llm(request_msg['context'], q), True)
     
         return jsonify({'title': response})
-    return jsonify({'title': "Response"})
+    return jsonify({'Error': "Unable to generate title for the current chat"})
         
 
 
-@app.route('/api/upload', methods=["POST"])
-def upload():
+@app.route('/api/files', methods=["POST"])
+def uploadFiles():
     UPLOAD_FOLDER = os.path.join(os.getcwd(), 'docs')
 
     """ if 'files' not in request.files or 'chatID' not in request.form or 'addToCur' not in request.form:
@@ -304,7 +183,6 @@ def getChat(chatId):
     except Exception as e:
         return jsonify({"error": str(e)}), 400
     
-
 @app.route('/api/chat/delete/<chatId>', methods=["GET"])
 def deleteChat(chatId):
     try:
