@@ -1,6 +1,6 @@
 # Client
 
-- [x] File Select and upload
+- [x] File select and upload
 - [x] Navbar file view and file buffer
 - [x] Convo History
 - [x] Convo Delete
@@ -10,7 +10,8 @@
     - [x] Fetch Model list and put it in a useState to store the list
     - [x] Add Chat MetaData to store in DB
     - [x] Change title to fetch from Chat MetaData instead of its own useState vairable
-    - [] LLM settings panel
+    - [x] LLM settings panel
+- Chat title generate
 
 
 

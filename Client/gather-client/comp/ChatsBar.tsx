@@ -140,7 +140,7 @@ TODO:
       
         formData.append('chatID', currentChat? currentChat : createdEntryId)
 
-        const response = await axios.post('http://localhost:5000/api/upload', formData, {
+        const response = await axios.post('http://localhost:5000/api/files', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
@@ -249,7 +249,7 @@ TODO:
         <div className='ChatsBar-cont'>
             <div className='bar-top'>
                 <h2 className='sidebar-toggle' onClick={()=>toggleSidebar()}>O</h2>
-                <h2 className='mode-toggle'>Chat Page</h2>
+                <h2 className='mode-toggle'>{pathname?.endsWith('Chat')? 'Chat Page' : pathname?.endsWith('Agentic')? 'Agentic' : ''}</h2>
             </div>
 
 
