@@ -11,6 +11,7 @@
     - [x] Add Chat MetaData to store in DB
     - [x] Change title to fetch from Chat MetaData instead of its own useState vairable
     - [x] LLM settings panel
+- [] Chat title update
 - [] Chat title generate
 - [] Pipeline Page
 
@@ -26,7 +27,7 @@
 - [] Add HyDE before RAG retrieval
 - [x] Add chat history into LLM response so the LLM knows the current chat's context
 - [x] Web Scraping
-
+- [] Mongo Collection Factory?
 
 # General
 

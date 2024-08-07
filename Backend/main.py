@@ -12,6 +12,7 @@ from db import getAllfromCollection
 import pymongo
 
 
+
 llm = LLM_controller()
 mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
 mongoDB = mongoClient["Project-gather"]
@@ -332,10 +333,14 @@ def updateTitle():
 
     # TODO Implement saving mech
 
-    """ if ty == 'Chat':
+    if ty == 'Chat':
         mongoCollection.update_one({'_id':id}, {'$set':{
             'meta':chat_meta
-        }}) """
+        }})
+    elif ty == 'Pipeline':
+        mongoPipeLCollection.update_one({'_id':id}, {'$set':{
+            'meta':chat_meta
+        }})
 
 
     return jsonify({'response':"title updated"}, 200)

@@ -8,6 +8,7 @@ import ChatTitleFunc from '@/comp/Chat/ChatTitleFunc';
 import { ChatMetaData, ChatResponse, IChatEndpoints } from '@/comp/Types';
 import axios, { AxiosResponse } from 'axios';
 import { usePathname } from 'next/navigation';
+import { useDebounce, sendTitleUpdate } from '@/comp/Util';
 
 export default function page() {
 
@@ -57,26 +58,11 @@ export default function page() {
 
 
 
-
-  const sendUpdateToAPI = (id:string, meta:ChatMetaData) => {
-    axios.post('http://localhost:5000/api/chat/title' + `?type=${pathname?.replace('/', '')}`, {id:id, meta:meta})
-  }
-
-  const debounce = (func: (...args: any[]) => void, wait: number) => {
-    let timeout: ReturnType<typeof setTimeout>;
-    return (...args: any[]) => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => func(...args), wait);
-    };
-  };
-  const debouncedUpdate = useRef(debounce(sendUpdateToAPI, 500)).current;
-
-
   const handleTitleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
     let newMeta = chatMeta
     newMeta["title"] = e.target.value
     setChatMeta((prev)=>({...prev, title: e.target.value}))
-    debouncedUpdate(currentChat, newMeta);
+    useDebounce(() => sendTitleUpdate(pathname, currentChat, newMeta), 1000)
   }
     
 

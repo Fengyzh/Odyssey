@@ -3,10 +3,11 @@ import React, { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'reac
 import './chat.css'
 import axios, { AxiosResponse } from 'axios'
 import { useSidebar } from '@/app/context/sidebarContext';
-import { ChatResponse, IChatEndpoints } from '@/comp/Types';
+import { ChatMetaData, ChatResponse, IChatEndpoints } from '@/comp/Types';
 import ChatPage from '@/comp/Chat/ChatPage'
 import ChatTitleFunc from '@/comp/Chat/ChatTitleFunc';
 import { usePathname } from 'next/navigation';
+import {sendTitleUpdate, useDebounce} from '@/comp/Util';
 
 
 export default function page() {
@@ -31,6 +32,7 @@ export default function page() {
   const modelSelectRef = useRef<HTMLDivElement>(null);
   const titleContRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname()
+  const inputRef = useRef<HTMLInputElement>(null)
 
 
   const { toggleSidebar, 
@@ -76,6 +78,20 @@ if (res.data.meta != undefined) {
 }
 
 
+const handleTitleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
+  let newMeta = chatMeta
+  newMeta["title"] = e.target.value
+  setChatMeta((prev)=>({...prev, title: e.target.value}))
+  const ilength = inputRef.current?.value.length
+  if (ilength == undefined) return
+  const charWidth = 9; // Adjust this value based on the average character width in your input font
+  const padding = 15; // Total padding (left + right) in pixels
+  const newWidth = Math.min(ilength * charWidth + padding, 400);
+  if (inputRef && inputRef.current) inputRef.current.style.width = `${newWidth}px`
+  /* useDebounce(() => sendTitleUpdate(pathname, currentChat, newMeta), 1000) */
+}
+
+
 
 /* model.name, model.details.parameter_size */
 
@@ -116,7 +132,9 @@ const chatOptionPanel = (<div className='chat-option-panel'>
       <h2 className='sidebar-toggle' onClick={()=>toggleSidebar()}>O</h2>
 
       <div ref={titleContRef} className='chat-title-func-cont'>
-        <h2 className='chat-page-title'> {chatMeta.title} </h2>
+      {chatMeta.title !== 'Chat Title1'? <input ref={inputRef} className='chat-page-title-t' onChange={(e)=>handleTitleChange(e)} value={chatMeta.title}/> 
+    : 
+    <h2 className='chat-page-title'> {chatMeta.title} </h2>}
           {titleFunctionalBlock()}
       </div>
       <div className='chat-options'>
