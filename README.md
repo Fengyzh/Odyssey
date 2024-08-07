@@ -6,5 +6,5 @@ Odyssey is a personal front-end to interact with LLMs. It offers Chat, BrainStor
 - Everything is local, your documents, histories and LLMs
 - Built-in RAG system for documents
 - Web Search
-- Chat, Agentic and RolePlay mode
+- Chat, Pipeline and RolePlay mode
 - Chat history

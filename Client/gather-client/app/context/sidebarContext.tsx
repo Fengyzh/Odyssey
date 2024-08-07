@@ -3,6 +3,7 @@
 import axios from 'axios';
 import React, { createContext, useState, useContext, ReactNode, Dispatch, SetStateAction, useEffect } from 'react';
 import { ChatSnippets, FileSnippets, ChatMetaData } from '@/comp/Types';
+import { usePathname } from 'next/navigation';
 
 
 interface SidebarContextType {
@@ -41,33 +42,43 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
   const [tab, setTab] = useState<boolean>(true)
   const [curFiles, setCurFiles] = useState([])
   const [chatMeta, setChatMeta] = useState<ChatMetaData>(DEFAULT_CHAT_METADATA)
+  const [chatInfo, setChatInfo] = useState()
+  const pathname = usePathname()
 
 
 
   const fetchChatSnippets = () => {
-    axios.get("http://localhost:5000/api/chats").then((res)=>{
+    if (pathname === "/Chat") {    
+      axios.get("http://localhost:5000/api/chats").then((res)=>{
       setChats(res.data)
       //console.log(res.data)
     })
-
+  } else if (pathname == "/Pipeline") {
+    axios.get("http://localhost:5000/api/pipelines").then((res)=>{
+      console.log(res.data)
+      setChats(res.data)
+    })
+  }
   }
 
 
-
-
   useEffect(() => {
-    fetchChatSnippets()
-  }, [])
+
+    
+}, [pathname])
+
 
 
   const toggleSidebar = () => {
     setIsSidebarToggled(prevState => !prevState);
+    console.log(pathname)
+
   };
 
 
   const  fetchCurrentChatFiles = () => {
     if (currentChat) {
-        axios.get("http://localhost:5000/api/files/" + currentChat).then((res)=>{
+        axios.get("http://localhost:5000/api/files/" + currentChat + `?type=${pathname?.replace('/', '')}`).then((res)=>{
             if (res.data) {                
                 setCurFiles(res.data)
                 console.log(res.data)

@@ -1,11 +1,12 @@
 'use client'
 import React, { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react'
 import './chat.css'
-import axios from 'axios'
+import axios, { AxiosResponse } from 'axios'
 import { useSidebar } from '@/app/context/sidebarContext';
-import { IChatEndpoints } from '@/comp/Types';
+import { ChatResponse, IChatEndpoints } from '@/comp/Types';
 import ChatPage from '@/comp/Chat/ChatPage'
 import ChatTitleFunc from '@/comp/Chat/ChatTitleFunc';
+import { usePathname } from 'next/navigation';
 
 
 export default function page() {
@@ -18,10 +19,18 @@ export default function page() {
   //const [chat, setChat] = useState<ChatResponse[] | any[]>([])
   //const [chatMeta, setChatMeta] = useState<ChatMetaData>(DEFAULT_CHAT_METADATA)
   //const [wait, setWait] = useState(false)
+
+
+  const DEFAULT_MODEL_OPTIONS = {top_k:'40', top_p:'0.9', temperature: '0.8'}
+  const DEFAULT_CHAT_METADATA = {title:'Chat Title', dateCreate:'', dataChanged:'', currentModel:'llama3:instruct', modelOptions:DEFAULT_MODEL_OPTIONS}
+
   const [isOptionPanel, setIsOptionPanel] = useState<boolean>(true)
+  const [chat, setChat] = useState<ChatResponse[] | any[]>([])
+
 
   const modelSelectRef = useRef<HTMLDivElement>(null);
   const titleContRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname()
 
 
   const { toggleSidebar, 
@@ -52,6 +61,18 @@ const handleChatDelete = () => {
   axios.get("http://localhost:5000/api/chat/delete/" + currentChat)
   setCurrentChat('')
   fetchChatSnippets()
+}
+
+
+const cfetch = (res:AxiosResponse<any, any>)=>{
+  console.log(res.data)
+  setChat(res.data.history)
+
+if (res.data.meta != undefined) {
+    console.log(res.data.meta)
+    setChatMeta(res.data.meta)
+  }
+
 }
 
 
@@ -106,12 +127,18 @@ const chatOptionPanel = (<div className='chat-option-panel'>
   </div>)}
 
 
+const chatProps = {
+  chatEndpoints: chatEndpoints,
+  titleComp: chatTitle,
+  chat: chat,
+  setChat: setChat,
+  resProcess: cfetch
+}
 
 
   return (
     <ChatPage 
-      chatEndpoints = {chatEndpoints}
-      titleComp={chatTitle}
+      {...chatProps}
     />
   )
 }

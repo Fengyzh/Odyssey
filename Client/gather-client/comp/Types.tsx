@@ -53,3 +53,11 @@ export interface IChatEndpoints {
   stream: string;
   delete: string;
 }
+
+export interface IChatInfo {
+  _id:string;
+  docs: string[];
+  history:ChatResponse[];
+  meta: ChatMetaData;
+}
+

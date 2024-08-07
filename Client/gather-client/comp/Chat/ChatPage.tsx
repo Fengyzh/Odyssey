@@ -1,20 +1,25 @@
 'use client'
-import React, { useState, useEffect, useRef, ChangeEvent, FormEvent, ReactNode } from 'react'
+import React, { useState, useEffect, useRef, ChangeEvent, FormEvent, ReactNode, Dispatch, SetStateAction } from 'react'
 import '@/app/Chat/chat.css'
-import axios from 'axios'
+import axios, { AxiosResponse } from 'axios'
 import StaggerText from '@/comp/StaggerText'
 import { useSidebar } from '../../app/context/sidebarContext';
 import NavLayout from '@/app/navLayout'
 import { ChatResponse, IOllamaList, IChatEndpoints } from '@/comp/Types';
+import { usePathname } from 'next/navigation'
 
 interface IChatPageProps {
     chatEndpoints: IChatEndpoints
     titleComp: () => ReactNode
+    chat: ChatResponse[] | any[]
+    setChat: Dispatch<SetStateAction<ChatResponse[] | any[]>>;
+    resProcess: (res: AxiosResponse<any, any>) => void
+
 } 
 
 
 
-const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp }) => {
+const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, setChat, resProcess }) => {
 
   const DEFAULT_MODEL_OPTIONS = {top_k:'40', top_p:'0.9', temperature: '0.8'}
   const DEFAULT_CHAT_METADATA = {title:'Chat Title', dateCreate:'', dataChanged:'', currentModel:'llama3:instruct', modelOptions:DEFAULT_MODEL_OPTIONS}
@@ -24,8 +29,8 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp }) => {
   */
   
   const [prompt, setPrompt] = useState("")
-  const [chat, setChat] = useState<ChatResponse[] | any[]>([])
   const [wait, setWait] = useState(false)
+  const pathname = usePathname()
 
 
   const titleContRef = useRef<HTMLDivElement>(null);
@@ -41,15 +46,7 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp }) => {
 
   useEffect(() => {
     if (currentChat) {
-      axios.get("http://localhost:5000/api/chat/" + currentChat).then((res)=>{
-          setChat(res.data.history)
-
-        if (res.data.meta != undefined) {
-            console.log(res.data.meta)
-            setChatMeta(res.data.meta)
-          }
-        
-      })
+      axios.get("http://localhost:5000/api/chat/" + currentChat + `?type=${pathname?.replace('/','')}`).then(resProcess)
     } else {
       console.log("reset")
       setChat([])

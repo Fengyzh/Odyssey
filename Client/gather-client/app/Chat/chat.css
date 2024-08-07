@@ -27,6 +27,16 @@
     padding-left: 1rem;
 }
 
+.chat-page-title-t {
+    font-size: x-large;
+    background-color: black;
+    font-weight: 700;
+    border: 0;
+    color: white;
+    margin-left: 1rem;
+    padding-left: 0.5rem;
+}
+
 
 .chat-options {
     height: 100%;
@@ -35,6 +45,8 @@
     align-items: center;
     width: 5rem;
     position: relative;
+    z-index: 999;
+
 }
 
 .chat-options-btn {
@@ -47,7 +59,6 @@
     color: white;
     font-size: 150%;
     cursor: pointer;
-    z-index: 999;
 }
 
 .chat-option-panel {
@@ -57,7 +68,7 @@
     position: absolute;
     background-color: var(--button-color-dark);
     width: 22rem;
-    height: 10rem;
+    height: 12rem;
     right:0;
     top: 0;
     margin-top: 80%;
@@ -86,12 +97,12 @@
 }
 
 .chat-delete-btn-cont {
+    position: relative;
     display: flex;
     justify-content: center;
     width: 100%;
     text-align: center;
-    margin-top: auto;
-    margin-bottom: 1rem;
+    margin-top: 0.5rem;
 }
 
 .chat-delete-btn {

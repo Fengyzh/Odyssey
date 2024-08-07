@@ -249,7 +249,7 @@ TODO:
         <div className='ChatsBar-cont'>
             <div className='bar-top'>
                 <h2 className='sidebar-toggle' onClick={()=>toggleSidebar()}>O</h2>
-                <h2 className='mode-toggle'>{pathname?.endsWith('Chat')? 'Chat Page' : pathname?.endsWith('Agentic')? 'Agentic' : ''}</h2>
+                <h2 className='mode-toggle'>{pathname?.endsWith('Chat')? 'Chat Page' : pathname?.endsWith('Pipeline')? 'Pipeline' : ''}</h2>
             </div>
 
 

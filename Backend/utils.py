@@ -8,3 +8,4 @@ def format_chunks(stream_res, isGenerate):
             complete_text += chunk['message']['content']
 
     return complete_text
+
