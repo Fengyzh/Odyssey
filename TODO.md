@@ -11,7 +11,7 @@
     - [x] Add Chat MetaData to store in DB
     - [x] Change title to fetch from Chat MetaData instead of its own useState vairable
     - [x] LLM settings panel
-- [] Chat title update
+- [x] Chat title update
 - [] Chat title generate
 - [] Pipeline Page
 

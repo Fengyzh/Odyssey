@@ -4,7 +4,7 @@ import ollama
 from constants import DEFAULT_CHAT_METADATA
 import datetime
 from LLM import LLM_controller
-from utils import format_chunks
+from utils import format_chunks, context2Plain
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -62,15 +62,22 @@ def stream():
         
         """ Complete Current Chat history """
         chat_context.append({'role':'assistant', 'content':complete_text})
-        print("context", chat_context)
+        #print("context", chat_context)
         if (request_msg['id']):
             object_id = ObjectId(request_msg['id'])
-            mongoCollection.update_one({'_id':object_id}, {'$set':{
-                'history': chat_context,
-                'meta':chat_meta
-            }})
+            if ty == 'Chat':
+                mongoCollection.update_one({'_id':object_id}, {'$set':{
+                    'history': chat_context,
+                    'meta':chat_meta
+                }})
+            elif ty == 'Pipeline':
+                mongoPipeLCollection.update_one({'_id':object_id}, {'$set':{
+                    'history': chat_context,
+                    'meta':chat_meta
+                }})
     request_msg = request.get_json()
-    
+    ty  = request.args.get('type')
+
     """ if request_msg and request_msg['id']:
         chatId = request_msg['id']
         entry = mongoCollection.find_one({"_id": ObjectId(chatId)}, {"_id":1, "docs":1}) 
@@ -91,8 +98,10 @@ def stream():
 def getChatTitle():
     request_msg = request.get_json()
     if request_msg and 'context' in request_msg:
-        q = "You are a professtional title creator for a conversation summarize the following conversation in a few words for the title of this conversation: "
-        response = format_chunks(llm.gen_llm(request_msg['context'], q), True)
+        q = "You are a professtional title creator for a conversation summarize the following conversation in a few words for the title of this conversation you are not allowed to output anything other than the title: "
+        print(request_msg['context'])
+        response = llm.gen_llm(context2Plain(request_msg['context']), q)['response'].replace("\"", "")
+        print(response)
     
         return jsonify({'title': response})
     return jsonify({'Error': "Unable to generate title for the current chat"})
@@ -159,7 +168,11 @@ def newChat():
     updated_meta = DEFAULT_CHAT_METADATA
     updated_meta['dateCreate'] = datetime.datetime.now()
     updated_meta['dataChanged'] = datetime.datetime.now()
-    result = mongoCollection.insert_one({'title': "New Chat", 'history':[], 'docs':[], 'meta':updated_meta})
+    ty = request.args.get('type')
+    if ty == 'Chat':
+        result = mongoCollection.insert_one({'title': "New Chat", 'history':[], 'docs':[], 'meta':updated_meta})
+    elif ty == 'Pipeline':
+        result = mongoPipeLCollection.insert_one({'title': "New Chat", 'history':[], 'docs':[], 'meta':updated_meta, 'pipeline':[]})
     result_id = result.inserted_id
     return jsonify({'id': str(result_id)})
 
