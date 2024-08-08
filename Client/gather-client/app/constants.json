@@ -1,4 +1,0 @@
-{
-    "DEFAULT_MODEL_OPTIONS": {"top_k":"40", "top_p":"0.9", "temperature": "0.8"}
-
-}

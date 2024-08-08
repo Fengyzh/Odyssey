@@ -37,11 +37,11 @@ export default function page() {
 
   const { toggleSidebar, 
         currentChat, 
-        setCurrentChat, 
         fetchChatSnippets, 
         isSidebarToggled, 
         setChatMeta, 
-        chatMeta } = useSidebar();
+        chatMeta,
+        handleChatDelete } = useSidebar();
 
 
 
@@ -59,13 +59,6 @@ export default function page() {
 
 
 
-const handleChatDelete = () => {
-  axios.get("http://localhost:5000/api/chat/delete/" + currentChat)
-  setCurrentChat('')
-  fetchChatSnippets()
-}
-
-
 const cfetch = (res:AxiosResponse<any, any>)=>{
   console.log(res.data)
   setChat(res.data.history)
@@ -78,17 +71,23 @@ if (res.data.meta != undefined) {
 }
 
 
+const debouncedSendTitleUpdate = useDebounce((newMeta) => {
+  sendTitleUpdate(pathname, currentChat, newMeta).then((res)=>{
+    fetchChatSnippets()
+  });
+}, 1000);
+
 const handleTitleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
   let newMeta = chatMeta
   newMeta["title"] = e.target.value
   setChatMeta((prev)=>({...prev, title: e.target.value}))
+    /*     debouncedSendTitleUpdate(newMeta)*/
   const ilength = inputRef.current?.value.length
   if (ilength == undefined) return
   const charWidth = 9; // Adjust this value based on the average character width in your input font
   const padding = 15; // Total padding (left + right) in pixels
   const newWidth = Math.min(ilength * charWidth + padding, 400);
   if (inputRef && inputRef.current) inputRef.current.style.width = `${newWidth}px`
-  /* useDebounce(() => sendTitleUpdate(pathname, currentChat, newMeta), 1000) */
 }
 
 

@@ -326,7 +326,7 @@ def streamPipeline():
 def updateTitle():
     request_msg = request.get_json()
     chat_meta = request_msg['meta']
-    object_id = request_msg['id']
+    object_id = ObjectId(request_msg['id'])
     ty = request.args.get('type')
     print(chat_meta)
     print(object_id)
@@ -334,16 +334,16 @@ def updateTitle():
     # TODO Implement saving mech
 
     if ty == 'Chat':
-        mongoCollection.update_one({'_id':id}, {'$set':{
+        mongoCollection.update_one({'_id':object_id}, {'$set':{
             'meta':chat_meta
         }})
     elif ty == 'Pipeline':
-        mongoPipeLCollection.update_one({'_id':id}, {'$set':{
+        mongoPipeLCollection.update_one({'_id':object_id}, {'$set':{
             'meta':chat_meta
         }})
 
 
-    return jsonify({'response':"title updated"}, 200)
+    return jsonify({'response':"title updated", "title":chat_meta['title']}, 200)
 
 
 @app.route('/api/LLM/list', methods=["GET"])

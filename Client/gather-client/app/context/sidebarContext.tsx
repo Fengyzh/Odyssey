@@ -20,7 +20,7 @@ interface SidebarContextType {
   fetchCurrentChatFiles: () => void;
   chatMeta: ChatMetaData;
   setChatMeta: Dispatch<SetStateAction<ChatMetaData>>
-
+  handleChatDelete: () => void;
 }
 
 // Create the context with an empty default value
@@ -42,7 +42,6 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
   const [tab, setTab] = useState<boolean>(true)
   const [curFiles, setCurFiles] = useState([])
   const [chatMeta, setChatMeta] = useState<ChatMetaData>(DEFAULT_CHAT_METADATA)
-  const [chatInfo, setChatInfo] = useState()
   const pathname = usePathname()
 
 
@@ -55,7 +54,7 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
     })
   } else if (pathname == "/Pipeline") {
     axios.get("http://localhost:5000/api/pipelines").then((res)=>{
-      console.log(res.data)
+      //console.log(res.data)
       setChats(res.data)
     })
   }
@@ -63,7 +62,6 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
 
 
   useEffect(() => {
-
     
 }, [pathname])
 
@@ -74,6 +72,12 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
     console.log(pathname)
 
   };
+
+  const handleChatDelete = () => {
+    axios.get("http://localhost:5000/api/chat/delete/" + currentChat + `?type=${pathname?.replace('/', '')}`)
+    setCurrentChat('')
+    fetchChatSnippets()
+  }
 
 
   const  fetchCurrentChatFiles = () => {
@@ -104,7 +108,8 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
       fetchCurrentChatFiles, 
       curFiles,
       chatMeta,
-      setChatMeta
+      setChatMeta,
+      handleChatDelete
       }}>
         {children}
     </SidebarContext.Provider>
