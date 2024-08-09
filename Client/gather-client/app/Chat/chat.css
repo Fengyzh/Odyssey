@@ -78,6 +78,13 @@
     z-index: 989;
 }
 
+.pipeline-option-panel {
+    width: 10rem;
+    height: 3rem;
+    background-color: transparent;
+}
+
+
 .chat-options-cont {
     margin-top: 1rem;
     padding-left: 1rem;
@@ -112,13 +119,19 @@
     width: 50%;
     background-color: var(--background-color-dark);
     border: 0;
-    border-radius: 5%;
+    border-radius: 10px;
     color: tomato;
     cursor: pointer;
     font-size: medium;
     font-weight: 600;
     transition: 0.3s ease;
 }
+
+.pipeline-delete-btn {
+    width: 90%;
+    background-color: var(--button-color-dark);
+}
+
 
 .chat-delete-btn:hover{
     background-color: tomato;

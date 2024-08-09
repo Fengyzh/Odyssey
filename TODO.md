@@ -12,8 +12,10 @@
     - [x] Change title to fetch from Chat MetaData instead of its own useState vairable
     - [x] LLM settings panel
 - [x] Chat title update
-- [] Chat title generate
+- [x] Chat title generate
 - [] Pipeline Page
+    - [] Pipeline option button with delete chat
+    - [] Pipeline panel
 
 
 

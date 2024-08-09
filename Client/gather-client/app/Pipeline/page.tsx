@@ -21,7 +21,8 @@ export default function page() {
   const [chat, setChat] = useState<ChatResponse[] | any[]>([])
   const [pipeline, setPipeline] = useState<string>()
   const pathname = usePathname()
-  const [fetchTrigger, setFetchTrigger] = useState(false);
+  const [isOptionPanel, setIsOptionPanel] = useState<boolean>(false)
+
 
   
   const { toggleSidebar, 
@@ -81,11 +82,10 @@ export default function page() {
   }
   
 
-  const chatOptionPanel = (<div className='chat-option-panel'>
-  {currentChat?   
+  const chatOptionPanel = (<div className='pipeline-option-panel chat-option-panel'>
   <div className='chat-delete-btn-cont'>
-    <button className='chat-delete-btn' onClick={()=>handleChatDelete()}> Delete Chat</button>
-  </div> : ''}
+    <button className='chat-delete-btn pipeline-delete-btn' onClick={()=>handleChatDelete()}> Delete Chat</button>
+  </div>
 
 </div>)
 
@@ -99,9 +99,17 @@ export default function page() {
     <h2 className='chat-page-title'> {chatMeta.title} </h2>}
           
   </div>
+
   <div className='chat-options'>
-    <button onClick={()=>{console.log(pipeline)}}>check pipeline</button>
-</div>
+    <button className='chat-options-btn'> P+ </button>
+  </div>
+
+  {currentChat?   
+  <div className='chat-options'>
+    <button onClick={()=>{setIsOptionPanel(!isOptionPanel)}} className='chat-options-btn'> === </button>
+    {isOptionPanel? chatOptionPanel : ''}
+  </div> : ""}
+
 </div>)}
 
 // TODO: Update to Agent endpoints
