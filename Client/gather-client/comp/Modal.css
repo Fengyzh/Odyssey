@@ -1,0 +1,35 @@
+.modal-cont {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.2);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-y: hidden;
+}
+
+.modal-body {
+    background-color: var(--deep-background-color-dark);
+    width: 50%;
+    height: 80%;
+    border-radius: 1rem;
+
+    color: white;
+    opacity: 100%;
+    position: relative;
+}
+
+.modal-func {
+    padding: 1rem;
+    height: 100%;
+    width: 100%;
+    overflow-y: scroll;
+}
+
+.test {
+    position: absolute;
+    right:0;
+    transform: translateX(100%);
+}

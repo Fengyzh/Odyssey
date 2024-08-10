@@ -11,6 +11,8 @@ import axios, { AxiosResponse } from 'axios';
 import { usePathname } from 'next/navigation';
 import { useDebounce, sendTitleUpdate, adjustInputLength } from '@/comp/Util';
 import { constants } from '@/app/constants'
+import './pipeline.css'
+import { Modal }  from '@/comp/Modal'
 
 export default function page() {
   //const { DEFAULT_MODEL_OPTIONS, DEFAULT_CHAT_METADATA } = constants();
@@ -19,9 +21,10 @@ export default function page() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [chat, setChat] = useState<ChatResponse[] | any[]>([])
-  const [pipeline, setPipeline] = useState<string>()
+  const [pipeline, setPipeline] = useState<string[]>(["layer1"])
   const pathname = usePathname()
   const [isOptionPanel, setIsOptionPanel] = useState<boolean>(false)
+  const [isModal, setIsModal] = useState<boolean>(true)
 
 
   
@@ -61,7 +64,7 @@ export default function page() {
       }
     
     if (res.data.pipeline != undefined) {
-      setPipeline("hello")
+      setPipeline([])
     }
         
   }
@@ -80,6 +83,11 @@ export default function page() {
     debouncedSendTitleUpdate(newMeta)
     //useDebounce(() => sendTitleUpdate(pathname, currentChat, newMeta), 1000)
   }
+
+ const handleAddPipelineLayer = () => {
+    setPipeline((prev)=>[...prev, "layer" + (pipeline.length + 1)])
+ }
+
   
 
   const chatOptionPanel = (<div className='pipeline-option-panel chat-option-panel'>
@@ -100,17 +108,51 @@ export default function page() {
           
   </div>
 
-  <div className='chat-options'>
-    <button className='chat-options-btn'> P+ </button>
+  <div className='chat-options pipeline-options'>
+    <button className='chat-options-btn' onClick={()=>setIsModal((prev)=>!prev)}> P+ </button>
   </div>
 
-  {currentChat?   
+  {/* Aadd the currentChat? back after pipeline panel is done */}   
   <div className='chat-options'>
     <button onClick={()=>{setIsOptionPanel(!isOptionPanel)}} className='chat-options-btn'> === </button>
     {isOptionPanel? chatOptionPanel : ''}
-  </div> : ""}
+  </div>
 
 </div>)}
+
+
+const pipelineLayerComp = (pipe:string, index:number) => {
+  return (
+    <div className='pipeline-layers'>
+      <div className=''>
+        {pipe}
+      </div>
+      <div className='pipeline-layers-control'>
+        <button className='pipeline-layers-btn'>U</button>
+        <button className='pipeline-layers-btn'>D</button>
+        <button className='pipeline-layers-btn'>X</button>
+      </div>
+    </div>
+  )
+
+}
+
+
+const modalBody = () => {
+  return (
+    <div className='pipeline-body'>
+        {pipeline.map((pipe, index)=>{
+              return pipelineLayerComp(pipe, index)
+          
+        })}
+
+      <button className='pipeline-addlayer-btn' onClick={()=>handleAddPipelineLayer()}>Add Layer</button>
+
+    </div>
+  )
+}
+
+
 
 // TODO: Update to Agent endpoints
 const chatEndpoints:IChatEndpoints = {getCurrentChat:'http://localhost:5000/api/chat/', newChat:'http://localhost:5000/api/newchat', stream:'http://localhost:5000/api/stream', delete:'http://localhost:5000/api/chat/delete/'}
@@ -123,8 +165,16 @@ const chatProps = {
   resProcess: pfetch
 }
 
+const ModalProps = {
+  modalBody: modalBody,
+  setIsModal:setIsModal
+}
+
 
   return (
-    <ChatPage {...chatProps}/>
+    <>
+      <ChatPage {...chatProps}/>
+      {isModal? <Modal {...ModalProps}/> : ''}
+    </>
   )
 }

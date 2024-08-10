@@ -1,0 +1,85 @@
+.pipeline-options {
+    margin-right: 1rem;
+}
+
+
+.pipeline-body {
+    background-color: black;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.pipeline-addlayer-btn {
+    width: 95%;
+    border: 0;
+    height: 5%;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 2rem;
+    background-color: var(--button-color-dark);
+    color: white;
+    font-size: large;
+    font-weight: 600;
+    text-align: center;
+    transition: 0.3s ease-in;
+}
+
+.pipeline-addlayer-btn:hover{
+    background-color: var(--accent-color);
+}
+
+.pipeline-layers-cont {
+    width: 100%;
+    height: 100%;;
+}
+
+.pipeline-layers {
+    width: 95%;
+    border: 0;
+    height: 10%;
+    border-radius: 10px;
+    margin-top: 2rem;
+    background-color: var(--button-color-dark);    
+    color: white;
+    font-size: large;
+    font-weight: 600;
+    padding: 1rem;
+    position: relative;
+}
+
+.pipeline-layers-control {
+    width: auto;
+    max-width: 30%;
+    height: 50%;;
+    position: absolute;
+    background-color: var(--deep-background-color-dark);
+    display: flex;
+    justify-content: center;
+    right: 0;
+    top: 0;
+    border-radius: 10px 10px 0 10px;
+    transform: translateY(-50%);
+}
+
+.pipeline-layers-btn {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    margin-left: 0.5rem;
+    background-color: transparent;
+    border: 0;
+    transition: 0.3s ease-in;
+    cursor: pointer;
+    font-size: large;
+    font-weight: 600;
+    color: white;
+}
+
+.pipeline-layers-btn:last-child {
+    margin-right: 0.5rem;
+    background-color: transparent;
+    border: 0;
+    color: tomato;
+}
