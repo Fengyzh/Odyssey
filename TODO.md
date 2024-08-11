@@ -16,6 +16,7 @@
 - [] Pipeline Page
     - [] Pipeline option button with delete chat
     - [] Pipeline panel
+- [] System prompt in option panel
 
 
 
@@ -58,12 +59,15 @@
 
 
 
+# Markins
+    - TODO: Things to be implemented
+    - TEMP: Things to be used temporarily and meant to be removed later
+
+
+
+
 
 # Drawing Board
-
-
-
-
 
 docs: {
     _id,

@@ -45,6 +45,7 @@ export interface IModelOptions {
   top_k: string;
   top_p: string;
   temperature: string;
+  systemPrompt?: string;
 }
 
 export interface IChatEndpoints {
@@ -59,5 +60,11 @@ export interface IChatInfo {
   docs: string[];
   history:ChatResponse[];
   meta: ChatMetaData;
+}
+
+export interface IPipelineLayer {
+  model: string;
+  modelOptions?: IModelOptions;
+  
 }
 
