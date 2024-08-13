@@ -6,7 +6,7 @@ import NavLayout from '@/app/navLayout'
 import ChatPage from '@/comp/Chat/ChatPage'
 import { useSidebar } from '../context/sidebarContext';
 import ChatTitleFunc from '@/comp/Chat/ChatTitleFunc';
-import { ChatMetaData, ChatResponse, IChatEndpoints, IPipelineLayer } from '@/comp/Types';
+import { ChatMetaData, ChatResponse, IChatEndpoints, IOllamaList, IPipelineLayer } from '@/comp/Types';
 import axios, { AxiosResponse } from 'axios';
 import { usePathname } from 'next/navigation';
 import { useDebounce, sendTitleUpdate, adjustInputLength } from '@/comp/Util';
@@ -25,6 +25,8 @@ export default function page() {
   const pathname = usePathname()
   const [isOptionPanel, setIsOptionPanel] = useState<boolean>(false)
   const [isModal, setIsModal] = useState<boolean>(true)
+  const [isModelSelect, setIsModelSelect] = useState<boolean[]>([true])
+  const [modelList, setModelList] = useState<IOllamaList[] | []>([])
 
 
   
@@ -52,6 +54,19 @@ export default function page() {
     }, [chatMeta['title']]) 
 
 
+    useEffect(() => {
+      if (isModal) {      
+        handleExtentModelSelect()    
+      }
+    }, [isModal]) 
+
+
+    const handleExtentModelSelect = () => {
+      axios.get("http://localhost:5000/api/LLM/list").then((res)=> {
+        setModelList(res.data?.models.models)
+        console.log(res.data.models.models)
+      })
+    }
 
 
     const pfetch = (res:AxiosResponse<any, any>)=>{
@@ -124,6 +139,31 @@ export default function page() {
   setPipeline(temp)
  }
 
+
+ const ToggleLayerModelPanel = (index:number) => {
+  setIsModelSelect((prev)=>{
+    let temp = [...prev]
+    temp[index] = !temp[index]
+    return temp
+  })
+  /* let el = document.getElementsByClassName('pipeline-model-select')[index] as HTMLDivElement
+  if (!isModelSelect[index]) {
+    el.style.width = "20em"
+  } else {
+    el.style.width = "10em"
+  }
+  console.log(isModelSelect)
+  console.log('open') */
+
+ }
+
+
+ const handleModelSelect = (index:number, modelName:string) => {
+  const newPipeline = [...pipeline]
+  newPipeline[index].model = modelName
+  setPipeline(newPipeline)
+}
+
   
 
   const chatOptionPanel = (<div className='pipeline-option-panel chat-option-panel'>
@@ -160,8 +200,45 @@ export default function page() {
 const pipelineLayerComp = (pipe:IPipelineLayer, index:number) => {
   return (
     <div className='pipeline-layers'>
-      <div className=''>
-        {pipe.model}
+      <div>
+
+        <div  className='pipeline-model-options'>
+
+            <div className='layer-title'>
+              <div className='pipeline-model-select' > 
+                {pipe.model} 
+              </div>
+              <div className='layer-options-btn' onClick={()=>ToggleLayerModelPanel(index)}> Options</div>
+            </div>
+
+            <div className={`layer-model-select-cont ${isModelSelect[index]? `model-option-toggle` : ``}`}>
+              <div className='layer-model-select'>
+              {modelList.map((model, modelindex) => {
+                return <h4 key={modelindex} className='layer-model-items' onClick={()=>handleModelSelect(index, model.name)}>{model.name} {model.details.parameter_size}</h4>
+                })}
+              </div>
+       
+
+              {/* {modelList.map((model, modelindex) => {
+                return <h4 key={modelindex} className='layer-model-items' onClick={()=>handleModelSelect(index, model.name)}>{model.name} {model.details.parameter_size}</h4>
+                })} */}
+              <div className='layer-model-option-cont'>
+                <div className='layer-model-options'>
+                    <p>Temperature</p>
+                    <input className='layer-option-inputs' value={pipeline[index].modelOptions?.temperature}/>
+                  </div>
+                  <div className='layer-model-options'>
+                    <p>Top K</p>
+                    <input className='layer-option-inputs' value={pipeline[index].modelOptions?.top_k}/>
+                  </div>
+                  <div className='layer-model-options'>
+                    <p>Top P</p>
+                    <input className='layer-option-inputs' value={pipeline[index].modelOptions?.top_p}/>
+                  </div>
+              </div>
+            </div>
+
+        </div>
 
         <div>
           <textarea className='pipeline-sysprompt-text' onChange={(e)=>handleSysPrompt(e, index)} value={pipe.modelOptions?.systemPrompt}/>
