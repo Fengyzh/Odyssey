@@ -6,7 +6,7 @@ import NavLayout from '@/app/navLayout'
 import ChatPage from '@/comp/Chat/ChatPage'
 import { useSidebar } from '../context/sidebarContext';
 import ChatTitleFunc from '@/comp/Chat/ChatTitleFunc';
-import { ChatMetaData, ChatResponse, IChatEndpoints, IOllamaList, IPipelineLayer } from '@/comp/Types';
+import { ChatMetaData, ChatResponse, IChatEndpoints, IModelOptions, IOllamaList, IPipelineLayer, IPipelineMeta } from '@/comp/Types';
 import axios, { AxiosResponse } from 'axios';
 import { usePathname } from 'next/navigation';
 import { useDebounce, sendTitleUpdate, adjustInputLength } from '@/comp/Util';
@@ -15,18 +15,20 @@ import './pipeline.css'
 import { Modal }  from '@/comp/Modal'
 
 export default function page() {
-  const { DEFAULT_LAYER_DATA } = constants();
+  const { DEFAULT_LAYER_DATA, DEFAULT_PIPELINE_META } = constants();
 
   const titleContRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const pipelineInputRef = useRef<HTMLInputElement>(null);
 
   const [chat, setChat] = useState<ChatResponse[] | any[]>([])
   const [pipeline, setPipeline] = useState<IPipelineLayer[]>([DEFAULT_LAYER_DATA])
   const pathname = usePathname()
   const [isOptionPanel, setIsOptionPanel] = useState<boolean>(false)
   const [isModal, setIsModal] = useState<boolean>(true)
-  const [isModelSelect, setIsModelSelect] = useState<boolean[]>([true])
+  const [isModelSelect, setIsModelSelect] = useState<boolean[]>([false])
   const [modelList, setModelList] = useState<IOllamaList[] | []>([])
+  const [pipelineMeta, setPipelineMeta] = useState<IPipelineMeta>(DEFAULT_PIPELINE_META)
 
 
   
@@ -54,11 +56,11 @@ export default function page() {
     }, [chatMeta['title']]) 
 
 
-    useEffect(() => {
+    /* useEffect(() => {
       if (isModal) {      
         handleExtentModelSelect()    
       }
-    }, [isModal]) 
+    }, [isModal]) */ 
 
 
     const handleExtentModelSelect = () => {
@@ -96,7 +98,6 @@ export default function page() {
     newMeta["title"] = e.target.value
     setChatMeta((prev)=>({...prev, title: e.target.value}))
     debouncedSendTitleUpdate(newMeta)
-    //useDebounce(() => sendTitleUpdate(pathname, currentChat, newMeta), 1000)
   }
 
  const handleAddPipelineLayer = () => {
@@ -146,14 +147,6 @@ export default function page() {
     temp[index] = !temp[index]
     return temp
   })
-  /* let el = document.getElementsByClassName('pipeline-model-select')[index] as HTMLDivElement
-  if (!isModelSelect[index]) {
-    el.style.width = "20em"
-  } else {
-    el.style.width = "10em"
-  }
-  console.log(isModelSelect)
-  console.log('open') */
 
  }
 
@@ -164,6 +157,34 @@ export default function page() {
   setPipeline(newPipeline)
 }
 
+
+  const handleLayerOptions = (index:number, options:keyof IModelOptions, e:React.ChangeEvent<HTMLInputElement>) => {
+    let tempPipe = [...pipeline]
+    let tempOptions = tempPipe[index]
+    if (tempOptions.modelOptions) {
+      tempOptions.modelOptions[options] = e.target.value
+      setPipeline(tempPipe)
+    }    
+  }
+
+  const handleSubmitPipeline = () => {
+    // Handle Pipeline update url
+    console.log(pipeline)
+  }
+
+  const handleFav = () => {
+    let tempMeta = {...pipelineMeta}
+    tempMeta.isFav = !tempMeta.isFav
+    console.log(tempMeta.isFav)
+
+    setPipelineMeta(tempMeta)
+  }
+
+
+  const handlePipelineTitleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
+    setPipelineMeta((prev)=>({...prev, pipelineName: e.target.value}))
+    adjustInputLength(pipelineInputRef, 15, 12)
+  }
   
 
   const chatOptionPanel = (<div className='pipeline-option-panel chat-option-panel'>
@@ -219,21 +240,19 @@ const pipelineLayerComp = (pipe:IPipelineLayer, index:number) => {
               </div>
        
 
-              {/* {modelList.map((model, modelindex) => {
-                return <h4 key={modelindex} className='layer-model-items' onClick={()=>handleModelSelect(index, model.name)}>{model.name} {model.details.parameter_size}</h4>
-                })} */}
+              {/* TODO: Handle input logic */}
               <div className='layer-model-option-cont'>
                 <div className='layer-model-options'>
                     <p>Temperature</p>
-                    <input className='layer-option-inputs' value={pipeline[index].modelOptions?.temperature}/>
+                    <input className='layer-option-inputs' onChange={(e)=>handleLayerOptions(index, 'temperature', e)} value={pipeline[index].modelOptions?.temperature}/>
                   </div>
                   <div className='layer-model-options'>
                     <p>Top K</p>
-                    <input className='layer-option-inputs' value={pipeline[index].modelOptions?.top_k}/>
+                    <input className='layer-option-inputs' onChange={(e)=>handleLayerOptions(index, 'top_k', e)} value={pipeline[index].modelOptions?.top_k}/>
                   </div>
                   <div className='layer-model-options'>
                     <p>Top P</p>
-                    <input className='layer-option-inputs' value={pipeline[index].modelOptions?.top_p}/>
+                    <input className='layer-option-inputs' onChange={(e)=>handleLayerOptions(index, 'top_p', e)} value={pipeline[index].modelOptions?.top_p}/>
                   </div>
               </div>
             </div>
@@ -268,13 +287,24 @@ const pipelineLayerComp = (pipe:IPipelineLayer, index:number) => {
 
 const modalBody = () => {
   return (
-    <div className='pipeline-body'>
-        {pipeline.map((pipe, index)=>{
-              return pipelineLayerComp(pipe, index)
-        })}
+    <div>
+      <div className='pipeline-title-cont'>
+        <input ref={pipelineInputRef} className='pipeline-body-title' onChange={(e)=>handlePipelineTitleChange(e)} value={pipelineMeta.pipelineName}/>
+        <button className={`pipeline-fav ${pipelineMeta.isFav? `pipeline-faved`:``}`} onClick={()=>handleFav()}>FAV</button>
+      </div>
+      <div className='pipeline-body'>
+          {pipeline.map((pipe, index)=>{
+                return (
+                  <>
+                    {pipelineLayerComp(pipe, index)}
+                    <h3 className='pipeline-layer-seperator'>V</h3>
+                  </>
+                  )
+          })}
+        <div className='pipeline-output-labal'>Output</div>
+        <button className='pipeline-addlayer-btn' onClick={()=>handleAddPipelineLayer()}>Add Layer</button>
 
-      <button className='pipeline-addlayer-btn' onClick={()=>handleAddPipelineLayer()}>Add Layer</button>
-
+      </div>
     </div>
   )
 }
@@ -282,7 +312,18 @@ const modalBody = () => {
 const modalExBtnPanel = () => {
   return (
     <div className='pipeline-ex-btn-panel'>
-      <button className='pipeline-submit'>Update Pipeline</button>
+      <button onClick={()=>handleSubmitPipeline()} className='pipeline-submit'>Update Pipeline</button>
+    </div>
+  )
+}
+
+const modalLeftBody = () => {
+  return (
+    <div className='pipeline-saved-body'>
+      <div className='saved-pipelines'>Hello</div>
+      <div className='saved-pipelines'>Hello</div>
+      <div className='saved-pipelines'>Hello</div>
+
     </div>
   )
 }
@@ -303,7 +344,9 @@ const chatProps = {
 const ModalProps = {
   modalBody: modalBody,
   setIsModal:setIsModal,
-  modalExternalControlPanel: modalExBtnPanel
+  modalExternalControlPanel: modalExBtnPanel,
+  modalTitle:'Pipeline Setup',
+  modelLeftBody: modalLeftBody
 }
 
 

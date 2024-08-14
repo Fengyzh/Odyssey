@@ -65,6 +65,11 @@ export interface IChatInfo {
 export interface IPipelineLayer {
   model: string;
   modelOptions?: IModelOptions;
-  
+}
+
+export interface IPipelineMeta {
+  id:string;
+  pipelineName:string;
+  isFav:boolean;
 }
 

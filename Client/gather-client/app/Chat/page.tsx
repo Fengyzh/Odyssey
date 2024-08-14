@@ -7,7 +7,7 @@ import { ChatMetaData, ChatResponse, IChatEndpoints } from '@/comp/Types';
 import ChatPage from '@/comp/Chat/ChatPage'
 import ChatTitleFunc from '@/comp/Chat/ChatTitleFunc';
 import { usePathname } from 'next/navigation';
-import {sendTitleUpdate, useDebounce} from '@/comp/Util';
+import {adjustInputLength, sendTitleUpdate, useDebounce} from '@/comp/Util';
 
 
 export default function page() {
@@ -58,6 +58,9 @@ export default function page() {
   }, [isSidebarToggled]) 
 
 
+  useEffect(() => {
+    adjustInputLength(inputRef)
+  }, [chatMeta['title']]) 
 
 const cfetch = (res:AxiosResponse<any, any>)=>{
   console.log(res.data)
@@ -81,13 +84,7 @@ const handleTitleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
   let newMeta = chatMeta
   newMeta["title"] = e.target.value
   setChatMeta((prev)=>({...prev, title: e.target.value}))
-    /*     debouncedSendTitleUpdate(newMeta)*/
-  const ilength = inputRef.current?.value.length
-  if (ilength == undefined) return
-  const charWidth = 9; // Adjust this value based on the average character width in your input font
-  const padding = 15; // Total padding (left + right) in pixels
-  const newWidth = Math.min(ilength * charWidth + padding, 400);
-  if (inputRef && inputRef.current) inputRef.current.style.width = `${newWidth}px`
+  debouncedSendTitleUpdate(newMeta)
 }
 
 
@@ -107,6 +104,11 @@ const chatOptionPanel = (<div className='chat-option-panel'>
   <div className='chat-options-cont'>
     <p>Temperature</p>
     <input onChange={(e)=>{setChatMeta((prev)=>({...prev, modelOptions: {...prev.modelOptions, temperature:e.target.value}}))}} className='chat-options-input' value={chatMeta.modelOptions.temperature}/>
+  </div>
+  <div>
+    {/* Update mongo entries to accept sysprompt and then remove the logic here */}
+    <label className='chat-option-sysprompt-label'>System Prompt</label>
+    <textarea className='chat-option-sysprompt' value={chatMeta.modelOptions.systemPrompt? chatMeta.modelOptions.systemPrompt : "Placeholder sys prompt"}/>
   </div>
 
   <button onClick={()=>{console.log(chatMeta)}}>Test</button>

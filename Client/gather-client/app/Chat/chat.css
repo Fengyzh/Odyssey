@@ -76,6 +76,7 @@
     margin-top: 80%;
     border-radius: 10px;
     z-index: 989;
+    overflow-y: scroll;
 }
 
 .pipeline-option-panel {
@@ -291,6 +292,27 @@
 }
 
 
+.chat-option-sysprompt{
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+    width: 90%;
+    height: 8em;
+    padding: 0.5rem;
+    border: 0;
+    border-radius: 10px;
+    resize: none;
+    font-family: sans-serif;
+    background-color: var(--deep-background-color-dark);
+    color: white;
+    font-size: medium;
+    font-weight: 400;
+}
+
+.chat-option-sysprompt-label {
+    margin-top: 1rem;
+    float: left;
+    margin-left: 1rem;
+}
 
 
 

@@ -28,14 +28,13 @@ export const sendTitleUpdate = async (pathname:string | null, id:string, meta:Ch
     return axios.post('http://localhost:5000/api/chat/title' + `?type=${pathname?.replace('/', '')}`, {id:id, meta:meta})
 }
 
-export const adjustInputLength = (inputRef:React.RefObject<HTMLInputElement>) => {
+
+
+export const adjustInputLength = (inputRef:React.RefObject<HTMLInputElement>, charWidth:number=9, padding:number=15) => {
     const ilength = inputRef.current?.value.length
     if (ilength == undefined) return
-    const charWidth = 9; // Adjust this value based on the average character width in your input font
-    const padding = 15; // Total padding (left + right) in pixels
     const newWidth = Math.min(ilength * charWidth + padding, 400);
     if (inputRef && inputRef.current) inputRef.current.style.width = `${newWidth}px`
   } 
-
 
 

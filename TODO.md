@@ -14,9 +14,13 @@
 - [x] Chat title update
 - [x] Chat title generate
 - [] Pipeline Page
-    - [] Pipeline option button with delete chat
-    - [] Pipeline panel
-- [] System prompt in option panel
+    - [x] Pipeline option button with delete chat
+    - [] Implement delete chat logic for pipeline
+    - [x] Pipeline panel
+- [x] System prompt in chat option panel
+- [x] Model options in layer option panel
+    - [x] Handle model option input logic in layer option panel
+- [] Load all the saved pipeline in the left modal panel (wait for backend impl)
 
 
 
@@ -32,9 +36,12 @@
 - [x] Web Scraping
 - [] Mongo Collection Factory?
 
-# General
+- [] Handle update pipeline saving
+- [] Handle delete chats in pipeline
+- [] Create Pipeline collection in Mongo
 
-- [] Phase I refactor
+# General
+- [x] Phase I refactor
 
 
 
