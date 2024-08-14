@@ -15,12 +15,12 @@ interface IChatPageProps {
     chat: ChatResponse[] | any[]
     setChat: Dispatch<SetStateAction<ChatResponse[] | any[]>>;
     resProcess: (res: AxiosResponse<any, any>) => void
-
+    streamBodyExtras: any
 } 
 
 
 
-const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, setChat, resProcess }) => {
+const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, setChat, resProcess, streamBodyExtras }) => {
   const { DEFAULT_MODEL_OPTIONS, DEFAULT_CHAT_METADATA } = constants();
 
 
@@ -133,7 +133,7 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
     let curContext = [...chat]
     curContext.push(userMessage)
     console.log(createdEntryId)
-    const response = await fetch("http://localhost:5000/api/stream" + `?type=${pathname?.replace('/', '')}`, {
+    const response = await fetch(chatEndpoints.stream, {
       method: 'POST',
       headers: {
         "Content-Type": "application/json",
@@ -142,7 +142,8 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
         message: prompt, 
         context:curContext,
         meta:chatMeta,
-        id:currentChat? currentChat : createdEntryId
+        id:currentChat? currentChat : createdEntryId,
+        streamBodyExtras
       })
 
     })
@@ -206,7 +207,7 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
         })}
         
 
-        {wait? <div>Waiting for Response</div> : ""}
+        {wait? <div className='waiting-res-indicator'>Waiting for Response ...</div> : ""}
 
         <div ref={chatSpaceRef} className='chat-space'></div>
       </div>

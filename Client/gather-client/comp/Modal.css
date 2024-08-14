@@ -37,8 +37,12 @@
     transform: translateX(-45rem);
     margin-left: 15rem;
     border-radius: 10px;
-    z-index: 90999;
     transition: 0.3s ease-in-out;
+}
+
+.panel-closed {
+    transform: translateX(-100vw);
+    opacity: 0;
 }
 
 .modal-left-title-cont {
@@ -55,4 +59,33 @@
 .model-left-func {
     height: 100%;
     width: 100%;
+}
+
+
+
+.modal-btn-panel {
+    display: flex;
+    justify-content: space-between;
+}
+
+.modal-left-panel-toggle {
+    bottom: 0;
+    left: 0;
+    height: 2rem;
+    width: auto;
+    padding: 0 1rem 0 1rem;
+    margin-top: 1rem;
+    border-radius: 10px;
+    border: 0;
+    text-align: center;
+    font-size: large;
+    font-weight: 500;
+    background-color: var(--button-color-dark);
+    color:white;
+    transition: 0.3s ease-in;
+    cursor: pointer;
+}
+
+.modal-left-panel-toggle:hover {
+    background-color: var(--accent-color);
 }

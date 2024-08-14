@@ -5,7 +5,7 @@
 - [x] Convo History
 - [x] Convo Delete
     - [x] Implement Chat Delete logic in chat page with the delete button
-- [] Waiting for Response style change
+- [x] Waiting for Response style change
 - [x] LLM settings and LLM select
     - [x] Fetch Model list and put it in a useState to store the list
     - [x] Add Chat MetaData to store in DB
@@ -15,7 +15,7 @@
 - [x] Chat title generate
 - [] Pipeline Page
     - [x] Pipeline option button with delete chat
-    - [] Implement delete chat logic for pipeline
+    - [] Implement delete chat logic for pipeline (wait for backend impl)
     - [x] Pipeline panel
 - [x] System prompt in chat option panel
 - [x] Model options in layer option panel

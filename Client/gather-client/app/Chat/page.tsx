@@ -151,7 +151,8 @@ const chatProps = {
   titleComp: chatTitle,
   chat: chat,
   setChat: setChat,
-  resProcess: cfetch
+  resProcess: cfetch,
+  streamBodyExtras:{}
 }
 
 

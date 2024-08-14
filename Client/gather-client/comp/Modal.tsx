@@ -1,11 +1,11 @@
-import React, { SetStateAction, Dispatch, ReactNode } from 'react'
+'use client'
+import React, { SetStateAction, Dispatch, ReactNode, useState } from 'react'
 import './Modal.css'
 
 interface IModalProp {
     modalBody: () => ReactNode;
     setIsModal: Dispatch<SetStateAction<boolean>>;
     modalExternalControlPanel: () => ReactNode;
-    modalTitle: string;
     modelLeftBody?: () => ReactNode;
 }
 
@@ -13,12 +13,14 @@ interface IModalProp {
 
 
 
-export const Modal:React.FC<IModalProp> = ({modalBody, setIsModal, modalExternalControlPanel, modalTitle, modelLeftBody}) => {
+export const Modal:React.FC<IModalProp> = ({modalBody, setIsModal, modalExternalControlPanel, modelLeftBody}) => {
+  const [isLeftPanel, setIsLeftPanel] = useState<boolean>(false)
+  
   return (
     <div className='modal-cont' onClick={()=>(setIsModal(prev=>!prev))}>
 
       {modelLeftBody? 
-      <div className='modal-left-panel'>
+      <div className={`modal-left-panel ${isLeftPanel? "" : `panel-closed`}`}>
           <div className='modal-left-title-cont'>
             <h3 className='modal-left-title'>Saved</h3>
           </div>
@@ -33,8 +35,11 @@ export const Modal:React.FC<IModalProp> = ({modalBody, setIsModal, modalExternal
                 {modalBody()}
 
             </div>
+            <div className='modal-btn-panel'>
+            {modelLeftBody? <button onClick={()=>setIsLeftPanel((prev)=>!prev)} className='modal-left-panel-toggle'>Saved Pipeline</button> : ""}
+              {modalExternalControlPanel()}
+            </div>
 
-            {modalExternalControlPanel()}
         </div>
 
 
