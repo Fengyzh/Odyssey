@@ -2,10 +2,11 @@
 import React, { ChangeEvent, FormEvent, ReactElement, useEffect, useRef, useState } from 'react'
 import './ChatsBar.css'
 import { useSidebar } from '@/app/context/sidebarContext';
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter  } from 'next/navigation'
 import axios from 'axios';
 import { ChatSnippets, FileSnippets } from './Types';
 import FileSnippetsComp from './FileSnippetsComp';
+import Link from "next/link";
 
 export default function ChatsBar() {
 
@@ -27,12 +28,15 @@ TODO:
     const [fileLoading, setFileLoading] = useState<boolean>(false);
     const [currentSelected, setCurrentSelected] = useState<number | null>(null);
 
+    const [modeSelectPanel, setModeSelectPanel] = useState<boolean | null>(false);
+
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const router = useRouter()
 
     useEffect(() => {
+        setCurrentChat("")
         fetchChatSnippets()
         fetchAllFiles()
-
     }, [])
 
 
@@ -78,8 +82,7 @@ TODO:
     }
 
     const handleNewChat = () => {
-        setCurrentChat("")
-        
+        setCurrentChat("")        
     }
 
     const  handleDeleteFile = async (fid:string) => {
@@ -170,7 +173,14 @@ TODO:
         setAddBufferFiles((prev) => [...prev, {_id:fid, name:fname}])
     }
 
+    const handleModeSelect = () => {
+        setModeSelectPanel((prev)=>!prev)
+    }
 
+    const handleRedirect = (uri:string) => {
+        setCurrentChat("")
+        router.push(uri)
+    }
 
 
     const chatHistoryComp =  
@@ -178,7 +188,7 @@ TODO:
     {chats.map((chat:ChatSnippets, index)=>{
         return (
         <div className='nav-chat-cont'>
-            <div onClick={()=>handleChatSelect(chat._id, index)} key={index} className={`nav-chat-titles ${currentSelected === index? 'selected' : ''}`}>{chat.meta.title} 
+            <div onClick={()=>handleChatSelect(chat._id, index)} key={index} className={`nav-chat-titles ${currentChat === chat._id? 'selected' : ''}`}>{chat.meta.title} 
             </div>
         </div>)
     })}
@@ -249,7 +259,17 @@ TODO:
         <div className='ChatsBar-cont'>
             <div className='bar-top'>
                 <h2 className='sidebar-toggle' onClick={()=>toggleSidebar()}>O</h2>
-                <h2 className='mode-toggle'>{pathname?.endsWith('Chat')? 'Chat Page' : pathname?.endsWith('Agentic')? 'Agentic' : ''}</h2>
+                <div className='mode-toggle-cont'>
+                    <div className='mode-toggle-title' onClick={()=>handleModeSelect()}>
+                        <h2 className='mode-toggle'>{pathname?.endsWith('Chat')? 'Chat Page' : pathname?.endsWith('Pipeline')? 'Pipeline' : ''}</h2>
+                    </div>
+                    {modeSelectPanel? <div className='mode-toggle-select'>
+                        <li onClick={()=>handleRedirect('/Chat')} className='mode-select-items'>Chat</li>
+                        <li onClick={()=>handleRedirect('/Pipeline')} className='mode-select-items'>Pipeline</li>
+                        <li onClick={()=>handleRedirect('/Roleplay')} className='mode-select-items'>Role Play</li>
+                    </div> : ""}
+                    
+                </div>
             </div>
 
 
@@ -282,7 +302,7 @@ TODO:
 
             <div>
                 <button onClick={()=>{console.log(pathname)}}>PATH</button>
-                <button onClick={()=>{handleNewChat()}}>Start a new Chat</button>
+                <button onClick={()=>{console.log(currentChat)}}>Current Chat</button>
             </div>
         </div>
   )

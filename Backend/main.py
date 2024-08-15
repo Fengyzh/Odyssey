@@ -4,11 +4,13 @@ import ollama
 from constants import DEFAULT_CHAT_METADATA
 import datetime
 from LLM import LLM_controller
-from utils import format_chunks
+from utils import format_chunks, context2Plain
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from db import getAllfromCollection
 import pymongo
+
 
 
 llm = LLM_controller()
@@ -16,6 +18,7 @@ mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
 mongoDB = mongoClient["Project-gather"]
 mongoCollection = mongoDB["LLM-Chats"]
 mongoDocCollection = mongoDB["LLM-Docs"]
+mongoPipeLCollection = mongoDB["LLM-Pipelines"]
 #RAG_client = RAGRetriever()
 
 
@@ -59,15 +62,22 @@ def stream():
         
         """ Complete Current Chat history """
         chat_context.append({'role':'assistant', 'content':complete_text})
-        print("context", chat_context)
+        #print("context", chat_context)
         if (request_msg['id']):
             object_id = ObjectId(request_msg['id'])
-            mongoCollection.update_one({'_id':object_id}, {'$set':{
-                'history': chat_context,
-                'meta':chat_meta
-            }})
+            if ty == 'Chat':
+                mongoCollection.update_one({'_id':object_id}, {'$set':{
+                    'history': chat_context,
+                    'meta':chat_meta
+                }})
+            elif ty == 'Pipeline':
+                mongoPipeLCollection.update_one({'_id':object_id}, {'$set':{
+                    'history': chat_context,
+                    'meta':chat_meta
+                }})
     request_msg = request.get_json()
-    
+    ty  = request.args.get('type')
+
     """ if request_msg and request_msg['id']:
         chatId = request_msg['id']
         entry = mongoCollection.find_one({"_id": ObjectId(chatId)}, {"_id":1, "docs":1}) 
@@ -84,12 +94,14 @@ def stream():
 
 
 
-@app.route('/api/chat/title', methods=["POST"])
+@app.route('/api/chat/summary', methods=["POST"])
 def getChatTitle():
     request_msg = request.get_json()
     if request_msg and 'context' in request_msg:
-        q = "You are a professtional title creator for a conversation summarize the following conversation in a few words for the title of this conversation: "
-        response = format_chunks(llm.gen_llm(request_msg['context'], q), True)
+        q = "You are a professtional title creator for a conversation summarize the following conversation in a few words for the title of this conversation you are not allowed to output anything other than the title: "
+        print(request_msg['context'])
+        response = llm.gen_llm(context2Plain(request_msg['context']), q)['response'].replace("\"", "")
+        print(response)
     
         return jsonify({'title': response})
     return jsonify({'Error': "Unable to generate title for the current chat"})
@@ -156,25 +168,31 @@ def newChat():
     updated_meta = DEFAULT_CHAT_METADATA
     updated_meta['dateCreate'] = datetime.datetime.now()
     updated_meta['dataChanged'] = datetime.datetime.now()
-    result = mongoCollection.insert_one({'title': "New Chat", 'history':[], 'docs':[], 'meta':updated_meta})
+    ty = request.args.get('type')
+    if ty == 'Chat':
+        result = mongoCollection.insert_one({'title': "New Chat", 'history':[], 'docs':[], 'meta':updated_meta})
+    elif ty == 'Pipeline':
+        result = mongoPipeLCollection.insert_one({'title': "New Chat", 'history':[], 'docs':[], 'meta':updated_meta, 'pipeline':[]})
     result_id = result.inserted_id
     return jsonify({'id': str(result_id)})
 
 
 @app.route('/api/chats', methods=["GET"])
 def getChats():
-    entries = list(mongoCollection.find({}, {"_id": 1, "title": 1, "meta": 1}))  # Retrieve all entries and convert cursor to a list
-    for entry in entries:
-        entry['_id'] = str(entry['_id'])  # Convert ObjectId to string for JSON serialization
-    #print(entries)
+    entries = getAllfromCollection(mongoCollection, {"_id": 1, "title": 1, "meta": 1})
     return jsonify(entries)
 
 
 
 @app.route('/api/chat/<chatId>', methods=["GET"])
 def getChat(chatId):
+    ty = request.args.get('type')
     try:
-        entry = mongoCollection.find_one({"_id": ObjectId(chatId)})  # Retrieve the entry with specified fields
+        if ty == 'Chat':
+            entry = mongoCollection.find_one({"_id": ObjectId(chatId)})  # Retrieve the entry with specified fields
+        else:
+            entry = mongoPipeLCollection.find_one({"_id": ObjectId(chatId)})  # Retrieve the entry with specified fields
+            
         if entry:
             entry['_id'] = str(entry['_id'])  # Convert ObjectId to string for JSON serialization
             return jsonify(entry)
@@ -222,8 +240,14 @@ def deleteFile():
 
 @app.route('/api/files/<chatId>', methods=["GET"])
 def getCurFiles(chatId):
+    ty = request.args.get('type')
+
     try:
-        entry = mongoCollection.find_one({"_id": ObjectId(chatId)}, {"_id":1, "docs":1})  # Retrieve the entry with specified fields
+        if ty == 'Chat':
+            entry = mongoCollection.find_one({"_id": ObjectId(chatId)}, {"_id":1, "docs":1})  # Retrieve the entry with specified fields
+        else:
+            entry = mongoPipeLCollection.find_one({"_id": ObjectId(chatId)}, {"_id":1, "docs":1})  # Retrieve the entry with specified fields
+
         if not entry or 'docs' not in entry:
             return jsonify({"error": "Entry not found or docs field missing"}), 404
 
@@ -266,12 +290,79 @@ def deleteCurFiles(chatId):
 
         return jsonify({"success":"File Deleted"}), 200
 
+@app.route('/api/pipelines', methods=["GET"])
+def getAllPipelines():
+    entries = getAllfromCollection(mongoPipeLCollection, {"_id": 1, "title": 1, "meta": 1})
+    return jsonify(entries)
+
+
+@app.route('/api/pipelines/stream', methods=["POST"])
+def streamPipeline():
+
+    def get_data():
+        chat_context = request_msg['context']
+        chat_meta = request_msg['meta']
+        chat_pipeline = request_msg['pipeline']
+        complete_text = ""
+        llm_res = llm.chat_llm(context=chat_context, model=chat_meta['currentModel'], options=LLM_controller.convertOptions(chat_meta['modelOptions']))
+        for chunk in llm_res:
+            complete_text += chunk['message']['content']
+            content = chunk['message']['content']
+            yield f'{content}'
+        
+        """ Complete Current Chat history """
+        chat_context.append({'role':'assistant', 'content':complete_text})
+        print("context", chat_context)
+        if (request_msg['id']):
+            object_id = ObjectId(request_msg['id'])
+            mongoCollection.update_one({'_id':object_id}, {'$set':{
+                'history': chat_context,
+                'meta':chat_meta
+            }})
+    request_msg = request.get_json()
+    
+    """ if request_msg and request_msg['id']:
+        chatId = request_msg['id']
+        entry = mongoCollection.find_one({"_id": ObjectId(chatId)}, {"_id":1, "docs":1}) 
+        rag_context = RAG_client.hybrid_search(request_msg['message'], list(entry)) """
+
+
+    #if request_msg and 'message' in request_msg:
+    return get_data(), {'Content-Type': 'text/plain'}
+
+
+
+
+
+
+@app.route('/api/chat/title', methods=["POST"])
+def updateTitle():
+    request_msg = request.get_json()
+    chat_meta = request_msg['meta']
+    object_id = ObjectId(request_msg['id'])
+    ty = request.args.get('type')
+    print(chat_meta)
+    print(object_id)
+
+    # TODO Implement saving mech
+
+    if ty == 'Chat':
+        mongoCollection.update_one({'_id':object_id}, {'$set':{
+            'meta':chat_meta
+        }})
+    elif ty == 'Pipeline':
+        mongoPipeLCollection.update_one({'_id':object_id}, {'$set':{
+            'meta':chat_meta
+        }})
+
+
+    return jsonify({'response':"title updated", "title":chat_meta['title']}, 200)
+
 
 @app.route('/api/LLM/list', methods=["GET"])
 def getLLMList():
     modelList = ollama.list()
     return jsonify({'models':modelList})
-
 
 
 

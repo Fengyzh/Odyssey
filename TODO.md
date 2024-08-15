@@ -5,13 +5,23 @@
 - [x] Convo History
 - [x] Convo Delete
     - [x] Implement Chat Delete logic in chat page with the delete button
-- [] Waiting for Response style change
-- [] LLM settings and LLM select
+- [x] Waiting for Response style change
+- [x] LLM settings and LLM select
     - [x] Fetch Model list and put it in a useState to store the list
     - [x] Add Chat MetaData to store in DB
     - [x] Change title to fetch from Chat MetaData instead of its own useState vairable
     - [x] LLM settings panel
-- Chat title generate
+- [x] Chat title update
+- [x] Chat title generate
+- [] Pipeline Page
+    - [x] Pipeline option button with delete chaty
+    - [] Implement delete chat logic for pipeline (wait for backend impl)
+    - [x] Pipeline panel
+- [x] System prompt in chat option panel
+- [x] Model options in layer option panel
+    - [x] Handle model option input logic in layer option panel
+- [] Load all the saved pipeline in the left modal panel (wait for backend impl)
+- [] Pipeline Web/Doc toggle
 
 
 
@@ -25,11 +35,14 @@
 - [] Add HyDE before RAG retrieval
 - [x] Add chat history into LLM response so the LLM knows the current chat's context
 - [x] Web Scraping
+- [] Mongo Collection Factory?
 
+- [] Handle update pipeline saving
+- [] Handle delete chats in pipeline
+- [] Create Pipeline collection in Mongo
 
 # General
-
-- [] Phase I refactor
+- [x] Phase I refactor
 
 
 
@@ -54,12 +67,15 @@
 
 
 
+# Markins
+    - TODO: Things to be implemented
+    - TEMP: Things to be used temporarily and meant to be removed later
+
+
+
+
 
 # Drawing Board
-
-
-
-
 
 docs: {
     _id,

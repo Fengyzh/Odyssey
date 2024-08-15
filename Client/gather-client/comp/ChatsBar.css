@@ -9,7 +9,7 @@
     display: flex;
     flex-direction: column;
     z-index: 999;
-    transform: translateX(-100%);
+    transform: translateX(-200%);
 }
 
 
@@ -30,7 +30,7 @@
 
 .mode-toggle {
     color: var(--accent-color);
-    padding-left: 1rem;
+    margin: 1rem;
 }
 
 .nav-chat-titles {
@@ -231,4 +231,42 @@
 
 .nav-new-chat:hover {
     background-color: var(--accent-color);
+}
+
+
+.mode-toggle-cont {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.mode-toggle-title {
+    cursor: pointer;
+}
+
+.mode-toggle-select {
+    position: absolute;
+    transform: translateY(5%);
+    background-color: var(--deep-background-color-dark);
+    width: 100%;
+    height: 210%;
+    z-index: 999;
+    border-radius: 10px;
+    list-style: none;
+    font-size: large;
+    font-weight: 500;
+    display: flex;
+    flex-direction: column;
+}
+
+.mode-select-items {
+    padding-top: 0;
+    padding-left: 1rem;
+    margin-top: 1rem;
+    transition: 0.3s ease-in;
+    cursor: pointer;
+}
+
+.mode-select-items:hover{
+    color: var(--accent-color);
 }

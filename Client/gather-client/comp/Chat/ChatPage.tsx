@@ -1,34 +1,46 @@
 'use client'
-import React, { useState, useEffect, useRef, ChangeEvent, FormEvent, ReactNode } from 'react'
+import React, { useState, useEffect, useRef, ChangeEvent, FormEvent, ReactNode, Dispatch, SetStateAction } from 'react'
 import '@/app/Chat/chat.css'
-import axios from 'axios'
+import axios, { AxiosResponse } from 'axios'
 import StaggerText from '@/comp/StaggerText'
 import { useSidebar } from '../../app/context/sidebarContext';
 import NavLayout from '@/app/navLayout'
 import { ChatResponse, IOllamaList, IChatEndpoints } from '@/comp/Types';
+import { usePathname } from 'next/navigation'
+import { constants } from '@/app/constants'
 
 interface IChatPageProps {
     chatEndpoints: IChatEndpoints
     titleComp: () => ReactNode
+    chat: ChatResponse[] | any[]
+    setChat: Dispatch<SetStateAction<ChatResponse[] | any[]>>;
+    resProcess: (res: AxiosResponse<any, any>) => void
+    streamBodyExtras: any
 } 
 
 
 
-const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp }) => {
+const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, setChat, resProcess, streamBodyExtras }) => {
+  const { DEFAULT_MODEL_OPTIONS, DEFAULT_CHAT_METADATA } = constants();
 
-  const DEFAULT_MODEL_OPTIONS = {top_k:'40', top_p:'0.9', temperature: '0.8'}
-  const DEFAULT_CHAT_METADATA = {title:'Chat Title', dateCreate:'', dataChanged:'', currentModel:'llama3:instruct', modelOptions:DEFAULT_MODEL_OPTIONS}
+
+  //const DEFAULT_MODEL_OPTIONS = {top_k:'40', top_p:'0.9', temperature: '0.8'}
+  //const DEFAULT_CHAT_METADATA = {title:'Chat Title', dateCreate:'', dataChanged:'', currentModel:'llama3:instruct', modelOptions:DEFAULT_MODEL_OPTIONS}
 
   /* Chat looks like:
     [{role:xxxx, message:xxxx}, {role:xxxx, message:xxxx}...]
   */
   
   const [prompt, setPrompt] = useState("")
-  const [chat, setChat] = useState<ChatResponse[] | any[]>([])
   const [wait, setWait] = useState(false)
+  const [showBorder, setShowBorder] = useState(false);
+
+  const pathname = usePathname()
 
 
   const titleContRef = useRef<HTMLDivElement>(null);
+  const chatPageRef = useRef<HTMLDivElement>(null);
+  const chatSpaceRef = useRef<HTMLDivElement>(null);
 
 
   const {currentChat, 
@@ -41,14 +53,18 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp }) => {
 
   useEffect(() => {
     if (currentChat) {
-      axios.get("http://localhost:5000/api/chat/" + currentChat).then((res)=>{
-          setChat(res.data.history)
+      console.log(currentChat)
 
-        if (res.data.meta != undefined) {
-            console.log(res.data.meta)
-            setChatMeta(res.data.meta)
-          }
-        
+      axios.get("http://localhost:5000/api/chat/" + currentChat + `?type=${pathname?.replace('/','')}`).then(resProcess).then(()=>{
+            requestAnimationFrame(() => {
+              if (chatSpaceRef.current && chatPageRef.current) {
+                if (chatPageRef.current.scrollHeight > 2000) {
+                  chatPageRef.current.scrollTop = chatPageRef.current.scrollHeight;
+                } else {
+                  chatSpaceRef.current.scrollIntoView({behavior:'smooth'})
+                }
+              }
+            });
       })
     } else {
       console.log("reset")
@@ -72,6 +88,30 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp }) => {
   }, [isSidebarToggled]) 
 
 
+  useEffect(() => {
+    const chatPageElement = chatPageRef.current;
+    if (chatPageElement) {
+      chatPageElement.scrollTop = chatPageElement.scrollHeight;
+      const handleScroll = () => {
+        const scrollHeight = chatPageElement.scrollTop;
+        const scrollHeight2 = chatPageElement.scrollHeight - chatPageElement.clientHeight;
+        setShowBorder(scrollHeight !== scrollHeight2);
+      };
+  
+      // Initialize showBorder state based on current scroll position
+      setShowBorder(chatPageElement.scrollTop !== chatPageElement.scrollHeight - chatPageElement.clientHeight);
+
+      chatPageElement.addEventListener('scroll', handleScroll);
+  
+      return () => {
+        chatPageElement.removeEventListener('scroll', handleScroll);
+      };
+    }
+  }, []);
+
+
+
+
   const sendPrompt = async () => {
 
     let userMessage = {role:'user', content:prompt}
@@ -80,7 +120,7 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp }) => {
     let createdEntryId;
 
     if (!currentChat) {
-      const createResponse = await axios.get("http://localhost:5000/api/newchat")
+      const createResponse = await axios.get("http://localhost:5000/api/newchat" + `?type=${pathname?.replace('/', '')}`)
       const entryId = createResponse.data.id
       //console.log(entryId)
       setCurrentChat(entryId)
@@ -93,7 +133,7 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp }) => {
     let curContext = [...chat]
     curContext.push(userMessage)
     console.log(createdEntryId)
-    const response = await fetch("http://localhost:5000/api/stream", {
+    const response = await fetch(chatEndpoints.stream, {
       method: 'POST',
       headers: {
         "Content-Type": "application/json",
@@ -102,10 +142,23 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp }) => {
         message: prompt, 
         context:curContext,
         meta:chatMeta,
-        id:currentChat? currentChat : createdEntryId
+        id:currentChat? currentChat : createdEntryId,
+        streamBodyExtras
       })
 
     })
+
+    if (createdEntryId) {
+      axios.post("http://localhost:5000/api/chat/summary", {
+        id:createdEntryId,
+        context:curContext
+      }).then((res)=>{
+        if (res.data){
+          setChatMeta((prev)=>({...prev, title: res.data.title}))
+        }
+      })
+    }
+
 
     const reader = response.body?.getReader();
     setWait(prev => !prev)
@@ -141,7 +194,7 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp }) => {
     <div className='chat-page'>
         {titleComp()}
 
-      <div className='chat-box'> 
+      <div ref={chatPageRef} className='chat-box'> 
         <h3> {chat.length === 0 && !wait? "New Chat?" : ""} </h3>
         {chat.map((item, index)=> {
           //console.log(chat)
@@ -154,14 +207,14 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp }) => {
         })}
         
 
-        {wait? <div>Waiting for Response</div> : ""}
+        {wait? <div className='waiting-res-indicator'>Waiting for Response ...</div> : ""}
 
-        <div className='chat-space'></div>
+        <div ref={chatSpaceRef} className='chat-space'></div>
       </div>
 
 
-      <div className='chatbox-cont'>
-        <input className='chat-input' type='text' onChange={(e)=>{setPrompt(e.target.value)}}></input>
+      <div className={`chatbox-cont`}>
+        <input className={`chat-input ${showBorder ? 'with-border' : ''}`} type='text' onChange={(e)=>{setPrompt(e.target.value)}}></input>
         <button className='chat-send' onClick={()=>sendPrompt()}> {'>'} </button>
       </div>
 

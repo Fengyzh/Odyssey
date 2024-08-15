@@ -1,11 +1,13 @@
 'use client'
 import React, { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react'
 import './chat.css'
-import axios from 'axios'
+import axios, { AxiosResponse } from 'axios'
 import { useSidebar } from '@/app/context/sidebarContext';
-import { IChatEndpoints } from '@/comp/Types';
+import { ChatMetaData, ChatResponse, IChatEndpoints } from '@/comp/Types';
 import ChatPage from '@/comp/Chat/ChatPage'
 import ChatTitleFunc from '@/comp/Chat/ChatTitleFunc';
+import { usePathname } from 'next/navigation';
+import {adjustInputLength, sendTitleUpdate, useDebounce} from '@/comp/Util';
 
 
 export default function page() {
@@ -18,19 +20,28 @@ export default function page() {
   //const [chat, setChat] = useState<ChatResponse[] | any[]>([])
   //const [chatMeta, setChatMeta] = useState<ChatMetaData>(DEFAULT_CHAT_METADATA)
   //const [wait, setWait] = useState(false)
+
+
+  const DEFAULT_MODEL_OPTIONS = {top_k:'40', top_p:'0.9', temperature: '0.8'}
+  const DEFAULT_CHAT_METADATA = {title:'Chat Title', dateCreate:'', dataChanged:'', currentModel:'llama3:instruct', modelOptions:DEFAULT_MODEL_OPTIONS}
+
   const [isOptionPanel, setIsOptionPanel] = useState<boolean>(true)
+  const [chat, setChat] = useState<ChatResponse[] | any[]>([])
+
 
   const modelSelectRef = useRef<HTMLDivElement>(null);
   const titleContRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname()
+  const inputRef = useRef<HTMLInputElement>(null)
 
 
   const { toggleSidebar, 
         currentChat, 
-        setCurrentChat, 
         fetchChatSnippets, 
         isSidebarToggled, 
         setChatMeta, 
-        chatMeta } = useSidebar();
+        chatMeta,
+        handleChatDelete } = useSidebar();
 
 
 
@@ -47,11 +58,33 @@ export default function page() {
   }, [isSidebarToggled]) 
 
 
+  useEffect(() => {
+    adjustInputLength(inputRef)
+  }, [chatMeta['title']]) 
 
-const handleChatDelete = () => {
-  axios.get("http://localhost:5000/api/chat/delete/" + currentChat)
-  setCurrentChat('')
-  fetchChatSnippets()
+const cfetch = (res:AxiosResponse<any, any>)=>{
+  console.log(res.data)
+  setChat(res.data.history)
+
+if (res.data.meta != undefined) {
+    console.log(res.data.meta)
+    setChatMeta(res.data.meta)
+  }
+
+}
+
+
+const debouncedSendTitleUpdate = useDebounce((newMeta) => {
+  sendTitleUpdate(pathname, currentChat, newMeta).then((res)=>{
+    fetchChatSnippets()
+  });
+}, 1000);
+
+const handleTitleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
+  let newMeta = chatMeta
+  newMeta["title"] = e.target.value
+  setChatMeta((prev)=>({...prev, title: e.target.value}))
+  debouncedSendTitleUpdate(newMeta)
 }
 
 
@@ -71,6 +104,11 @@ const chatOptionPanel = (<div className='chat-option-panel'>
   <div className='chat-options-cont'>
     <p>Temperature</p>
     <input onChange={(e)=>{setChatMeta((prev)=>({...prev, modelOptions: {...prev.modelOptions, temperature:e.target.value}}))}} className='chat-options-input' value={chatMeta.modelOptions.temperature}/>
+  </div>
+  <div>
+    {/* Update mongo entries to accept sysprompt and then remove the logic here */}
+    <label className='chat-option-sysprompt-label'>System Prompt</label>
+    <textarea className='chat-option-sysprompt' value={chatMeta.modelOptions.systemPrompt? chatMeta.modelOptions.systemPrompt : "Placeholder sys prompt"}/>
   </div>
 
   <button onClick={()=>{console.log(chatMeta)}}>Test</button>
@@ -95,7 +133,9 @@ const chatOptionPanel = (<div className='chat-option-panel'>
       <h2 className='sidebar-toggle' onClick={()=>toggleSidebar()}>O</h2>
 
       <div ref={titleContRef} className='chat-title-func-cont'>
-        <h2 className='chat-page-title'> {chatMeta.title} </h2>
+      {chatMeta.title !== 'Chat Title1'? <input ref={inputRef} className='chat-page-title-t' onChange={(e)=>handleTitleChange(e)} value={chatMeta.title}/> 
+    : 
+    <h2 className='chat-page-title'> {chatMeta.title} </h2>}
           {titleFunctionalBlock()}
       </div>
       <div className='chat-options'>
@@ -106,12 +146,19 @@ const chatOptionPanel = (<div className='chat-option-panel'>
   </div>)}
 
 
+const chatProps = {
+  chatEndpoints: chatEndpoints,
+  titleComp: chatTitle,
+  chat: chat,
+  setChat: setChat,
+  resProcess: cfetch,
+  streamBodyExtras:{}
+}
 
 
   return (
     <ChatPage 
-      chatEndpoints = {chatEndpoints}
-      titleComp={chatTitle}
+      {...chatProps}
     />
   )
 }

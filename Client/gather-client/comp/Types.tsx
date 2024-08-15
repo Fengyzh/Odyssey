@@ -45,6 +45,7 @@ export interface IModelOptions {
   top_k: string;
   top_p: string;
   temperature: string;
+  systemPrompt?: string;
 }
 
 export interface IChatEndpoints {
@@ -53,3 +54,24 @@ export interface IChatEndpoints {
   stream: string;
   delete: string;
 }
+
+export interface IChatInfo {
+  _id:string;
+  docs: string[];
+  history:ChatResponse[];
+  meta: ChatMetaData;
+}
+
+export interface IPipelineLayer {
+  model: string;
+  modelOptions?: IModelOptions;
+  isWeb:boolean;
+  isDoc:boolean;
+}
+
+export interface IPipelineMeta {
+  id:string;
+  pipelineName:string;
+  isFav:boolean;
+}
+

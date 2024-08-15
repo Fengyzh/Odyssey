@@ -27,6 +27,18 @@
     padding-left: 1rem;
 }
 
+.chat-page-title-t {
+    font-size: large;
+    background-color: transparent;
+    font-weight: 600;
+    border: 0;
+    color: white;
+    margin-left: 1rem;
+    padding-left: 0.5rem;
+    max-width: 15%;
+    width: 6%;
+}
+
 
 .chat-options {
     height: 100%;
@@ -35,6 +47,8 @@
     align-items: center;
     width: 5rem;
     position: relative;
+    z-index: 999;
+
 }
 
 .chat-options-btn {
@@ -47,7 +61,6 @@
     color: white;
     font-size: 150%;
     cursor: pointer;
-    z-index: 999;
 }
 
 .chat-option-panel {
@@ -57,13 +70,21 @@
     position: absolute;
     background-color: var(--button-color-dark);
     width: 22rem;
-    height: 10rem;
+    height: 12rem;
     right:0;
     top: 0;
     margin-top: 80%;
     border-radius: 10px;
     z-index: 989;
+    overflow-y: scroll;
 }
+
+.pipeline-option-panel {
+    width: 10rem;
+    height: 3rem;
+    background-color: transparent;
+}
+
 
 .chat-options-cont {
     margin-top: 1rem;
@@ -86,12 +107,12 @@
 }
 
 .chat-delete-btn-cont {
+    position: relative;
     display: flex;
     justify-content: center;
     width: 100%;
     text-align: center;
-    margin-top: auto;
-    margin-bottom: 1rem;
+    margin-top: 0.5rem;
 }
 
 .chat-delete-btn {
@@ -99,13 +120,19 @@
     width: 50%;
     background-color: var(--background-color-dark);
     border: 0;
-    border-radius: 5%;
+    border-radius: 10px;
     color: tomato;
     cursor: pointer;
     font-size: medium;
     font-weight: 600;
     transition: 0.3s ease;
 }
+
+.pipeline-delete-btn {
+    width: 90%;
+    background-color: var(--button-color-dark);
+}
+
 
 .chat-delete-btn:hover{
     background-color: tomato;
@@ -162,6 +189,12 @@
     transition: 0.3s ease-in-out;
 }
 
+.chat-input.with-border {
+    border: 1px solid white;
+  }
+
+
+
 .chat-input:focus {
     border-color: rgb(161, 161, 161);
 }
@@ -195,6 +228,7 @@
     display: flex;
     justify-content: center;
 }
+
 
 .chat-model-cont {
     position: relative;
@@ -258,6 +292,33 @@
 }
 
 
+.chat-option-sysprompt{
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+    width: 90%;
+    height: 8em;
+    padding: 0.5rem;
+    border: 0;
+    border-radius: 10px;
+    resize: none;
+    font-family: sans-serif;
+    background-color: var(--deep-background-color-dark);
+    color: white;
+    font-size: medium;
+    font-weight: 400;
+}
+
+.chat-option-sysprompt-label {
+    margin-top: 1rem;
+    float: left;
+    margin-left: 1rem;
+}
+
+
+
+
+
+
 
 
 
@@ -285,7 +346,13 @@ h2, h3, h1 {
 
 
 
-
+.waiting-res-indicator {
+    background-color: var(--button-color-dark);
+    width: 20%;
+    text-align: center;
+    border-radius: 10px;
+    padding: 0.5rem;
+}
 
 
 
