@@ -19,6 +19,7 @@ mongoDB = mongoClient["Project-gather"]
 mongoCollection = mongoDB["LLM-Chats"]
 mongoDocCollection = mongoDB["LLM-Docs"]
 mongoPipeLCollection = mongoDB["LLM-Pipelines"]
+mongoSavedCollection = mongoDB["LLM-Saved-Settings"]
 #RAG_client = RAGRetriever()
 
 
@@ -204,7 +205,12 @@ def getChat(chatId):
 @app.route('/api/chat/delete/<chatId>', methods=["GET"])
 def deleteChat(chatId):
     try:
-        entry = mongoCollection.delete_one({"_id": ObjectId(chatId)})  # Retrieve the entry with specified fields
+        ty = request.args.get('type')
+        if ty == 'Chat':
+            entry = mongoCollection.delete_one({"_id": ObjectId(chatId)})  # Retrieve the entry with specified fields
+        else:
+            entry = mongoPipeLCollection.delete_one({"_id": ObjectId(chatId)})
+        
         if entry.deleted_count == 1:
             return jsonify({"message": "Entry Deleted Successfully"}), 200
     except Exception as e:
@@ -280,7 +286,6 @@ def getCurFiles(chatId):
 
 @app.route('/api/files/<chatId>', methods=["POST"])
 def deleteCurFiles(chatId):
-
         request_files = request.get_json()['files']
         updatedFileList = [i['_id'] for i in request_files]
         mongoCollection.update_one(
@@ -291,10 +296,21 @@ def deleteCurFiles(chatId):
         return jsonify({"success":"File Deleted"}), 200
 
 @app.route('/api/pipelines', methods=["GET"])
-def getAllPipelines():
+def get_all_pipelines():
     entries = getAllfromCollection(mongoPipeLCollection, {"_id": 1, "title": 1, "meta": 1})
     return jsonify(entries)
 
+
+@app.route('/api/pipelines/<pipelineId>', methods=["POST"])
+def update_pipelines(pipelineId):
+    req = request.get_json()
+
+    entries = mongoPipeLCollection.update_one({'_id':ObjectId(pipelineId)}, {'$set':{
+                'pipeline': req['pipeline'],
+                'pipeline_meta':req['pipelineMeta']
+            }})
+    
+    return jsonify({'response': 'updated pipeline'}, 200)
 
 @app.route('/api/pipelines/stream', methods=["POST"])
 def streamPipeline():
@@ -331,12 +347,34 @@ def streamPipeline():
     return get_data(), {'Content-Type': 'text/plain'}
 
 
+@app.route('/api/pipelines/saved', methods=["GET"])
+def get_all_saved_pipelines():
+    entries = getAllfromCollection(mongoSavedCollection, {"_id": 1, "name": 1})
+    return jsonify(entries)
+
+@app.route('/api/pipelines/saved/<pipelineId>', methods=["GET"])
+def get_saved_pipeline(pipelineId):
+    entries = mongoSavedCollection.find_one({"_id": ObjectId(pipelineId)})
+    if entries:
+        entries['_id'] = str(entries['_id'])
+    return jsonify(entries)
+
+
+@app.route('/api/pipelines/saved', methods=["POST"])
+def save_pipeline():
+    req = request.get_json()
+    entries = mongoSavedCollection.insert_one({'settings':req["pipeline"], 'name':req["name"], 'type':'pipeline'})
+
+    return jsonify({'response': 'pipeline saved'},200)
+
+
+
 
 
 
 
 @app.route('/api/chat/title', methods=["POST"])
-def updateTitle():
+def update_title():
     request_msg = request.get_json()
     chat_meta = request_msg['meta']
     object_id = ObjectId(request_msg['id'])
@@ -360,7 +398,7 @@ def updateTitle():
 
 
 @app.route('/api/LLM/list', methods=["GET"])
-def getLLMList():
+def get_LLM_list():
     modelList = ollama.list()
     return jsonify({'models':modelList})
 

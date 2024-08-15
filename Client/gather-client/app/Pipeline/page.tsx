@@ -6,7 +6,7 @@ import NavLayout from '@/app/navLayout'
 import ChatPage from '@/comp/Chat/ChatPage'
 import { useSidebar } from '../context/sidebarContext';
 import ChatTitleFunc from '@/comp/Chat/ChatTitleFunc';
-import { ChatMetaData, ChatResponse, IChatEndpoints, IModelOptions, IOllamaList, IPipelineLayer, IPipelineMeta } from '@/comp/Types';
+import { ChatMetaData, ChatResponse, IChatEndpoints, IModelOptions, IOllamaList, IPipelineLayer, IPipelineMeta, ISavedPipeline } from '@/comp/Types';
 import axios, { AxiosResponse } from 'axios';
 import { usePathname } from 'next/navigation';
 import { useDebounce, sendTitleUpdate, adjustInputLength } from '@/comp/Util';
@@ -29,6 +29,7 @@ export default function page() {
   const [isModelSelect, setIsModelSelect] = useState<boolean[]>([true])
   const [modelList, setModelList] = useState<IOllamaList[] | []>([])
   const [pipelineMeta, setPipelineMeta] = useState<IPipelineMeta>(DEFAULT_PIPELINE_META)
+  const [savedPipelines, setSavedPipelines] = useState<ISavedPipeline[] | []>([])
 
 
   
@@ -56,17 +57,25 @@ export default function page() {
     }, [chatMeta['title']]) 
 
 
-    /* useEffect(() => {
+    useEffect(() => {
       if (isModal) {      
-        handleExtentModelSelect()    
+        handleExtentModelSelect()
+        fetchAllSavedPipeline()    
       }
-    }, [isModal]) */ 
+    }, [isModal]) 
 
 
     const handleExtentModelSelect = () => {
       axios.get("http://localhost:5000/api/LLM/list").then((res)=> {
         setModelList(res.data?.models.models)
         console.log(res.data.models.models)
+      })
+    }
+
+    const fetchAllSavedPipeline = () => {
+      return axios.get("http://localhost:5000/api/pipelines/saved").then((res)=>{
+        console.log(res.data)
+        setSavedPipelines(res.data)
       })
     }
 
@@ -80,8 +89,15 @@ export default function page() {
         setChatMeta(res.data.meta)
       }
     
-    if (res.data.pipeline != undefined) {
+      console.log(res.data.pipeline)
+      console.log(res.data.pipeline_meta)
+
+    if (res.data.pipeline != undefined && res.data.pipeline_meta != undefined) {
+      setPipeline(res.data.pipeline)
+      setPipelineMeta(res.data.pipeline_meta)
+    } else {
       setPipeline([])
+      setPipelineMeta(DEFAULT_PIPELINE_META)
     }
         
   }
@@ -170,14 +186,21 @@ export default function page() {
   const handleSubmitPipeline = () => {
     // Handle Pipeline update url
     console.log(pipeline)
+    axios.post("http://localhost:5000/api/pipelines/" + currentChat, {
+      pipeline:pipeline,
+      pipelineMeta: pipelineMeta
+    })
   }
 
   const handleFav = () => {
-    let tempMeta = {...pipelineMeta}
-    tempMeta.isFav = !tempMeta.isFav
-    console.log(tempMeta.isFav)
 
-    setPipelineMeta(tempMeta)
+    axios.post("http://localhost:5000/api/pipelines/saved", {
+      pipeline:pipeline,
+      name:pipelineMeta.pipelineName
+    }).then(()=>{
+      fetchAllSavedPipeline()
+    })
+
   }
 
 
@@ -198,6 +221,12 @@ export default function page() {
 
   }
 
+  const handleChangePipeline = (pipelineId:string) => {
+    axios.get("http://localhost:5000/api/pipelines/saved/" + pipelineId).then((res)=>{
+      setPipeline([...res.data.settings])
+    })
+  }
+  
 
 
   const chatOptionPanel = (<div className='pipeline-option-panel chat-option-panel'>
@@ -307,7 +336,7 @@ const modalBody = () => {
     <div>
       <div className='pipeline-title-cont'>
         <input ref={pipelineInputRef} className='pipeline-body-title' onChange={(e)=>handlePipelineTitleChange(e)} value={pipelineMeta.pipelineName}/>
-        <button className={`pipeline-fav ${pipelineMeta.isFav? `pipeline-faved`:``}`} onClick={()=>handleFav()}>Save</button>
+        <button className={`pipeline-fav`} onClick={()=>handleFav()}>Save Pipeline</button>
       </div>
       <div className='pipeline-body'>
           {pipeline.map((pipe, index)=>{
@@ -337,9 +366,9 @@ const modalExBtnPanel = () => {
 const modalLeftBody = () => {
   return (
     <div className='pipeline-saved-body'>
-      <div className='saved-pipelines'>Hello</div>
-      <div className='saved-pipelines'>Hello</div>
-      <div className='saved-pipelines'>Hello</div>
+      {savedPipelines.map((sPipe, index)=>{
+        return <div onClick={()=>handleChangePipeline(sPipe._id)} className='saved-pipelines'>{sPipe.name}</div>
+      })}
 
     </div>
   )
@@ -363,7 +392,8 @@ const ModalProps = {
   modalBody: modalBody,
   setIsModal:setIsModal,
   modalExternalControlPanel: modalExBtnPanel,
-  modelLeftBody: modalLeftBody
+  modalLeftBody: modalLeftBody,
+  modalLeftName: "Saved Pipeline"
 }
 
 

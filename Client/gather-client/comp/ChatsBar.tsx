@@ -21,7 +21,7 @@ TODO:
 */
     const pathname = usePathname()
 
-    const { isSidebarToggled, toggleSidebar, setCurrentChat, currentChat, fetchChatSnippets, chats, tab, setTab, fetchCurrentChatFiles, curFiles } = useSidebar();
+    const { isSidebarToggled, toggleSidebar, setCurrentChat, currentChat, fetchChatSnippets, chats, tab, setTab, fetchCurrentChatFiles, curFiles, chatMeta } = useSidebar();
     const [allFiles, setAllFiles] = useState<FileSnippets[] | []>([])
     const [bufferFiles, setBufferFiles] = useState<FileList | [] | File[]>([]);
     const [addBufferFiles, setAddBufferFiles] = useState<[] | FileSnippets[]>([]);
@@ -302,7 +302,7 @@ TODO:
 
             <div>
                 <button onClick={()=>{console.log(pathname)}}>PATH</button>
-                <button onClick={()=>{console.log(currentChat)}}>Current Chat</button>
+                <button onClick={()=>{console.log(chatMeta)}}>Current Chat</button>
             </div>
         </div>
   )

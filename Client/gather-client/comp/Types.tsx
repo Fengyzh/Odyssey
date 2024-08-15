@@ -75,3 +75,16 @@ export interface IPipelineMeta {
   isFav:boolean;
 }
 
+
+export interface ISavedPipelineSnippet {
+  _id:string;
+  name:string;
+}
+
+export interface ISavedPipeline {
+  _id:string;
+  type:string;
+  name:string;
+  settings: IPipelineLayer[]
+}
+

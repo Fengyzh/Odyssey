@@ -21,7 +21,7 @@
 - [x] Model options in layer option panel
     - [x] Handle model option input logic in layer option panel
 - [] Load all the saved pipeline in the left modal panel (wait for backend impl)
-- [] Pipeline Web/Doc toggle
+- [x] Pipeline Web/Doc toggle
 
 
 
@@ -37,13 +37,15 @@
 - [x] Web Scraping
 - [] Mongo Collection Factory?
 
-- [] Handle update pipeline saving
-- [] Handle delete chats in pipeline
-- [] Create Pipeline collection in Mongo
+- [x] Handle update pipeline saving
+- [x] Handle delete chats in pipeline
+- [x] Create Pipeline collection in Mongo
+- [] Use front-end model options
+- [] Pipeline LLM workflow
 
 # General
 - [x] Phase I refactor
-
+- [] Phase II refactor
 
 
 # Issues

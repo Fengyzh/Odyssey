@@ -1,9 +1,10 @@
 import ollama
 
+DEFAULT_MODEL_OPTIONS = {'temperature': '0.7', 'top_k':'50', 'top_p':'0.9'}
 
 class LLM_controller():
     
-    def chat_llm(self, context="", stream=True, model='llama3:instruct', options={}):
+    def chat_llm(self, context="", stream=True, model='llama3:instruct', options=DEFAULT_MODEL_OPTIONS):
         text_stream = []
         if context:
             text_stream = context
@@ -11,7 +12,7 @@ class LLM_controller():
         model=model,
         messages=text_stream,
         stream=stream,
-        options={})
+        options={'temperature':options['temperature'], 'top_k':options['top_k'], 'top_p':options['top_p']})
 
         return response
 
