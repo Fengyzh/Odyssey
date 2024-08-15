@@ -14,13 +14,14 @@
 - [x] Chat title update
 - [x] Chat title generate
 - [] Pipeline Page
-    - [x] Pipeline option button with delete chat
+    - [x] Pipeline option button with delete chaty
     - [] Implement delete chat logic for pipeline (wait for backend impl)
     - [x] Pipeline panel
 - [x] System prompt in chat option panel
 - [x] Model options in layer option panel
     - [x] Handle model option input logic in layer option panel
 - [] Load all the saved pipeline in the left modal panel (wait for backend impl)
+- [] Pipeline Web/Doc toggle
 
 
 

@@ -25,8 +25,8 @@ export default function page() {
   const [pipeline, setPipeline] = useState<IPipelineLayer[]>([DEFAULT_LAYER_DATA])
   const pathname = usePathname()
   const [isOptionPanel, setIsOptionPanel] = useState<boolean>(false)
-  const [isModal, setIsModal] = useState<boolean>(false)
-  const [isModelSelect, setIsModelSelect] = useState<boolean[]>([false])
+  const [isModal, setIsModal] = useState<boolean>(true)
+  const [isModelSelect, setIsModelSelect] = useState<boolean[]>([true])
   const [modelList, setModelList] = useState<IOllamaList[] | []>([])
   const [pipelineMeta, setPipelineMeta] = useState<IPipelineMeta>(DEFAULT_PIPELINE_META)
 
@@ -186,6 +186,19 @@ export default function page() {
     adjustInputLength(pipelineInputRef, 15, 12)
   }
   
+  const handleRAGOption = (index:number, isWeb:boolean) => {
+    let tempPipe = [...pipeline]
+    
+    if (isWeb) {
+      tempPipe[index].isWeb = !tempPipe[index].isWeb
+    } else {
+      tempPipe[index].isDoc = !tempPipe[index].isDoc
+    }
+    setPipeline(tempPipe)
+
+  }
+
+
 
   const chatOptionPanel = (<div className='pipeline-option-panel chat-option-panel'>
   <div className='chat-delete-btn-cont'>
@@ -240,8 +253,12 @@ const pipelineLayerComp = (pipe:IPipelineLayer, index:number) => {
               </div>
        
 
-              {/* TODO: Handle input logic */}
               <div className='layer-model-option-cont'>
+                <div className='layer-model-options'>
+                  <button className={`layer-model-option-toggle ${pipeline[index].isWeb? `layer-model-option-open` : ``}`} onClick={()=>handleRAGOption(index, true)}>Web</button>
+                  <button className={`layer-model-option-toggle ${pipeline[index].isDoc? `layer-model-option-open` : ``}`} onClick={()=>handleRAGOption(index, false)}>Document</button>
+                </div>
+
                 <div className='layer-model-options'>
                     <p>Temperature</p>
                     <input className='layer-option-inputs' onChange={(e)=>handleLayerOptions(index, 'temperature', e)} value={pipeline[index].modelOptions?.temperature}/>

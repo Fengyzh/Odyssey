@@ -65,6 +65,8 @@ export interface IChatInfo {
 export interface IPipelineLayer {
   model: string;
   modelOptions?: IModelOptions;
+  isWeb:boolean;
+  isDoc:boolean;
 }
 
 export interface IPipelineMeta {

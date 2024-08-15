@@ -340,3 +340,30 @@
 .saved-pipelines:hover {
     background-color: var(--accent-color);
 }
+
+.layer-model-option-toggle {
+    background-color: var(--button-color-dark);
+    width: 50%;
+    border: 0;
+    color: white;
+    padding: 0.5rem 1rem 0.5rem 1rem;
+    border-radius: 10px;
+    font-size: large;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+    transition: 0.3s ease-in;
+}
+
+.layer-model-option-toggle:last-child{
+    margin-left: 0.5rem;
+}
+
+
+.layer-model-option-toggle:hover {
+    background-color: var(--accent-color);
+}
+
+.layer-model-option-open {
+    color: var(--accent-color);
+}
