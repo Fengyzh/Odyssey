@@ -4,24 +4,28 @@ DEFAULT_MODEL_OPTIONS = {'temperature': '0.7', 'top_k':'50', 'top_p':'0.9'}
 
 class LLM_controller():
     
-    def chat_llm(self, context="", stream=True, model='llama3:instruct', options=DEFAULT_MODEL_OPTIONS):
+    def chat_llm(self, context="", stream=True, model='llama3:instruct', options={}):
         text_stream = []
         if context:
             text_stream = context
+        if options:
+            options = {'temperature':options['temperature'], 'top_k':options['top_k'], 'top_p':options['top_p']}
         response = ollama.chat(
         model=model,
         messages=text_stream,
         stream=stream,
-        options={'temperature':options['temperature'], 'top_k':options['top_k'], 'top_p':options['top_p']})
+        options=options)
 
         return response
 
-    def gen_llm(self, message="", systemMsg="", model='llama3:instruct'):
+    def gen_llm(self, message="", systemMsg="", model='llama3:instruct', options={}):
+        if options:
+            options = {'temperature':options['temperature'], 'top_k':options['top_k'], 'top_p':options['top_p']}
         response = ollama.generate(
         model=model,
         system=systemMsg,
         prompt=message,
-        options={})
+        options=options)
 
         return response
     
@@ -34,11 +38,140 @@ class LLM_controller():
             print(chunk['message']['content'], end='', flush=True)
         return
 
-    def convertOptions(options):
+    def convertOptions(self, options):
         convertedOptions = {}
         convertedOptions['temperature'] = float(options['temperature'])
         convertedOptions['top_k'] = int(options['top_k'])
         convertedOptions['top_p'] = float(options['top_p'])
         return convertedOptions
+
+    def pipeline_chat(self, user_prompt, pipeline):
+        pipeline_chat = []
+        working_chat = []
+
+        assit_convo = self.buildConversationBlock(pipeline[0]['modelOptions']['systemPrompt'], 'system')
+        #pipeline_chat.append(assit_convo)
+        working_chat.append(assit_convo)
+
+        user_convo = self.buildConversationBlock(user_prompt, 'user')
+        pipeline_chat.append(user_convo)
+        working_chat.append(user_convo)
+
+
+        for p in pipeline:
+            ans = self.chat_llm(context=working_chat, stream=False, model=p['model'], options=self.convertOptions(p['modelOptions']))['message']
+            pipeline_chat.append(ans)
+            working_chat = []
+            working_chat.append(self.buildConversationBlock(p['modelOptions']['systemPrompt'], 'system'))
+            working_chat.append(self.buildConversationBlock(ans['content'], 'user'))
+
+
+        print(pipeline_chat)
+        print('\n\n')
+        working_chat[1]['role'] = 'assistant'
+        return working_chat
+    
+
+    def pipeline_gen(self, user_prompt, pipeline):
+        full_conversation = user_prompt
+
+        for p in pipeline:
+            ans = self.gen_llm(full_conversation, p['modelOptions']['systemPrompt'])['response']
+            full_conversation = "\n" + ans + "---NEXT_AGENT"
+        
+        return full_conversation
+
+
+
+
+
+    def pipeline_chat_proto(self, user_prompt, pipeline):
+        pipeline_chat = []
+        working_chat = []
+
+        assit_convo = self.buildConversationBlock(pipeline[0]['modelOptions']['systemPrompt'], 'system')
+        working_chat.append(assit_convo)
+
+        user_convo = self.buildConversationBlock(user_prompt, 'user')
+        pipeline_chat.append(user_convo)
+        working_chat.append(user_convo)
+
+
+        for p in pipeline:
+            print(working_chat)
+            ans = self.chat_llm(context=working_chat, stream=True, model=p['model'], options=self.convertOptions(p['modelOptions']))
+            overall = ""
+            for chunk in ans:
+                content = chunk['message']['content']
+                overall += content
+                yield f'{content}'          
+            yield "BREAK"
+            pipeline_chat.append(self.buildConversationBlock(overall, 'assistant'))
+            working_chat = []
+            working_chat.append(self.buildConversationBlock(p['modelOptions']['systemPrompt'], 'system'))
+            working_chat.append(self.buildConversationBlock(overall, 'user'))
+
+        print('\nPipelineChat:\n')
+        print(pipeline_chat)
+        working_chat[1]['role'] = 'assistant'
+        return working_chat
+
+
+
+
+
+if __name__ == '__main__':
+    generic_pipeline_p = "You are part of a LLM response pipeline, you must do as best as you can in your role. you can mention last or previous responses but do not explictly say they are from the previous or last response \n"
+
+
+
+    lc = LLM_controller()
+    sim_pipe = [
+    {
+      "isDoc": False,
+      "isWeb": True,
+      "model": "llama3:instruct",
+      "modelOptions": {
+        "systemPrompt": generic_pipeline_p + "You are a helpful assistant, answer the user request",
+        "temperature": "0.7",
+        "top_k": "50",
+        "top_p": "0.9"
+      }
+    },
+    {
+      "isDoc": False,
+      "isWeb": True,
+      "model": "llama3:instruct",
+      "modelOptions": {
+        "systemPrompt": generic_pipeline_p + "You are a professional reader, tell me what the last response is about",
+        "temperature": "0.9",
+        "top_k": "50",
+        "top_p": "0.9"
+      }
+    }
+  ]
+    
+    #res = lc.pipeline_chat("tell me a very short story about a cat named kit helping a dog named sam to finish its homework assignment", sim_pipe)
+    #res = lc.pipeline_gen("tell me a very short story about a cat named kit helping a dog named sam to finish its homework assignment", sim_pipe)
+    #print(res)
+    """ overall = ""
+    res = lc.chat_llm([lc.buildConversationBlock("tell me a very short story about a cat named kit helping a dog named sam to finish its homework assignment", 'user')], stream=True)
+    for chunk in res:
+        content = chunk['message']['content']
+        overall += content
+        print(content, flush=True, end="")
+    
+    res = lc.chat_llm([ lc.buildConversationBlock(overall, 'assistant') ,lc.buildConversationBlock(generic_pipeline_p + "You are a professional reader, tell me what the last response is about", 'user')], stream=True)
+
+    for chunk in res:
+        content = chunk['message']['content']
+        overall += content
+        print(content, flush=True, end="") """
+    res = lc.pipeline_chat_proto("tell me a very short story", sim_pipe)
+    for chunks in res:
+        print(chunks, flush=True, end='')
+
+    
+
 
 

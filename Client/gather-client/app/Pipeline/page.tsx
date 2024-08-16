@@ -25,8 +25,8 @@ export default function page() {
   const [pipeline, setPipeline] = useState<IPipelineLayer[]>([DEFAULT_LAYER_DATA])
   const pathname = usePathname()
   const [isOptionPanel, setIsOptionPanel] = useState<boolean>(false)
-  const [isModal, setIsModal] = useState<boolean>(true)
-  const [isModelSelect, setIsModelSelect] = useState<boolean[]>([true])
+  const [isModal, setIsModal] = useState<boolean>(false)
+  const [isModelSelect, setIsModelSelect] = useState<boolean[]>([false])
   const [modelList, setModelList] = useState<IOllamaList[] | []>([])
   const [pipelineMeta, setPipelineMeta] = useState<IPipelineMeta>(DEFAULT_PIPELINE_META)
   const [savedPipelines, setSavedPipelines] = useState<ISavedPipeline[] | []>([])
@@ -377,7 +377,7 @@ const modalLeftBody = () => {
 
 
 // TODO: Update to Agent endpoints
-const chatEndpoints:IChatEndpoints = {getCurrentChat:'http://localhost:5000/api/chat/', newChat:'http://localhost:5000/api/newchat', stream:'http://localhost:5000//api/pipelines/stream', delete:'http://localhost:5000/api/chat/delete/'}
+const chatEndpoints:IChatEndpoints = {getCurrentChat:'http://localhost:5000/api/chat/', newChat:'http://localhost:5000/api/newchat', stream:'http://localhost:5000/api/pipelines/stream', delete:'http://localhost:5000/api/chat/delete/'}
 
 const chatProps = {
   chatEndpoints: chatEndpoints,

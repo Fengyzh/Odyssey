@@ -133,7 +133,7 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
     let curContext = [...chat]
     curContext.push(userMessage)
     console.log(createdEntryId)
-    const response = await fetch(chatEndpoints.stream, {
+    const response = await fetch(chatEndpoints.stream + `?type=${pathname?.replace('/', '')}`, {
       method: 'POST',
       headers: {
         "Content-Type": "application/json",
@@ -172,6 +172,10 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
           console.log("break!")
           break;
         }
+        if (a.includes('PRUI')) { /* TEST */
+          setChat(prevChat => [...prevChat, { role: 'assistant', content: "" }]); /* TEST */
+        }
+
         setChat((prevChat) => {      
           if (prevChat.length === 0) {
             return [{ role: 'assistant', content: a }];
@@ -197,7 +201,7 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
       <div ref={chatPageRef} className='chat-box'> 
         <h3> {chat.length === 0 && !wait? "New Chat?" : ""} </h3>
         {chat.map((item, index)=> {
-          //console.log(chat)
+          /* Might remove this staggerText and put the markdown tag in the div at the bottom */
           if (item.role == 'assistant') {
             return <StaggerText className="chat-bubble chat-ai" key={index} text={item.content}></StaggerText>
           }

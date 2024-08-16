@@ -40,7 +40,7 @@
 - [x] Handle update pipeline saving
 - [x] Handle delete chats in pipeline
 - [x] Create Pipeline collection in Mongo
-- [] Use front-end model options
+- [x] Use front-end model options
 - [] Pipeline LLM workflow
 
 # General

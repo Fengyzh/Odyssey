@@ -55,10 +55,14 @@ def stream():
         chat_meta = request_msg['meta']
         print(chat_meta)
         complete_text = ""
-        llm_res = llm.chat_llm(context=chat_context, model=chat_meta['currentModel'], options=LLM_controller.convertOptions(chat_meta['modelOptions']))
+        llm_res = llm.chat_llm(context=chat_context, model=chat_meta['currentModel'], options=llm.convertOptions(options=chat_meta['modelOptions']))
+        count = 0 # TEST
         for chunk in llm_res:
             complete_text += chunk['message']['content']
             content = chunk['message']['content']
+            count += 1 # TEST
+            if count == 10: # TEST
+                yield "PRUI" # TEST
             yield f'{content}'
         
         """ Complete Current Chat history """
