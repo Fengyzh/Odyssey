@@ -167,22 +167,22 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
     while(true) {
       if (reader) {
         const {done, value} = await reader.read()
-        let a = new TextDecoder().decode(value)
+        let streamText = new TextDecoder().decode(value)
         if (done) {
           console.log("break!")
           break;
         }
-        if (a.includes('PRUI')) { /* TEST */
-          setChat(prevChat => [...prevChat, { role: 'assistant', content: "" }]); /* TEST */
+        if (streamText.includes('PRUI')) { /* TEST */
+          //setChat(prevChat => [...prevChat, userMessage, { role: 'assistant', content: "" }]); /* TEST */
         }
 
         setChat((prevChat) => {      
           if (prevChat.length === 0) {
-            return [{ role: 'assistant', content: a }];
+            return [userMessage, { role: 'assistant', content: streamText }];
           } else {
             const updatedChat = [...prevChat];
             const lastMessage = updatedChat[updatedChat.length - 1];
-            updatedChat[updatedChat.length - 1] = { ...lastMessage, content: lastMessage.content + a };          
+            updatedChat[updatedChat.length - 1] = { ...lastMessage, content: lastMessage.content + streamText };          
             return updatedChat;
           }
         });    

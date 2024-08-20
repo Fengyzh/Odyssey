@@ -13,14 +13,15 @@
     - [x] LLM settings panel
 - [x] Chat title update
 - [x] Chat title generate
-- [] Pipeline Page
+- [x] Pipeline Page
     - [x] Pipeline option button with delete chaty
-    - [] Implement delete chat logic for pipeline (wait for backend impl)
+    - [x] Implement delete chat logic for pipeline (wait for backend impl)
     - [x] Pipeline panel
 - [x] System prompt in chat option panel
 - [x] Model options in layer option panel
     - [x] Handle model option input logic in layer option panel
-- [] Load all the saved pipeline in the left modal panel (wait for backend impl)
+- [x] Load all the saved pipeline in the left modal panel (wait for backend impl)
+- [] Add delete saved pipeline in left modal panel
 - [x] Pipeline Web/Doc toggle
 
 
@@ -32,7 +33,7 @@
 - [x] Hybrid Search
 - [] Reranker in Hybrid Search
 - [] Connect Backend to RAG service
-- [] Add HyDE before RAG retrieval
+- [x] Add HyDE before RAG retrieval
 - [x] Add chat history into LLM response so the LLM knows the current chat's context
 - [x] Web Scraping
 - [] Mongo Collection Factory?
@@ -42,6 +43,7 @@
 - [x] Create Pipeline collection in Mongo
 - [x] Use front-end model options
 - [] Pipeline LLM workflow
+    - [] Add front-end logic to send all user questions to backend for LLM context
 
 # General
 - [x] Phase I refactor
@@ -61,7 +63,6 @@
 - The curContext in Chat.tsx (line 69 - 70) has a logic where the newest user message will be added to the context making the "message" field of the request to the backend kind of redundant. But there should be more thoughts on whether we should keep it this way or not
 
 
-
 # Decisions
 
 - Not to implement any MongoDB doc id trashing
@@ -74,6 +75,8 @@
     - TEMP: Things to be used temporarily and meant to be removed later
 
 
+# Refactor Tips:
+    - You can just make the front-end send the curFiles of the currentChat to backend for RAG in /api/stream instead of making it access the DB to find all the curFiles belong to the chat
 
 
 

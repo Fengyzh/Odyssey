@@ -77,10 +77,9 @@ class LLM_controller():
 
         for p in pipeline:
             ans = self.gen_llm(full_conversation, p['modelOptions']['systemPrompt'])['response']
-            full_conversation = "\n" + ans + "---NEXT_AGENT"
+            full_conversation = full_conversation + "\n" + ans + "---NEXT_AGENT"
         
         return full_conversation
-
 
 
 
@@ -115,13 +114,46 @@ class LLM_controller():
         print(pipeline_chat)
         working_chat[1]['role'] = 'assistant'
         return working_chat
+    
+
+
+
+    def pipeline_gen_pod(self, full_convo, curPipeline):
+        res = self.gen_llm(full_convo, curPipeline['modelOptions']['systemPrompt'])['response']
+
+        return res
+
+    """ 
+        Returns:
+            pipeline_convo: The full text of the generation, including the user question
+            chat: The Chat form of the generation
+     """
+    def pipeline_chat_pod(self, user_prompt, pipeline, cutOffUserPrompt=False):
+        chat = [] if cutOffUserPrompt else [self.buildConversationBlock(user_prompt, 'user')]
+        pipeline_convo = "" if cutOffUserPrompt else f"{user_prompt}"
+
+        for index, p in enumerate(pipeline):
+            if index == 0:
+                curSlice = self.pipeline_gen_pod(user_prompt, p)
+            else:
+                curSlice = self.pipeline_gen_pod(chat[-1]['content'], p)
+            
+
+            pipeline_convo = pipeline_convo + curSlice
+            if index != len(pipeline)-1:
+                pipeline_convo = pipeline_convo + "<PIPELINE_BREAK>"
+            chat.append(self.buildConversationBlock(curSlice, 'assistant'))
+
+        return [pipeline_convo, chat]
+
+
 
 
 
 
 
 if __name__ == '__main__':
-    generic_pipeline_p = "You are part of a LLM response pipeline, you must do as best as you can in your role. you can mention last or previous responses but do not explictly say they are from the previous or last response \n"
+    generic_pipeline_p = "You are part of a LLM response pipeline, you must do as best as you can in your role. you can mention last or previous responses but do not explictly say they are from the previous or last response. You might be given context to the questions the user have asked previously in the structure of { PREVIOUS_QUESTIONS: question1, question2, ... } but there won't be any response to those questions in your context, treat it as those questions had been answered. \n"
 
 
 
@@ -143,7 +175,7 @@ if __name__ == '__main__':
       "isWeb": True,
       "model": "llama3:instruct",
       "modelOptions": {
-        "systemPrompt": generic_pipeline_p + "You are a professional reader, tell me what the last response is about",
+        "systemPrompt": generic_pipeline_p + "You are a professional summarizer, summarize what it said",
         "temperature": "0.9",
         "top_k": "50",
         "top_p": "0.9"
@@ -167,11 +199,22 @@ if __name__ == '__main__':
         content = chunk['message']['content']
         overall += content
         print(content, flush=True, end="") """
-    res = lc.pipeline_chat_proto("tell me a very short story", sim_pipe)
-    for chunks in res:
-        print(chunks, flush=True, end='')
+    #res = lc.pipeline_chat_proto("tell me a very short story", sim_pipe)
+    #for chunks in res:
+        #print(chunks, flush=True, end='')
+
+    res = lc.pipeline_chat_pod('tell me a very short story', sim_pipe, True)
+    res2 = lc.pipeline_chat_pod('{ PREVIOUS_QUESTIONS: tell me a very short story } how about one about cats', sim_pipe)
+    #print(res)
+    print(res2)
+    #print(lc.pipeline_chat_pod(res[0] + '\n' + 'How about a sandwich?', sim_pipe, False)[1])
 
     
 
+""" 
+run first pipeline with user request
 
+
+
+ """
 

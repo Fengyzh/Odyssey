@@ -19,17 +19,21 @@ emb = HuggingFaceBgeEmbeddings(
 
 
 class chromaRetriever():
-    def __init__(self, collection) -> None:
+    def __init__(self, collection=None) -> None:
         self.collection = collection
 
     def preProcess(self, text):
         return text.split()
 
     def query_documents(self,query, kwargs):
-        q = self.preProcess(query)
+        #q = self.preProcess(query)
+        q = query
         results = self.collection.query(query_texts=q, n_results=kwargs)
         print("\n\n", results, "\n\n")
         return results['documents']
+
+    def set_collection(self, collection):
+        self.collection = collection
 
 
 
@@ -45,6 +49,7 @@ class RAGRetriever():
         self.chromaClient = chromadb.PersistentClient(path="./chromadir")
         self.embedding = emb
         self.text_spliter = RecursiveCharacterTextSplitter(chunk_size = 500, chunk_overlap=0)
+        self.lc = LLM_controller()
     
         
     def create_embeddings(self, docs, *, collection_name):
@@ -53,6 +58,14 @@ class RAGRetriever():
 
         if (collection.count() < 1):
             collection.add(documents=splits, ids=[str(i) for i in range(len(splits))])
+        
+
+    def hyde(self, user_prompt, n=1):
+        generated_docs = [user_prompt]
+        for _ in range(n):
+            generated_docs.append(self.lc.gen_llm(user_prompt, "Given a question, generate a short and concise answer that answers the user question, it does not have to be detailed. Answer:")['response'])
+        
+        return generated_docs
 
 
     def hybrid_search(self, query, documents, kwargs=2, weights=[0.5,0.5], fweights=None):
@@ -61,27 +74,28 @@ class RAGRetriever():
         if fweights:
             sparse_vector_weight = fweights
 
+
+        chroma_retriever = chromaRetriever()
         for i in documents:
             try:
                 collection = self.chromaClient.get_collection(name=i, embedding_function=MyEmbeddingFunction())
                 docs = collection.get(include=["documents"])['documents']
+                chroma_retriever.set_collection(collection)
+
+                tokenized_doc = [t.split() for t in docs]
+                tokenized_query = query.split()
+                bm25_search = BM25Okapi(tokenized_doc)
+                sparse_res = bm25_search.get_top_n(tokenized_query, docs, n=max(1, sparse_vector_weight[0]))
+                sparse_res[-1] += "\n BM25"
+
+                print('\nquery: ', query)
+                vector_res = chroma_retriever.query_documents(query, max(1, sparse_vector_weight[1]))[0]
+
+                rag_context.append(sparse_res)
+                rag_context.append(vector_res)
             except:
                 print(f"{i} doesn't exist as one of the collections")
                 continue
-
-            tokenized_doc = [t.split() for t in docs]
-            tokenized_query = query.split()
-            bm25_search = BM25Okapi(tokenized_doc)
-            sparse_res = bm25_search.get_top_n(tokenized_query, docs, n=sparse_vector_weight[0])
-            sparse_res += "\n BM25"
-
-
-            v = chromaRetriever(collection)
-            
-            vector_res = v.query_documents(query, sparse_vector_weight[1])[0]
-
-            rag_context.append(sparse_res)
-            rag_context.append(vector_res)
 
         return rag_context
 
@@ -148,9 +162,15 @@ class Web_Retriever:
 
 
 if __name__ == '__main__':
-    wr = Web_Retriever()
-    wr.webSearch()
+    #wr = Web_Retriever()
+    #wr.webSearch()
     #lm = LLM_controller()
+    r = RAGRetriever()
+    res = r.hyde('what is inode number')[1]
+    re = r.hybrid_search(query=res, documents=['test_emb'])
+
+    print(re)
+    #print(r.hyde('how to make a sandwich', 2))
 
 
 
