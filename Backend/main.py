@@ -319,16 +319,22 @@ def streamPipeline():
         user_prompt = request_msg['message']
         chat_meta = request_msg['meta']
         chat_pipeline = request_msg['streamBodyExtras']['pipeline']
-        llm_res = llm.pipeline_chat_pod(user_prompt, chat_pipeline, False, True)
+        chat_context = request_msg['context']
+        pipeline_prompt = llm.extract_pipeline_question_context(chat_context) + f'\n {user_prompt}'
+
+        print(pipeline_prompt)
+        llm_res = llm.pipeline_chat_pod(pipeline_prompt, chat_pipeline, False, True)
         for chunk in llm_res:
             yield chunk
         [pipeline_convo, chat] = llm.getPipelineResults()
         
-        print(pipeline_convo, chat)
         
         if (request_msg['id']):
             object_id = ObjectId(request_msg['id'])
-            mongoPipeLCollection.update_one({'_id':object_id}, {'$push': {'history': {'$each': chat}}})
+            mongoPipeLCollection.update_one({'_id':object_id}, {'$push': {
+                'history': {'$each': chat},
+                }
+            })
 
     request_msg = request.get_json()
     

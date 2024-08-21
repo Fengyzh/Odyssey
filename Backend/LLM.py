@@ -124,12 +124,19 @@ class LLM_controller():
     def getPipelineResults(self):
         return [self.pipeline_convo, self.chat]
 
-    def preprocess_pipeline_prompt(self, curPipeline):
-        for _ in curPipeline:
-            curPipeline['modelOptions']['systemPrompt'] = generic_pipeline_p + curPipeline['modelOptions']['systemPrompt']
-        return curPipeline
+    def preprocess_pipeline_prompt(self, cur_pipeline):
+        for _ in cur_pipeline:
+            cur_pipeline['modelOptions']['systemPrompt'] = generic_pipeline_p + cur_pipeline['modelOptions']['systemPrompt']
+        return cur_pipeline
 
-
+    def extract_pipeline_question_context(self, chat_context):
+        extracted_user_prompts = []
+        for context in chat_context:
+            if context['role'] == 'user':
+                extracted_user_prompts.append(context['content'])
+        extracted_user_prompts.pop()
+        user_prompts = "PREVIOUS_QUESTIONS:" + ",".join(extracted_user_prompts) + ' Current Questions:'
+        return user_prompts
 
 
     def pipeline_gen_pod(self, full_convo, curPipeline, stream=False):
@@ -148,7 +155,6 @@ class LLM_controller():
         self.pipeline_convo = "" 
 
 
-        print(stream)
         for index, p in enumerate(pipeline):
 
             curSlice = self.pipeline_gen_pod(self.chat[-1]['content'], p, stream)
