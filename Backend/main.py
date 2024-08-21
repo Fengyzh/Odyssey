@@ -56,13 +56,9 @@ def stream():
         print(chat_meta)
         complete_text = ""
         llm_res = llm.chat_llm(context=chat_context, model=chat_meta['currentModel'], options=llm.convertOptions(options=chat_meta['modelOptions']))
-        count = 0 # TEST
         for chunk in llm_res:
             complete_text += chunk['message']['content']
             content = chunk['message']['content']
-            count += 1 # TEST
-            if count == 10: # TEST
-                yield "PRUI" # TEST
             yield f'{content}'
         
         """ Complete Current Chat history """
@@ -320,25 +316,20 @@ def update_pipelines(pipelineId):
 def streamPipeline():
 
     def get_data():
-        chat_context = request_msg['context']
+        user_prompt = request_msg['message']
         chat_meta = request_msg['meta']
-        chat_pipeline = request_msg['pipeline']
-        complete_text = ""
-        llm_res = llm.chat_llm(context=chat_context, model=chat_meta['currentModel'], options=LLM_controller.convertOptions(chat_meta['modelOptions']))
+        chat_pipeline = request_msg['streamBodyExtras']['pipeline']
+        llm_res = llm.pipeline_chat_pod(user_prompt, chat_pipeline, False, True)
         for chunk in llm_res:
-            complete_text += chunk['message']['content']
-            content = chunk['message']['content']
-            yield f'{content}'
+            yield chunk
+        [pipeline_convo, chat] = llm.getPipelineResults()
         
-        """ Complete Current Chat history """
-        chat_context.append({'role':'assistant', 'content':complete_text})
-        print("context", chat_context)
+        print(pipeline_convo, chat)
+        
         if (request_msg['id']):
             object_id = ObjectId(request_msg['id'])
-            mongoCollection.update_one({'_id':object_id}, {'$set':{
-                'history': chat_context,
-                'meta':chat_meta
-            }})
+            mongoPipeLCollection.update_one({'_id':object_id}, {'$push': {'history': {'$each': chat}}})
+
     request_msg = request.get_json()
     
     """ if request_msg and request_msg['id']:

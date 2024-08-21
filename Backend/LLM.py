@@ -1,8 +1,13 @@
 import ollama
 
 DEFAULT_MODEL_OPTIONS = {'temperature': '0.7', 'top_k':'50', 'top_p':'0.9'}
+generic_pipeline_p = "You are part of a LLM response pipeline, you must do as best as you can in your role. you can mention last or previous responses but do not explictly say they are from the previous or last response. You might be given context to the questions the user have asked previously in the structure of { PREVIOUS_QUESTIONS: question1, question2, ... } but there won't be any response to those questions in your context, treat it as those questions had been answered. \n"
+
 
 class LLM_controller():
+    def __init__(self):
+        self.pipeline_convo = []
+        self.chat = []
     
     def chat_llm(self, context="", stream=True, model='llama3:instruct', options={}):
         text_stream = []
@@ -18,13 +23,14 @@ class LLM_controller():
 
         return response
 
-    def gen_llm(self, message="", systemMsg="", model='llama3:instruct', options={}):
+    def gen_llm(self, message="", systemMsg="", model='llama3:instruct', options={}, stream=False):
         if options:
             options = {'temperature':options['temperature'], 'top_k':options['top_k'], 'top_p':options['top_p']}
         response = ollama.generate(
         model=model,
         system=systemMsg,
         prompt=message,
+        stream=stream,
         options=options)
 
         return response
@@ -72,11 +78,11 @@ class LLM_controller():
         return working_chat
     
 
-    def pipeline_gen(self, user_prompt, pipeline):
+    def pipeline_gen(self, user_prompt, pipeline, stream=False):
         full_conversation = user_prompt
 
         for p in pipeline:
-            ans = self.gen_llm(full_conversation, p['modelOptions']['systemPrompt'])['response']
+            ans = self.gen_llm(full_conversation, p['modelOptions']['systemPrompt'], stream=stream)['response']
             full_conversation = full_conversation + "\n" + ans + "---NEXT_AGENT"
         
         return full_conversation
@@ -115,11 +121,20 @@ class LLM_controller():
         working_chat[1]['role'] = 'assistant'
         return working_chat
     
+    def getPipelineResults(self):
+        return [self.pipeline_convo, self.chat]
+
+    def preprocess_pipeline_prompt(self, curPipeline):
+        for _ in curPipeline:
+            curPipeline['modelOptions']['systemPrompt'] = generic_pipeline_p + curPipeline['modelOptions']['systemPrompt']
+        return curPipeline
 
 
 
-    def pipeline_gen_pod(self, full_convo, curPipeline):
-        res = self.gen_llm(full_convo, curPipeline['modelOptions']['systemPrompt'])['response']
+
+    def pipeline_gen_pod(self, full_convo, curPipeline, stream=False):
+        processed_pipeline_options = self.preprocess_pipeline_prompt(curPipeline)
+        res = self.gen_llm(full_convo, processed_pipeline_options['modelOptions']['systemPrompt'], stream=stream)
 
         return res
 
@@ -128,23 +143,38 @@ class LLM_controller():
             pipeline_convo: The full text of the generation, including the user question
             chat: The Chat form of the generation
      """
-    def pipeline_chat_pod(self, user_prompt, pipeline, cutOffUserPrompt=False):
-        chat = [] if cutOffUserPrompt else [self.buildConversationBlock(user_prompt, 'user')]
-        pipeline_convo = "" if cutOffUserPrompt else f"{user_prompt}"
+    def pipeline_chat_pod(self, user_prompt, pipeline, cutOffUserPrompt=False, stream=False):
+        self.chat = [self.buildConversationBlock(user_prompt, 'user')]
+        self.pipeline_convo = "" 
 
+
+        print(stream)
         for index, p in enumerate(pipeline):
-            if index == 0:
-                curSlice = self.pipeline_gen_pod(user_prompt, p)
-            else:
-                curSlice = self.pipeline_gen_pod(chat[-1]['content'], p)
+
+            curSlice = self.pipeline_gen_pod(self.chat[-1]['content'], p, stream)
             
+            if not stream:
+                self.pipeline_convo = self.pipeline_convo + curSlice['response']
+                self.chat.append(self.buildConversationBlock(curSlice['response'], 'assistant'))
+            else:
+                stream_text = ""
+                for chunk in curSlice:
+                    stream_text += chunk['response']
+                    #print(chunk['response'], flush=True, end="")
+                    yield chunk['response']
+                if index != len(pipeline)-1:
+                    #print("<PIPELINE_BREAK>")
+                    yield "<PIPELINE_BREAK>"
 
-            pipeline_convo = pipeline_convo + curSlice
+                self.chat.append(self.buildConversationBlock(stream_text, 'assistant'))
+                self.pipeline_convo = self.pipeline_convo + stream_text
+
             if index != len(pipeline)-1:
-                pipeline_convo = pipeline_convo + "<PIPELINE_BREAK>"
-            chat.append(self.buildConversationBlock(curSlice, 'assistant'))
+                self.pipeline_convo = self.pipeline_convo + "<PIPELINE_BREAK>"
 
-        return [pipeline_convo, chat]
+        if cutOffUserPrompt:
+            del self.chat[0]
+
 
 
 
@@ -203,10 +233,25 @@ if __name__ == '__main__':
     #for chunks in res:
         #print(chunks, flush=True, end='')
 
-    res = lc.pipeline_chat_pod('tell me a very short story', sim_pipe, True)
-    res2 = lc.pipeline_chat_pod('{ PREVIOUS_QUESTIONS: tell me a very short story } how about one about cats', sim_pipe)
-    #print(res)
-    print(res2)
+    #res2 = lc.pipeline_chat_pod('{ PREVIOUS_QUESTIONS: tell me a very short story } how about one about cats', sim_pipe)
+    #res = lc.gen_llm('tell me a very short story', stream=True)
+
+    res = lc.pipeline_chat_pod('tell me a very short story', sim_pipe, True, True)
+
+    for chunk in res:
+        print(chunk, flush=True, end="")
+    print("\n")
+    print(lc.getPipelineResults())
+    print("\n")
+
+    """ res = lc.pipeline_chat_pod('tell me a very short story about cat', sim_pipe, True, True)
+    
+    for chunk in res:
+        print(chunk, flush=True, end="")
+    print("\n")
+    print(lc.getPipelineResults())
+    print("\n") """
+
     #print(lc.pipeline_chat_pod(res[0] + '\n' + 'How about a sandwich?', sim_pipe, False)[1])
 
     
@@ -214,7 +259,23 @@ if __name__ == '__main__':
 """ 
 run first pipeline with user request
 
+    How to do multiple calls    
 
+    res = lc.pipeline_chat_pod('tell me a very short story', sim_pipe, True, True)
+
+    for chunk in res:
+        print(chunk, flush=True, end="")
+    print("\n")
+    print(lc.getPipelineResults())
+    print("\n")
+
+    res = lc.pipeline_chat_pod('tell me a very short story about cat', sim_pipe, True, True)
+    
+    for chunk in res:
+        print(chunk, flush=True, end="")
+    print("\n")
+    print(lc.getPipelineResults())
+    print("\n")
 
  """
 

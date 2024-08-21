@@ -172,11 +172,14 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
           console.log("break!")
           break;
         }
-        if (streamText.includes('PRUI')) { /* TEST */
-          //setChat(prevChat => [...prevChat, userMessage, { role: 'assistant', content: "" }]); /* TEST */
+        if (streamText.includes('<PIPELINE_BREAK>')) { /* TEST */
+          setChat(prevChat => [...prevChat, { role: 'assistant', content: "" }]); /* TEST */
         }
 
-        setChat((prevChat) => {      
+        setChat((prevChat) => {
+          if (streamText == '<PIPELINE_BREAK>') {
+            return [...prevChat]
+          }  
           if (prevChat.length === 0) {
             return [userMessage, { role: 'assistant', content: streamText }];
           } else {

@@ -39,7 +39,8 @@ export default function page() {
     isSidebarToggled, 
     setChatMeta, 
     chatMeta,
-    handleChatDelete } = useSidebar();
+    handleChatDelete,
+    setCurrentChat } = useSidebar();
 
     useEffect(() => {
       if (titleContRef && titleContRef.current) {
@@ -183,9 +184,17 @@ export default function page() {
     }    
   }
 
-  const handleSubmitPipeline = () => {
+  const handleSubmitPipeline = async () => {
     // Handle Pipeline update url
     console.log(pipeline)
+    if (!currentChat) {
+      const createResponse = await axios.get("http://localhost:5000/api/newchat" + `?type=${pathname?.replace('/', '')}`)
+      const entryId = createResponse.data.id
+      setCurrentChat(entryId)
+      fetchChatSnippets()
+    }
+
+    console.log(currentChat)
     axios.post("http://localhost:5000/api/pipelines/" + currentChat, {
       pipeline:pipeline,
       pipelineMeta: pipelineMeta
