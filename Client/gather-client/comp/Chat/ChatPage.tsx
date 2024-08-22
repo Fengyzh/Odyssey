@@ -8,6 +8,7 @@ import NavLayout from '@/app/navLayout'
 import { ChatResponse, IOllamaList, IChatEndpoints } from '@/comp/Types';
 import { usePathname } from 'next/navigation'
 import { constants } from '@/app/constants'
+import { createNewChat } from '../Util'
 
 interface IChatPageProps {
     chatEndpoints: IChatEndpoints
@@ -16,12 +17,15 @@ interface IChatPageProps {
     setChat: Dispatch<SetStateAction<ChatResponse[] | any[]>>;
     resProcess: (res: AxiosResponse<any, any>) => void
     streamBodyExtras: any
+    resCleanUp: () => void
+    chatInputBox: (defaultChatInputBox:React.JSX.Element) => React.JSX.Element
+    streamProcessing: (userMessage:ChatResponse, streamText:string) => void;
 } 
 
 
 
-const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, setChat, resProcess, streamBodyExtras }) => {
-  const { DEFAULT_MODEL_OPTIONS, DEFAULT_CHAT_METADATA } = constants();
+const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, setChat, resProcess, streamBodyExtras, resCleanUp, chatInputBox, streamProcessing }) => {
+  const { DEFAULT_LAYER_DATA, DEFAULT_CHAT_METADATA } = constants();
 
 
   //const DEFAULT_MODEL_OPTIONS = {top_k:'40', top_p:'0.9', temperature: '0.8'}
@@ -70,6 +74,7 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
       console.log("reset")
       setChat([])
       setChatMeta(DEFAULT_CHAT_METADATA)
+      resCleanUp()
     }
 
   }, [currentChat])
@@ -111,29 +116,37 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
 
 
 
+  const handleKeyPress = (e:React.KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key == 'Enter') {
+      sendPrompt()
+    }
+  }
+
 
   const sendPrompt = async () => {
-
+    
     let userMessage = {role:'user', content:prompt}
     setWait(prev => !prev)
     setChat(prevChat => [...prevChat, userMessage, { role: 'assistant', content: "" }]);
     let createdEntryId;
 
     if (!currentChat) {
-      const createResponse = await axios.get("http://localhost:5000/api/newchat" + `?type=${pathname?.replace('/', '')}`)
-      const entryId = createResponse.data.id
-      //console.log(entryId)
-      setCurrentChat(entryId)
-      createdEntryId = entryId
-      fetchChatSnippets()
+      const createResponse = await createNewChat(pathname)
+      if (createResponse) {
+        const entryId = createResponse.data.id
+        //console.log(entryId)
+        setCurrentChat(entryId)
+        createdEntryId = entryId
+        fetchChatSnippets()
+      }
     }
-
+    
 
     //setChat((prevChat) => [...prevChat, { role: 'assistant', content: "" }])
     let curContext = [...chat]
     curContext.push(userMessage)
     console.log(createdEntryId)
-    const response = await fetch(chatEndpoints.stream, {
+    const response = await fetch(chatEndpoints.stream + `?type=${pathname?.replace('/', '')}`, {
       method: 'POST',
       headers: {
         "Content-Type": "application/json",
@@ -149,12 +162,14 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
     })
 
     if (createdEntryId) {
-      axios.post("http://localhost:5000/api/chat/summary", {
+      axios.post("http://localhost:5000/api/chat/summary" + `?type=${pathname?.replace('/', '')}`, {
         id:createdEntryId,
-        context:curContext
+        context:curContext,
+        meta:chatMeta
       }).then((res)=>{
         if (res.data){
           setChatMeta((prev)=>({...prev, title: res.data.title}))
+          fetchChatSnippets()
         }
       })
     }
@@ -162,30 +177,58 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
 
     const reader = response.body?.getReader();
     setWait(prev => !prev)
-
+    setPrompt("")
 
     while(true) {
       if (reader) {
         const {done, value} = await reader.read()
-        let a = new TextDecoder().decode(value)
+        let streamText = new TextDecoder().decode(value)
         if (done) {
           console.log("break!")
           break;
         }
-        setChat((prevChat) => {      
-          if (prevChat.length === 0) {
-            return [{ role: 'assistant', content: a }];
-          } else {
-            const updatedChat = [...prevChat];
-            const lastMessage = updatedChat[updatedChat.length - 1];
-            updatedChat[updatedChat.length - 1] = { ...lastMessage, content: lastMessage.content + a };          
-            return updatedChat;
-          }
-        });    
+
+
+        streamProcessing(userMessage, streamText)
+  
       }
 }
 
 }
+
+
+const handleRAGOptions = (isWeb:boolean) => {
+  let tempMeta = {...chatMeta}
+  
+  if (isWeb) {
+    tempMeta.isWeb = !tempMeta.isWeb
+  } else {
+    tempMeta.isDoc = !tempMeta.isDoc 
+  }
+
+  console.log(tempMeta)
+  setChatMeta(tempMeta)
+}
+
+
+
+
+
+const ChatInputBoxComp = (el=<div></div>) => {
+    return (      
+    <div className={`chatbox-cont`}>
+    {pathname==='/Chat'? 
+      <div className='chat-option-cont'>
+        <button onClick={()=>handleRAGOptions(true)} className={`chat-option-btn ${chatMeta.isWeb? `chat-option-on` : ``}`}>Web</button>
+        <button onClick={()=>handleRAGOptions(false)} className={`chat-option-btn ${chatMeta.isDoc? `chat-option-on` : ``}`}>Document</button>
+      </div> : ''}
+      <input className={`chat-input ${showBorder ? 'with-border' : ''}`} type='text' value={prompt} onChange={(e)=>{setPrompt(e.target.value)}}></input>
+        <button onKeyDown={(e)=>handleKeyPress(e)} className='chat-send' onClick={()=>sendPrompt()}> {'>'} </button>
+      <button onClick={()=>console.log(streamBodyExtras)}>TEST</button>
+
+  </div> )
+}
+
 
 
 
@@ -197,7 +240,7 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
       <div ref={chatPageRef} className='chat-box'> 
         <h3> {chat.length === 0 && !wait? "New Chat?" : ""} </h3>
         {chat.map((item, index)=> {
-          //console.log(chat)
+          /* Might remove this staggerText and put the markdown tag in the div at the bottom */
           if (item.role == 'assistant') {
             return <StaggerText className="chat-bubble chat-ai" key={index} text={item.content}></StaggerText>
           }
@@ -213,10 +256,9 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
       </div>
 
 
-      <div className={`chatbox-cont`}>
-        <input className={`chat-input ${showBorder ? 'with-border' : ''}`} type='text' onChange={(e)=>{setPrompt(e.target.value)}}></input>
-        <button className='chat-send' onClick={()=>sendPrompt()}> {'>'} </button>
-      </div>
+        {chatInputBox(ChatInputBoxComp())}
+
+
 
     </div>
     </NavLayout>

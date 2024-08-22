@@ -4,6 +4,8 @@ import axios from 'axios';
 import React, { createContext, useState, useContext, ReactNode, Dispatch, SetStateAction, useEffect } from 'react';
 import { ChatSnippets, FileSnippets, ChatMetaData } from '@/comp/Types';
 import { usePathname } from 'next/navigation';
+import { constants } from '@/app/constants'
+
 
 
 interface SidebarContextType {
@@ -23,6 +25,9 @@ interface SidebarContextType {
   handleChatDelete: () => void;
 }
 
+const { DEFAULT_LAYER_DATA, DEFAULT_CHAT_METADATA } = constants();
+
+
 // Create the context with an empty default value
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
@@ -32,7 +37,6 @@ interface SidebarProviderProps {
 
 
 const DEFAULT_MODEL_OPTIONS = {top_k:'40', top_p:'0.9', temperature: '0.8'}
-const DEFAULT_CHAT_METADATA = {title:'Chat Title', dateCreate:'', dataChanged:'', currentModel:'llama3:instruct', modelOptions:DEFAULT_MODEL_OPTIONS}
 
 // Create the provider component
 export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) => {
@@ -49,8 +53,7 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
   const fetchChatSnippets = () => {
     if (pathname === "/Chat") {    
       axios.get("http://localhost:5000/api/chats").then((res)=>{
-      setChats(res.data)
-      //console.log(res.data)
+      setChats([...res.data])
     })
   } else if (pathname == "/Pipeline") {
     axios.get("http://localhost:5000/api/pipelines").then((res)=>{
@@ -75,7 +78,7 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
 
   const handleChatDelete = () => {
     axios.get("http://localhost:5000/api/chat/delete/" + currentChat + `?type=${pathname?.replace('/', '')}`)
-    setCurrentChat('')
+    setCurrentChat(prev=>'')
     fetchChatSnippets()
   }
 

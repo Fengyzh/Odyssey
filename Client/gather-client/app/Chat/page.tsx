@@ -25,7 +25,7 @@ export default function page() {
   const DEFAULT_MODEL_OPTIONS = {top_k:'40', top_p:'0.9', temperature: '0.8'}
   const DEFAULT_CHAT_METADATA = {title:'Chat Title', dateCreate:'', dataChanged:'', currentModel:'llama3:instruct', modelOptions:DEFAULT_MODEL_OPTIONS}
 
-  const [isOptionPanel, setIsOptionPanel] = useState<boolean>(true)
+  const [isOptionPanel, setIsOptionPanel] = useState<boolean>(false)
   const [chat, setChat] = useState<ChatResponse[] | any[]>([])
 
 
@@ -91,6 +91,9 @@ const handleTitleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
 
 /* model.name, model.details.parameter_size */
 
+const chatInputBox = (defaultChatInputBox: React.JSX.Element)=> {
+  return defaultChatInputBox
+}
 
 const chatOptionPanel = (<div className='chat-option-panel'>
   <div className='chat-options-cont'>
@@ -145,6 +148,25 @@ const chatOptionPanel = (<div className='chat-option-panel'>
     </div>
   </div>)}
 
+const chatTextStream = (userMessage:ChatResponse, streamText:string) => {
+setChat((prevChat) => {
+  if (prevChat.length === 0) {
+    return [userMessage, { role: 'assistant', content: streamText }];
+  } else {
+    const updatedChat = [...prevChat];
+    const lastMessage = updatedChat[updatedChat.length - 1];
+    updatedChat[updatedChat.length - 1] = { ...lastMessage, content: lastMessage.content + streamText };          
+    return updatedChat;
+  }
+});  
+
+}
+
+
+
+
+
+
 
 const chatProps = {
   chatEndpoints: chatEndpoints,
@@ -152,7 +174,11 @@ const chatProps = {
   chat: chat,
   setChat: setChat,
   resProcess: cfetch,
-  streamBodyExtras:{}
+  streamBodyExtras:{},
+  resCleanUp: ()=>{},
+  chatInputBox: chatInputBox,
+  streamProcessing: chatTextStream
+
 }
 
 

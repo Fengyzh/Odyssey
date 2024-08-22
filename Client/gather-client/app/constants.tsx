@@ -9,8 +9,8 @@ type ConstantsReturnType = {
   };
 
 export const constants = ():ConstantsReturnType => {
-    const DEFAULT_MODEL_OPTIONS= {top_k:"40", top_p:"0.9", temperature: "0.8", systemPrompt:"You are a helpful assistant"}
-    const DEFAULT_CHAT_METADATA= {title:'Chat Title', dateCreate:'', dataChanged:'', currentModel:'llama3:instruct', modelOptions:DEFAULT_MODEL_OPTIONS, summarizationSteps:0}
+    const DEFAULT_MODEL_OPTIONS= {top_k:"50", top_p:"0.9", temperature: "0.7", systemPrompt:"You are a helpful assistant"}
+    const DEFAULT_CHAT_METADATA= {title:'Chat Title', dateCreate:'', dataChanged:'', currentModel:'llama3:instruct', modelOptions:DEFAULT_MODEL_OPTIONS, isWeb:false, isDoc:false}
     const DEFAULT_LAYER_DATA = {model: 'llama3:instruct', modelOptions: DEFAULT_MODEL_OPTIONS, isWeb:false, isDoc:false}
     const DEFAULT_PIPELINE_META ={id:'', pipelineName:'New Pipeline', isFav:false}
     return {

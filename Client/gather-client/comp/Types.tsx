@@ -1,6 +1,6 @@
 export interface ChatResponse {
     role: string;
-    msg: any;
+    content: any;
 }
 
 export interface FileSnippets {
@@ -19,7 +19,9 @@ export interface ChatMetaData {
     dateCreate:string;
     dataChanged:string;
     currentModel:string;
-    modelOptions: IModelOptions
+    modelOptions:IModelOptions;
+    isWeb:boolean;
+    isDoc:boolean;
 }
 
 export interface IOllamaListDetails {
@@ -73,5 +75,18 @@ export interface IPipelineMeta {
   id:string;
   pipelineName:string;
   isFav:boolean;
+}
+
+
+export interface ISavedPipelineSnippet {
+  _id:string;
+  name:string;
+}
+
+export interface ISavedPipeline {
+  _id:string;
+  type:string;
+  name:string;
+  settings: IPipelineLayer[]
 }
 

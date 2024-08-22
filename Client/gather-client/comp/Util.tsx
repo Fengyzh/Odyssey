@@ -38,3 +38,7 @@ export const adjustInputLength = (inputRef:React.RefObject<HTMLInputElement>, ch
   } 
 
 
+export const createNewChat = async (pathname:string | null) => {
+    if (!pathname) return
+    return await axios.get("http://localhost:5000/api/newchat" + `?type=${pathname?.replace('/', '')}`)
+}
