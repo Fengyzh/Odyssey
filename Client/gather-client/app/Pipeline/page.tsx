@@ -9,7 +9,7 @@ import ChatTitleFunc from '@/comp/Chat/ChatTitleFunc';
 import { ChatMetaData, ChatResponse, IChatEndpoints, IModelOptions, IOllamaList, IPipelineLayer, IPipelineMeta, ISavedPipeline } from '@/comp/Types';
 import axios, { AxiosResponse } from 'axios';
 import { usePathname } from 'next/navigation';
-import { useDebounce, sendTitleUpdate, adjustInputLength } from '@/comp/Util';
+import { useDebounce, sendTitleUpdate, adjustInputLength, createNewChat } from '@/comp/Util';
 import { constants } from '@/app/constants'
 import './pipeline.css'
 import { Modal }  from '@/comp/Modal'
@@ -66,6 +66,7 @@ export default function page() {
     }, [isModal]) 
 
 
+
     const handleExtentModelSelect = () => {
       axios.get("http://localhost:5000/api/LLM/list").then((res)=> {
         setModelList(res.data?.models.models)
@@ -81,6 +82,12 @@ export default function page() {
     }
 
 
+    const pclean = () => {
+      setPipeline([DEFAULT_LAYER_DATA])
+      setPipelineMeta(DEFAULT_PIPELINE_META)
+    }
+
+
     const pfetch = (res:AxiosResponse<any, any>)=>{
       console.log(res.data)
       setChat(res.data.history)
@@ -93,11 +100,12 @@ export default function page() {
       console.log(res.data.pipeline)
       console.log(res.data.pipeline_meta)
 
+    console.log(res.data)
     if (res.data.pipeline != undefined && res.data.pipeline_meta != undefined) {
       setPipeline(res.data.pipeline)
       setPipelineMeta(res.data.pipeline_meta)
     } else {
-      setPipeline([])
+      setPipeline([DEFAULT_LAYER_DATA])
       setPipelineMeta(DEFAULT_PIPELINE_META)
     }
         
@@ -120,7 +128,7 @@ export default function page() {
  const handleAddPipelineLayer = () => {
   // TEMP: here to show the order relationship
   let temp = DEFAULT_LAYER_DATA
-  temp.model = temp.model + pipeline.length
+  temp.model = temp.model
     setPipeline((prev)=>[...prev, temp])
  }
 
@@ -186,19 +194,28 @@ export default function page() {
 
   const handleSubmitPipeline = async () => {
     // Handle Pipeline update url
-    console.log(pipeline)
+    let createdEntryId;
+    let chatId
     if (!currentChat) {
-      const createResponse = await axios.get("http://localhost:5000/api/newchat" + `?type=${pathname?.replace('/', '')}`)
-      const entryId = createResponse.data.id
-      setCurrentChat(entryId)
-      fetchChatSnippets()
+      const createResponse = await createNewChat(pathname)
+      if (createResponse) {
+        const entryId = createResponse.data.id
+        createdEntryId = entryId
+        chatId = entryId
+        fetchChatSnippets()
+      }
+     
+    } else {
+      chatId = currentChat
     }
 
-    console.log(currentChat)
-    axios.post("http://localhost:5000/api/pipelines/" + currentChat, {
+    console.log(pipeline)
+    await axios.post("http://localhost:5000/api/pipelines/" + chatId, {
       pipeline:pipeline,
       pipelineMeta: pipelineMeta
     })
+    setCurrentChat(chatId)
+    setIsModal(false)
   }
 
   const handleFav = () => {
@@ -250,9 +267,8 @@ export default function page() {
   <h2 className='sidebar-toggle' onClick={()=>toggleSidebar()}>O</h2>
 
   <div ref={titleContRef} className='chat-title-func-cont'>
-    {chatMeta.title !== 'Chat Title'? <input ref={inputRef} className='chat-page-title-t' onChange={(e)=>handleTitleChange(e)} value={chatMeta.title}/> 
-    : 
-    <h2 className='chat-page-title'> {chatMeta.title} </h2>}
+    <input ref={inputRef} className='chat-page-title-t' onChange={(e)=>handleTitleChange(e)} value={chatMeta.title}/> 
+
           
   </div>
 
@@ -260,11 +276,12 @@ export default function page() {
     <button className='chat-options-btn' onClick={()=>setIsModal((prev)=>!prev)}> P+ </button>
   </div>
 
-  {/* Aadd the currentChat? back after pipeline panel is done */}   
+  {currentChat?   
   <div className='chat-options'>
     <button onClick={()=>{setIsOptionPanel(!isOptionPanel)}} className='chat-options-btn'> === </button>
     {isOptionPanel? chatOptionPanel : ''}
-  </div>
+  </div> : ''}
+
 
 </div>)}
 
@@ -383,6 +400,35 @@ const modalLeftBody = () => {
   )
 }
 
+const chatInputBox = (defaultChatInputBox: React.JSX.Element)=> {
+  if (pipeline.length < 1) {
+    return <div className='chatbox-cont pipeline-chatbox-cont'> Add a pipeline layer to start!</div>
+  } else {
+    return defaultChatInputBox
+  }
+}
+
+const pipelineTextStream = (userMessage:ChatResponse, streamText:string) => {
+  if (streamText.includes('<PIPELINE_BREAK>')) { /* TEST */
+  setChat(prevChat => [...prevChat, { role: 'assistant', content: "" }]); /* TEST */
+}
+
+setChat((prevChat) => {
+  if (streamText == '<PIPELINE_BREAK>') {
+    return [...prevChat]
+  }  
+  if (prevChat.length === 0) {
+    return [userMessage, { role: 'assistant', content: streamText }];
+  } else {
+    const updatedChat = [...prevChat];
+    const lastMessage = updatedChat[updatedChat.length - 1];
+    updatedChat[updatedChat.length - 1] = { ...lastMessage, content: lastMessage.content + streamText };          
+    return updatedChat;
+  }
+});  
+
+}
+
 
 
 // TODO: Update to Agent endpoints
@@ -394,7 +440,10 @@ const chatProps = {
   chat: chat,
   setChat: setChat,
   resProcess: pfetch,
-  streamBodyExtras: {pipeline:pipeline, pipelineMeta:pipelineMeta}
+  streamBodyExtras: {pipeline:pipeline, pipelineMeta:pipelineMeta},
+  resCleanUp: pclean,
+  chatInputBox: chatInputBox,
+  streamProcessing: pipelineTextStream
 }
 
 const ModalProps = {

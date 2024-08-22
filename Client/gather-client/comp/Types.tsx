@@ -19,7 +19,9 @@ export interface ChatMetaData {
     dateCreate:string;
     dataChanged:string;
     currentModel:string;
-    modelOptions: IModelOptions
+    modelOptions:IModelOptions;
+    isWeb:boolean;
+    isDoc:boolean;
 }
 
 export interface IOllamaListDetails {

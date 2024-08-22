@@ -1,7 +1,7 @@
 import os
 from bson import ObjectId
 import ollama
-from constants import DEFAULT_CHAT_METADATA
+from constants import DEFAULT_CHAT_METADATA, DEFAULT_PIPELINE_META, DEFAULT_LAYER_DATA
 import datetime
 from LLM import LLM_controller
 from utils import format_chunks, context2Plain
@@ -81,6 +81,9 @@ def stream():
 
     """ if request_msg and request_msg['id']:
         chatId = request_msg['id']
+        isWeb = chat_meta['isWeb']
+        isDoc = chat_meta['isDoc']
+
         entry = mongoCollection.find_one({"_id": ObjectId(chatId)}, {"_id":1, "docs":1}) 
         rag_context = RAG_client.hybrid_search(request_msg['message'], list(entry)) """
 
@@ -100,9 +103,24 @@ def getChatTitle():
     request_msg = request.get_json()
     if request_msg and 'context' in request_msg:
         q = "You are a professtional title creator for a conversation summarize the following conversation in a few words for the title of this conversation you are not allowed to output anything other than the title: "
-        print(request_msg['context'])
         response = llm.gen_llm(context2Plain(request_msg['context']), q)['response'].replace("\"", "")
-        print(response)
+
+        chat_meta = request_msg['meta']
+        chat_meta['title'] = response
+        object_id = ObjectId(request_msg['id'])
+        print(object_id)
+
+        ty = request.args.get('type')
+
+        if ty == 'Chat':
+            print(222)
+            mongoCollection.update_one({'_id':object_id}, {'$set':{
+                'meta':chat_meta
+            }})
+        elif ty == 'Pipeline':
+            mongoPipeLCollection.update_one({'_id':object_id}, {'$set':{
+                'meta':chat_meta
+            }})
     
         return jsonify({'title': response})
     return jsonify({'Error': "Unable to generate title for the current chat"})
@@ -173,7 +191,7 @@ def newChat():
     if ty == 'Chat':
         result = mongoCollection.insert_one({'title': "New Chat", 'history':[], 'docs':[], 'meta':updated_meta})
     elif ty == 'Pipeline':
-        result = mongoPipeLCollection.insert_one({'title': "New Chat", 'history':[], 'docs':[], 'meta':updated_meta, 'pipeline':[]})
+        result = mongoPipeLCollection.insert_one({'title': "New Chat", 'history':[], 'docs':[], 'meta':updated_meta, 'pipeline':[DEFAULT_LAYER_DATA], 'pipeline_meta':DEFAULT_PIPELINE_META})
     result_id = result.inserted_id
     return jsonify({'id': str(result_id)})
 
@@ -304,7 +322,8 @@ def get_all_pipelines():
 @app.route('/api/pipelines/<pipelineId>', methods=["POST"])
 def update_pipelines(pipelineId):
     req = request.get_json()
-
+    print(pipelineId)
+    print(req['pipeline'], req['pipelineMeta'])
     entries = mongoPipeLCollection.update_one({'_id':ObjectId(pipelineId)}, {'$set':{
                 'pipeline': req['pipeline'],
                 'pipeline_meta':req['pipelineMeta']
@@ -322,8 +341,8 @@ def streamPipeline():
         chat_context = request_msg['context']
         pipeline_prompt = llm.extract_pipeline_question_context(chat_context) + f'\n {user_prompt}'
 
-        print(pipeline_prompt)
-        llm_res = llm.pipeline_chat_pod(pipeline_prompt, chat_pipeline, False, True)
+        #print(pipeline_prompt)
+        llm_res = llm.pipeline_chat_pod(user_prompt, chat_pipeline, chat_context,cutOffUserPrompt=False, stream=True)
         for chunk in llm_res:
             yield chunk
         [pipeline_convo, chat] = llm.getPipelineResults()
@@ -380,10 +399,6 @@ def update_title():
     chat_meta = request_msg['meta']
     object_id = ObjectId(request_msg['id'])
     ty = request.args.get('type')
-    print(chat_meta)
-    print(object_id)
-
-    # TODO Implement saving mech
 
     if ty == 'Chat':
         mongoCollection.update_one({'_id':object_id}, {'$set':{

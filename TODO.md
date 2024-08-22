@@ -31,7 +31,7 @@
 - [x] Initial RAG process
 - [x] Vector DB setup
 - [x] Hybrid Search
-- [] Reranker in Hybrid Search
+- [x] Reranker in Hybrid Search
 - [] Connect Backend to RAG service
 - [x] Add HyDE before RAG retrieval
 - [x] Add chat history into LLM response so the LLM knows the current chat's context
@@ -42,12 +42,14 @@
 - [x] Handle delete chats in pipeline
 - [x] Create Pipeline collection in Mongo
 - [x] Use front-end model options
-- [] Pipeline LLM workflow
-    - [] Add front-end logic to send all user questions to backend for LLM context
+- [x] Pipeline LLM workflow
+    - [x] Add front-end logic to send all user questions to backend for LLM context
 
 # General
 - [x] Phase I refactor
 - [] Phase II refactor
+    - [] Refactor out client-side send prompt setChat logic to their individual mode (chat, pipeline, RP)
+    - [] Refactor all the creat new chat to use the one in utils.tsx
 
 
 # Issues

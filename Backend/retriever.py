@@ -8,7 +8,9 @@ from chromadb import Documents, EmbeddingFunction, Embeddings
 import requests
 import json
 from bs4 import BeautifulSoup
-
+import torch
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
+import numpy as np
 
 
 emb = HuggingFaceBgeEmbeddings(
@@ -66,6 +68,29 @@ class RAGRetriever():
             generated_docs.append(self.lc.gen_llm(user_prompt, "Given a question, generate a short and concise answer that answers the user question, it does not have to be detailed. Answer:")['response'])
         
         return generated_docs
+
+    def rerank(self, passage):
+        tokenizer = AutoTokenizer.from_pretrained('BAAI/bge-reranker-v2-m3')
+        model = AutoModelForSequenceClassification.from_pretrained('BAAI/bge-reranker-v2-m3')
+        model.eval()
+
+        with torch.no_grad():
+            inputs = tokenizer(passage, padding=True, truncation=True, return_tensors='pt', max_length=512)
+            scores = model(**inputs, return_dict=True).logits.view(-1, ).float()
+            print(scores)
+            return scores
+
+    def get_top_rerank_results(self, rerank_score, retrieved_passage, retrival_query, top=2):
+        for passage in retrieved_passage:
+                passage.append(retrival_query)
+
+        scored_pairs = list(zip(rerank_score, retrieved_passage))
+        sorted_scored_pairs = sorted(scored_pairs, key=lambda x: x[0], reverse=True)
+
+        top_pairs = [pair for score, pair in sorted_scored_pairs[:top]]
+
+        print(top_pairs)
+        return top_pairs
 
 
     def hybrid_search(self, query, documents, kwargs=2, weights=[0.5,0.5], fweights=None):
@@ -166,10 +191,14 @@ if __name__ == '__main__':
     #wr.webSearch()
     #lm = LLM_controller()
     r = RAGRetriever()
-    res = r.hyde('what is inode number')[1]
-    re = r.hybrid_search(query=res, documents=['test_emb'])
+    #re = r.hybrid_search(query='what is inode number', documents=['test_emb'])
+    #print(re)
 
-    print(re)
+
+    #res = r.hyde('what is inode number')[1]
+    #re = r.hybrid_search(query=res, documents=['test_emb'])
+
+    #print(re)
     #print(r.hyde('how to make a sandwich', 2))
 
 
@@ -193,3 +222,26 @@ client = rr.getClient()
 print(client.list_collections())
 print(client.get_collection("668d722dcd1a12d62d1336f7").get()['documents']) """
 
+
+"""
+    rerank:
+
+    r = RAGRetriever()
+    re = r.hybrid_search(query='what is inode number', documents=['test_emb'])
+    #print(re)
+    for i in re:
+        i.append('what is inode number')
+    pairs = [['what is panda?', 'hi'], ['what is panda?', 'The giant panda (Ailuropoda melanoleuca), sometimes called a panda bear or simply panda, is a bear species endemic to China.']]
+
+    scores = r.rerank(re)
+
+    scored_pairs = list(zip(scores, re))
+    sorted_scored_pairs = sorted(scored_pairs, key=lambda x: x[0], reverse=True)
+
+    top_x = 2  
+    top_pairs = [pair for score, pair in sorted_scored_pairs[:top_x]]
+
+    print(top_pairs)
+
+
+"""

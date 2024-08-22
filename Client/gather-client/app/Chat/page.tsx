@@ -91,6 +91,9 @@ const handleTitleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
 
 /* model.name, model.details.parameter_size */
 
+const chatInputBox = (defaultChatInputBox: React.JSX.Element)=> {
+  return defaultChatInputBox
+}
 
 const chatOptionPanel = (<div className='chat-option-panel'>
   <div className='chat-options-cont'>
@@ -145,6 +148,25 @@ const chatOptionPanel = (<div className='chat-option-panel'>
     </div>
   </div>)}
 
+const chatTextStream = (userMessage:ChatResponse, streamText:string) => {
+setChat((prevChat) => {
+  if (prevChat.length === 0) {
+    return [userMessage, { role: 'assistant', content: streamText }];
+  } else {
+    const updatedChat = [...prevChat];
+    const lastMessage = updatedChat[updatedChat.length - 1];
+    updatedChat[updatedChat.length - 1] = { ...lastMessage, content: lastMessage.content + streamText };          
+    return updatedChat;
+  }
+});  
+
+}
+
+
+
+
+
+
 
 const chatProps = {
   chatEndpoints: chatEndpoints,
@@ -152,7 +174,11 @@ const chatProps = {
   chat: chat,
   setChat: setChat,
   resProcess: cfetch,
-  streamBodyExtras:{}
+  streamBodyExtras:{},
+  resCleanUp: ()=>{},
+  chatInputBox: chatInputBox,
+  streamProcessing: chatTextStream
+
 }
 
 
