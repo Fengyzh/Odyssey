@@ -2,7 +2,6 @@ import os
 import chromadb
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import SeleniumURLLoader
 from rank_bm25 import BM25Okapi
 from chromadb import Documents, EmbeddingFunction, Embeddings
 import requests
@@ -10,7 +9,7 @@ import json
 from bs4 import BeautifulSoup
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
-import numpy as np
+import PyPDF2
 
 
 emb = HuggingFaceBgeEmbeddings(
@@ -53,13 +52,40 @@ class RAGRetriever():
         self.text_spliter = RecursiveCharacterTextSplitter(chunk_size = 500, chunk_overlap=0)
         self.lc = LLM_controller()
     
+    def read_document(self, file_path):
+        _, file_extension = os.path.splitext(file_path)
+
+        if file_extension == '.pdf':
+            with open(file_path, 'rb') as file:
+                pdf_reader = PyPDF2.PdfReader(file)
+                num_pages = len(pdf_reader.pages)
+                text = ""
+                
+                # Iterate through each page of the PDF
+                for page_number in range(num_pages):
+                    # Get the specified page
+                    page = pdf_reader.pages[page_number]
+                    
+                    # Extract text from the page
+                    page_text = page.extract_text()
+                    # Append the text of the current page to the overall text
+                    text += page_text
+                    
+                return text
+        else:
+            with open(file_path,"r", encoding='UTF-8') as f:
+                text = f.read()
+                return text
         
-    def create_embeddings(self, docs, *, collection_name):
-        splits = self.text_spliter.split_text(docs)
+    
+    def create_embeddings(self, *, file_path, collection_name):
+        docs = self.read_document(file_path=file_path)
+        print(docs)
+        """ splits = self.text_spliter.split_text(docs)
         collection = self.chromaClient.get_or_create_collection(name=collection_name,  embedding_function=MyEmbeddingFunction())
 
         if (collection.count() < 1):
-            collection.add(documents=splits, ids=[str(i) for i in range(len(splits))])
+            collection.add(documents=splits, ids=[str(i) for i in range(len(splits))]) """
         
 
     def hyde(self, user_prompt, n=1):
@@ -141,6 +167,7 @@ from main import LLM_controller
 class Web_Retriever:
     def __init__(self):
         self.searXNGURL = "http://localhost:8080"
+        self.html_summarizer = LLM_controller()
     
 
     def q_web_format(self, web):
@@ -164,7 +191,6 @@ class Web_Retriever:
         return self.webScraper(web_links, query)
     
     def webScraper(self, urls, search_query):
-        html_summarizer = LLM_controller()
         extracted_htmls = [] 
 
         for url in urls:
@@ -172,11 +198,12 @@ class Web_Retriever:
             soup = BeautifulSoup(search_result.content)
             soup_text = soup.get_text()
             p_st = soup_text.replace("\n", "")
-            cont = f"This is a website raw HTML text information, extract and list the necessary infomation out based on the search query. You can also include information that you find fit or related to the user prompt. Search query: {search_query} \n\n Raw HTML text: {p_st}"
-            convo = html_summarizer.buildConversationBlock(cont, 'system')
-            extracted_info = html_summarizer.chat_llm([convo])
+            cont = f"You are a professional web scrapper, you will be provided with a website raw HTML text information, extract and list the necessary infomation out based on the search query. You can also include information that you find fit or related to the user prompt. "
+            sys_convo = self.html_summarizer.buildConversationBlock(cont, 'system')
+            user_convo = self.html_summarizer.buildConversationBlock(f"Search query: {search_query} \n\n Raw HTML text: {p_st}", 'user')
+            extracted_info = self.html_summarizer.chat_llm([sys_convo, user_convo])
             extracted_htmls.append(extracted_info)
-            html_summarizer.printStream(extracted_info)
+            self.html_summarizer.printStream(extracted_info)
 
         return [extracted_htmls, urls]
         
@@ -193,6 +220,7 @@ if __name__ == '__main__':
     r = RAGRetriever()
     #re = r.hybrid_search(query='what is inode number', documents=['test_emb'])
     #print(re)
+    r.create_embeddings(file_path='./docs/pdft.pdf', collection_name=123)
 
 
     #res = r.hyde('what is inode number')[1]

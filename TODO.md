@@ -33,6 +33,7 @@
 - [x] Hybrid Search
 - [x] Reranker in Hybrid Search
 - [] Connect Backend to RAG service
+    - [x] Add file extenstion check to parse files like PDF if the user uploaded a PDF file
 - [x] Add HyDE before RAG retrieval
 - [x] Add chat history into LLM response so the LLM knows the current chat's context
 - [x] Web Scraping

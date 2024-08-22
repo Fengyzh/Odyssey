@@ -10,6 +10,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from db import getAllfromCollection
 import pymongo
+import pathlib
 
 
 
@@ -174,7 +175,9 @@ def uploadFiles():
 
             with open(file_path,"r") as f:
                 content = f.read()
-                #RAG_client.create_embeddings(content, collection_name=str(result.inserted_id))
+                _, file_extension = os.path.splitext(f.name)
+
+            #RAG_client.create_embeddings(file_path=file_path, collection_name=str(result.inserted_id))
             print("embedding created")
     
     return jsonify({'message': 'Files successfully uploaded'}), 200
