@@ -13,6 +13,8 @@ import { useDebounce, sendTitleUpdate, adjustInputLength, createNewChat } from '
 import { constants } from '@/app/constants'
 import './pipeline.css'
 import { Modal }  from '@/comp/Modal'
+import { getLLMList, pipelineARIEndpoints } from '../api'
+import { favouritePipeline, getSavedPipelines, updatePipeline } from './api'
 
 export default function page() {
   const { DEFAULT_LAYER_DATA, DEFAULT_PIPELINE_META } = constants();
@@ -68,14 +70,14 @@ export default function page() {
 
 
     const handleExtentModelSelect = () => {
-      axios.get("http://localhost:5000/api/LLM/list").then((res)=> {
+      getLLMList().then((res)=> {
         setModelList(res.data?.models.models)
         console.log(res.data.models.models)
       })
     }
 
     const fetchAllSavedPipeline = () => {
-      return axios.get("http://localhost:5000/api/pipelines/saved").then((res)=>{
+      return getSavedPipelines().then((res)=>{
         console.log(res.data)
         setSavedPipelines(res.data)
       })
@@ -210,20 +212,14 @@ export default function page() {
     }
 
     console.log(pipeline)
-    await axios.post("http://localhost:5000/api/pipelines/" + chatId, {
-      pipeline:pipeline,
-      pipelineMeta: pipelineMeta
-    })
+    await updatePipeline(chatId, pipeline, pipelineMeta)
     setCurrentChat(chatId)
     setIsModal(false)
   }
 
   const handleFav = () => {
 
-    axios.post("http://localhost:5000/api/pipelines/saved", {
-      pipeline:pipeline,
-      name:pipelineMeta.pipelineName
-    }).then(()=>{
+    favouritePipeline(pipeline, pipelineMeta).then(()=>{
       fetchAllSavedPipeline()
     })
 
@@ -393,7 +389,7 @@ const modalLeftBody = () => {
   return (
     <div className='pipeline-saved-body'>
       {savedPipelines.map((sPipe, index)=>{
-        return <div onClick={()=>handleChangePipeline(sPipe._id)} className='saved-pipelines'>{sPipe.name}</div>
+        return <div key={sPipe._id} onClick={()=>handleChangePipeline(sPipe._id)} className='saved-pipelines'>{sPipe.name}</div>
       })}
 
     </div>
@@ -431,11 +427,9 @@ setChat((prevChat) => {
 
 
 
-// TODO: Update to Agent endpoints
-const chatEndpoints:IChatEndpoints = {getCurrentChat:'http://localhost:5000/api/chat/', newChat:'http://localhost:5000/api/newchat', stream:'http://localhost:5000/api/pipelines/stream', delete:'http://localhost:5000/api/chat/delete/'}
 
 const chatProps = {
-  chatEndpoints: chatEndpoints,
+  chatEndpoints: pipelineARIEndpoints,
   titleComp: chatTitle,
   chat: chat,
   setChat: setChat,

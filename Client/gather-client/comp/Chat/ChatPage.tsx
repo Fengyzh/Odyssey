@@ -9,6 +9,7 @@ import { ChatResponse, IOllamaList, IChatEndpoints } from '@/comp/Types';
 import { usePathname } from 'next/navigation'
 import { constants } from '@/app/constants'
 import { createNewChat } from '../Util'
+import { getChatTitleSummary, getCurrentChat } from '@/app/api'
 
 interface IChatPageProps {
     chatEndpoints: IChatEndpoints
@@ -59,7 +60,7 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
     if (currentChat) {
       console.log(currentChat)
 
-      axios.get("http://localhost:5000/api/chat/" + currentChat + `?type=${pathname?.replace('/','')}`).then(resProcess).then(()=>{
+      getCurrentChat(currentChat, pathname).then(resProcess).then(()=>{
             requestAnimationFrame(() => {
               if (chatSpaceRef.current && chatPageRef.current) {
                 if (chatPageRef.current.scrollHeight > 2000) {
@@ -161,12 +162,8 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
 
     })
 
-    if (createdEntryId) {
-      axios.post("http://localhost:5000/api/chat/summary" + `?type=${pathname?.replace('/', '')}`, {
-        id:createdEntryId,
-        context:curContext,
-        meta:chatMeta
-      }).then((res)=>{
+    if (createdEntryId || curContext.length <= 2) {
+      getChatTitleSummary(createdEntryId, curContext, pathname, chatMeta).then((res)=>{
         if (res.data){
           setChatMeta((prev)=>({...prev, title: res.data.title}))
           fetchChatSnippets()
