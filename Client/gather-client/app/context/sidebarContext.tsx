@@ -52,12 +52,11 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
 
   const fetchChatSnippets = () => {
     if (pathname === "/Chat") {    
-      axios.get("http://localhost:5000/api/chats").then((res)=>{
+      axios.get("http://localhost:5000/api/chat/all").then((res)=>{
       setChats([...res.data])
     })
   } else if (pathname == "/Pipeline") {
     axios.get("http://localhost:5000/api/pipelines").then((res)=>{
-      //console.log(res.data)
       setChats(res.data)
     })
   }
@@ -77,9 +76,11 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
   };
 
   const handleChatDelete = () => {
-    axios.get("http://localhost:5000/api/chat/delete/" + currentChat + `?type=${pathname?.replace('/', '')}`)
-    setCurrentChat(prev=>'')
-    fetchChatSnippets()
+    axios.delete("http://localhost:5000/api/chat/" + currentChat + `?type=${pathname?.replace('/', '')}`)
+    setCurrentChat(prev=>{
+      fetchChatSnippets()
+      return ''
+    })
   }
 
 

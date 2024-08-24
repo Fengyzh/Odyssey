@@ -18,3 +18,7 @@ export const favouritePipeline = async (pipeline:IPipelineLayer[], pipelineMeta:
 export const getSavedPipelines = () => {
     return axios.get("http://localhost:5000/api/pipelines/saved")
 }
+
+export const getSavedPipelineById = (pipelineId:string) => {
+    return axios.get("http://localhost:5000/api/pipelines/saved/" + pipelineId)
+}

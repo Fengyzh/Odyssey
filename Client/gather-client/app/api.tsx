@@ -21,7 +21,7 @@ export const getLLMList = async () => {
 }
 
 
-export const chatAPIEndpoints:IChatEndpoints = {getCurrentChat:'http://localhost:5000/api/chat/', newChat:'http://localhost:5000/api/newchat', stream:'http://localhost:5000/api/stream', delete:'http://localhost:5000/api/chat/delete/'}
+export const chatAPIEndpoints:IChatEndpoints = {getCurrentChat:'http://localhost:5000/api/chat/', newChat:'http://localhost:5000/api/chat/create', stream:'http://localhost:5000/api/stream'}
 
-export const pipelineARIEndpoints:IChatEndpoints = {getCurrentChat:'http://localhost:5000/api/chat/', newChat:'http://localhost:5000/api/newchat', stream:'http://localhost:5000/api/pipelines/stream', delete:'http://localhost:5000/api/chat/delete/'}
+export const pipelineARIEndpoints:IChatEndpoints = {getCurrentChat:'http://localhost:5000/api/chat/', newChat:'http://localhost:5000/api/chat/create', stream:'http://localhost:5000/api/pipelines/stream'}
 

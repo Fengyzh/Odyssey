@@ -26,7 +26,7 @@ interface IChatPageProps {
 
 
 const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, setChat, resProcess, streamBodyExtras, resCleanUp, chatInputBox, streamProcessing }) => {
-  const { DEFAULT_LAYER_DATA, DEFAULT_CHAT_METADATA } = constants();
+  const { DEFAULT_CHAT_METADATA } = constants();
 
 
   //const DEFAULT_MODEL_OPTIONS = {top_k:'40', top_p:'0.9', temperature: '0.8'}
@@ -135,7 +135,6 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
       const createResponse = await createNewChat(pathname)
       if (createResponse) {
         const entryId = createResponse.data.id
-        //console.log(entryId)
         setCurrentChat(entryId)
         createdEntryId = entryId
         fetchChatSnippets()
@@ -163,7 +162,8 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
     })
 
     if (createdEntryId || curContext.length <= 2) {
-      getChatTitleSummary(createdEntryId, curContext, pathname, chatMeta).then((res)=>{
+      let working_id = currentChat? currentChat : createdEntryId
+      getChatTitleSummary(working_id, curContext, pathname, chatMeta).then((res)=>{
         if (res.data){
           setChatMeta((prev)=>({...prev, title: res.data.title}))
           fetchChatSnippets()

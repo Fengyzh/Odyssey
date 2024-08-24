@@ -14,7 +14,7 @@ import { constants } from '@/app/constants'
 import './pipeline.css'
 import { Modal }  from '@/comp/Modal'
 import { getLLMList, pipelineARIEndpoints } from '../api'
-import { favouritePipeline, getSavedPipelines, updatePipeline } from './api'
+import { favouritePipeline, getSavedPipelineById, getSavedPipelines, updatePipeline } from './api'
 
 export default function page() {
   const { DEFAULT_LAYER_DATA, DEFAULT_PIPELINE_META } = constants();
@@ -244,7 +244,7 @@ export default function page() {
   }
 
   const handleChangePipeline = (pipelineId:string) => {
-    axios.get("http://localhost:5000/api/pipelines/saved/" + pipelineId).then((res)=>{
+    getSavedPipelineById(pipelineId).then((res)=>{
       setPipeline([...res.data.settings])
     })
   }
