@@ -37,8 +37,7 @@
 - [x] Add HyDE before RAG retrieval
 - [x] Add chat history into LLM response so the LLM knows the current chat's context
 - [x] Web Scraping
-- [] Mongo Collection Factory?
-
+- [x] Mongo Collection Factory
 - [x] Handle update pipeline saving
 - [x] Handle delete chats in pipeline
 - [x] Create Pipeline collection in Mongo
@@ -49,8 +48,9 @@
 # General
 - [x] Phase I refactor
 - [] Phase II refactor
-    - [] Refactor out client-side send prompt setChat logic to their individual mode (chat, pipeline, RP)
-    - [] Refactor all the creat new chat to use the one in utils.tsx
+    - [x] Refactor out client-side send prompt setChat logic to their individual mode (chat, pipeline, RP)
+    - [x] Refactor all the creat new chat to use the one in utils.tsx
+    - [x] Backend routes
 
 
 # Issues

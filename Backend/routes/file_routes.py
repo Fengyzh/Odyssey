@@ -1,6 +1,5 @@
-from datetime import datetime
 from bson import ObjectId
-from flask import Blueprint, Flask, request, jsonify
+from flask import Blueprint,request, jsonify
 import os
 from db import get_collection_by_type, get_doc_collection
 

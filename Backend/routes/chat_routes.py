@@ -1,6 +1,6 @@
 import datetime
 from bson import ObjectId
-from flask import Blueprint, Flask, request, jsonify
+from flask import Blueprint, request, jsonify
 from utils import context2Plain
 from LLM import LLM_controller
 from db import get_all_from_collection, get_chat_collection, get_collection_by_type, get_pipeline_collection

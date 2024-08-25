@@ -128,7 +128,6 @@ export default function page() {
   }
 
  const handleAddPipelineLayer = () => {
-  // TEMP: here to show the order relationship
   let temp = DEFAULT_LAYER_DATA
   temp.model = temp.model
     setPipeline((prev)=>[...prev, temp])

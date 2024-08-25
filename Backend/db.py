@@ -39,3 +39,6 @@ def get_pipeline_collection():
 
 def get_doc_collection():
     return mongoDocCollection
+
+def get_saved_pipeline_collection():
+    return mongoSavedCollection
