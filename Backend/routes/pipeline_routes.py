@@ -49,7 +49,7 @@ def streamPipeline():
                 '$push': {
                     'history': {'$each': chat},
                 },
-                'set': {
+                '$set': {
                    'meta':chat_meta
                 }
             })
@@ -82,7 +82,7 @@ def save_pipeline():
         return jsonify({'response': 'failed to save pipeline'}, 400)
 
 @pipeline_bp.route('/saved', methods=["DELETE"])
-def save_pipeline():
+def delete_saved_pipeline():
     # TODO
     pass
 
