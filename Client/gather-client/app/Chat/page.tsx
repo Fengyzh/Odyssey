@@ -8,6 +8,7 @@ import ChatPage from '@/comp/Chat/ChatPage'
 import ChatTitleFunc from '@/comp/Chat/ChatTitleFunc';
 import { usePathname } from 'next/navigation';
 import {adjustInputLength, sendTitleUpdate, useDebounce} from '@/comp/Util';
+import { chatAPIEndpoints } from '../api';
 
 
 export default function page() {
@@ -127,8 +128,7 @@ const chatOptionPanel = (<div className='chat-option-panel'>
       return (<ChatTitleFunc modelSelectRef={modelSelectRef}/>)
     }
 
-  
-    const chatEndpoints:IChatEndpoints = {getCurrentChat:'http://localhost:5000/api/chat/', newChat:'http://localhost:5000/api/newchat', stream:'http://localhost:5000/api/stream', delete:'http://localhost:5000/api/chat/delete/'}
+
 
 //    const chatTitle = () => {return (<Title titleContRef={titleContRef} optionPanelComp={chatOptionPanel}/>)}
 
@@ -169,7 +169,7 @@ setChat((prevChat) => {
 
 
 const chatProps = {
-  chatEndpoints: chatEndpoints,
+  chatEndpoints: chatAPIEndpoints,
   titleComp: chatTitle,
   chat: chat,
   setChat: setChat,

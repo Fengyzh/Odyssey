@@ -47,14 +47,13 @@ export interface IModelOptions {
   top_k: string;
   top_p: string;
   temperature: string;
-  systemPrompt?: string;
+  systemPrompt: string;
 }
 
 export interface IChatEndpoints {
   getCurrentChat: string;
   newChat: string;
   stream: string;
-  delete: string;
 }
 
 export interface IChatInfo {

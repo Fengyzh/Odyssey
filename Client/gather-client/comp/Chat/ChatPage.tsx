@@ -9,6 +9,7 @@ import { ChatResponse, IOllamaList, IChatEndpoints } from '@/comp/Types';
 import { usePathname } from 'next/navigation'
 import { constants } from '@/app/constants'
 import { createNewChat } from '../Util'
+import { getChatTitleSummary, getCurrentChat } from '@/app/api'
 
 interface IChatPageProps {
     chatEndpoints: IChatEndpoints
@@ -25,7 +26,7 @@ interface IChatPageProps {
 
 
 const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, setChat, resProcess, streamBodyExtras, resCleanUp, chatInputBox, streamProcessing }) => {
-  const { DEFAULT_LAYER_DATA, DEFAULT_CHAT_METADATA } = constants();
+  const { DEFAULT_CHAT_METADATA } = constants();
 
 
   //const DEFAULT_MODEL_OPTIONS = {top_k:'40', top_p:'0.9', temperature: '0.8'}
@@ -59,7 +60,7 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
     if (currentChat) {
       console.log(currentChat)
 
-      axios.get("http://localhost:5000/api/chat/" + currentChat + `?type=${pathname?.replace('/','')}`).then(resProcess).then(()=>{
+      getCurrentChat(currentChat, pathname).then(resProcess).then(()=>{
             requestAnimationFrame(() => {
               if (chatSpaceRef.current && chatPageRef.current) {
                 if (chatPageRef.current.scrollHeight > 2000) {
@@ -134,7 +135,6 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
       const createResponse = await createNewChat(pathname)
       if (createResponse) {
         const entryId = createResponse.data.id
-        //console.log(entryId)
         setCurrentChat(entryId)
         createdEntryId = entryId
         fetchChatSnippets()
@@ -161,12 +161,9 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
 
     })
 
-    if (createdEntryId) {
-      axios.post("http://localhost:5000/api/chat/summary" + `?type=${pathname?.replace('/', '')}`, {
-        id:createdEntryId,
-        context:curContext,
-        meta:chatMeta
-      }).then((res)=>{
+    if (createdEntryId || curContext.length <= 2) {
+      let working_id = currentChat? currentChat : createdEntryId
+      getChatTitleSummary(working_id, curContext, pathname, chatMeta).then((res)=>{
         if (res.data){
           setChatMeta((prev)=>({...prev, title: res.data.title}))
           fetchChatSnippets()

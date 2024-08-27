@@ -7,6 +7,7 @@ import axios from 'axios';
 import { ChatSnippets, FileSnippets } from './Types';
 import FileSnippetsComp from './FileSnippetsComp';
 import Link from "next/link";
+import { createNewChat } from './Util';
 
 export default function ChatsBar() {
 
@@ -89,7 +90,7 @@ TODO:
         let newFileList = curFiles.filter(file => file._id !== fid);
 
 
-        await axios.post('http://localhost:5000/api/files/' + currentChat, {files:newFileList})
+        await axios.post('http://localhost:5000/api/files/' + currentChat + `?type=${pathname?.replace('/', '')}`, {files:newFileList})
         fetchCurrentChatFiles()
     }
 
@@ -124,11 +125,13 @@ TODO:
         setFileLoading(true)
 
         if (!currentChat) {
-          const createResponse = await axios.get("http://localhost:5000/api/newchat")
-          const entryId = createResponse.data.id
-          setCurrentChat(entryId)
-          createdEntryId = entryId
-          fetchChatSnippets()
+          const createResponse = await createNewChat(pathname)
+          if (createResponse) {
+            const entryId = createResponse.data.id
+            setCurrentChat(entryId)
+            createdEntryId = entryId
+            fetchChatSnippets()
+          }
         }
 
         const formData = new FormData()
@@ -143,7 +146,7 @@ TODO:
       
         formData.append('chatID', currentChat? currentChat : createdEntryId)
 
-        const response = await axios.post('http://localhost:5000/api/files', formData, {
+        const response = await axios.post('http://localhost:5000/api/files' + `?type=${pathname?.replace('/', '')}`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },

@@ -23,6 +23,9 @@
 - [x] Load all the saved pipeline in the left modal panel (wait for backend impl)
 - [] Add delete saved pipeline in left modal panel
 - [x] Pipeline Web/Doc toggle
+- [] RP Page
+    - [] RP selection panel
+
 
 
 
@@ -37,20 +40,21 @@
 - [x] Add HyDE before RAG retrieval
 - [x] Add chat history into LLM response so the LLM knows the current chat's context
 - [x] Web Scraping
-- [] Mongo Collection Factory?
-
+- [x] Mongo Collection Factory
 - [x] Handle update pipeline saving
 - [x] Handle delete chats in pipeline
 - [x] Create Pipeline collection in Mongo
 - [x] Use front-end model options
 - [x] Pipeline LLM workflow
     - [x] Add front-end logic to send all user questions to backend for LLM context
-
+- [] RP Routess
+ 
 # General
 - [x] Phase I refactor
-- [] Phase II refactor
-    - [] Refactor out client-side send prompt setChat logic to their individual mode (chat, pipeline, RP)
-    - [] Refactor all the creat new chat to use the one in utils.tsx
+- [x] Phase II refactor
+    - [x] Refactor out client-side send prompt setChat logic to their individual mode (chat, pipeline, RP)
+    - [x] Refactor all the creat new chat to use the one in utils.tsx
+    - [x] Backend routes
 
 
 # Issues
