@@ -81,6 +81,13 @@ def save_pipeline():
     except:
         return jsonify({'response': 'failed to save pipeline'}, 400)
 
+@pipeline_bp.route('/saved', methods=["DELETE"])
+def save_pipeline():
+    # TODO
+    pass
+
+
+
 
 @pipeline_bp.route('/saved/<pipelineId>', methods=["GET"])
 def get_saved_pipeline(pipelineId):
@@ -88,5 +95,6 @@ def get_saved_pipeline(pipelineId):
     if entries:
         entries['_id'] = str(entries['_id'])
     return jsonify(entries)
+
 
 
