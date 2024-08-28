@@ -17,8 +17,8 @@ interface IChatPageProps {
     chat: ChatResponse[] | any[]
     setChat: Dispatch<SetStateAction<ChatResponse[] | any[]>>;
     resProcess: (res: AxiosResponse<any, any>) => void
-    streamBodyExtras: any
-    resCleanUp: () => void
+    streamBodyExtras?: any
+    resCleanUp?: () => void
     chatInputBox: (defaultChatInputBox:React.JSX.Element) => React.JSX.Element
     streamProcessing: (userMessage:ChatResponse, streamText:string) => void;
 } 
@@ -75,7 +75,9 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
       console.log("reset")
       setChat([])
       setChatMeta(DEFAULT_CHAT_METADATA)
-      resCleanUp()
+      if (resCleanUp != undefined) {
+        resCleanUp()
+      }
     }
 
   }, [currentChat])
@@ -156,7 +158,7 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
         context:curContext,
         meta:chatMeta,
         id:currentChat? currentChat : createdEntryId,
-        streamBodyExtras
+        streamBodyExtras:streamBodyExtras? streamBodyExtras : {}
       })
 
     })

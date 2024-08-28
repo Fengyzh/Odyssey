@@ -25,3 +25,4 @@ export const chatAPIEndpoints:IChatEndpoints = {getCurrentChat:'http://localhost
 
 export const pipelineARIEndpoints:IChatEndpoints = {getCurrentChat:'http://localhost:5000/api/chat/', newChat:'http://localhost:5000/api/chat/create', stream:'http://localhost:5000/api/pipelines/stream'}
 
+export const RPAPIEndpoints: IChatEndpoints = {getCurrentChat:'http://localhost:5000/api/chat/', newChat:'http://localhost:5000/api/chat/create', stream:'http://localhost:5000/api/rp/stream'}

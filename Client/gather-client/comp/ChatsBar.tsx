@@ -190,8 +190,8 @@ TODO:
     (<div className='chat-history-cont'>
     {chats.map((chat:ChatSnippets, index)=>{
         return (
-        <div className='nav-chat-cont'>
-            <div onClick={()=>handleChatSelect(chat._id, index)} key={index} className={`nav-chat-titles ${currentChat === chat._id? 'selected' : ''}`}>{chat.meta.title} 
+        <div key={chat._id} className='nav-chat-cont'>
+            <div onClick={()=>handleChatSelect(chat._id, index)}  className={`nav-chat-titles ${currentChat === chat._id? 'selected' : ''}`}>{chat.meta.title} 
             </div>
         </div>)
     })}
@@ -264,7 +264,7 @@ TODO:
                 <h2 className='sidebar-toggle' onClick={()=>toggleSidebar()}>O</h2>
                 <div className='mode-toggle-cont'>
                     <div className='mode-toggle-title' onClick={()=>handleModeSelect()}>
-                        <h2 className='mode-toggle'>{pathname?.endsWith('Chat')? 'Chat Page' : pathname?.endsWith('Pipeline')? 'Pipeline' : ''}</h2>
+                        <h2 className='mode-toggle'>{pathname?.endsWith('Chat')? 'Chat Page' : pathname?.endsWith('Pipeline')? 'Pipeline' : pathname?.endsWith('Roleplay')? 'Roleplay' : ''}</h2>
                     </div>
                     {modeSelectPanel? <div className='mode-toggle-select'>
                         <li onClick={()=>handleRedirect('/Chat')} className='mode-select-items'>Chat</li>

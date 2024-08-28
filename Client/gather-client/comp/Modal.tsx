@@ -5,7 +5,7 @@ import './Modal.css'
 interface IModalProp {
     modalBody: () => ReactNode;
     setIsModal: Dispatch<SetStateAction<boolean>>;
-    modalExternalControlPanel: () => ReactNode;
+    modalExternalControlPanel: ReactNode;
     modalLeftBody?: () => ReactNode;
     modalLeftName?: string;
 }
@@ -38,7 +38,7 @@ export const Modal:React.FC<IModalProp> = ({modalBody, setIsModal, modalExternal
             </div>
             <div className='modal-btn-panel'>
             {modalLeftBody? <button onClick={()=>setIsLeftPanel((prev)=>!prev)} className='modal-left-panel-toggle'>{modalLeftName}</button> : ""}
-              {modalExternalControlPanel()}
+              {modalExternalControlPanel}
             </div>
 
         </div>
@@ -47,3 +47,15 @@ export const Modal:React.FC<IModalProp> = ({modalBody, setIsModal, modalExternal
     </div>
   )
 }
+
+
+export const modalExBtnPanel = (handleSubmit:()=>void, btnTxt: string) => {
+  return (
+    
+    <div className='pipeline-ex-btn-panel'>
+      <button onClick={()=>handleSubmit()} className='pipeline-submit'>{btnTxt}</button>
+    </div>
+  )
+}
+
+

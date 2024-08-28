@@ -7,8 +7,9 @@ import { ChatMetaData, ChatResponse, IChatEndpoints } from '@/comp/Types';
 import ChatPage from '@/comp/Chat/ChatPage'
 import ChatTitleFunc from '@/comp/Chat/ChatTitleFunc';
 import { usePathname } from 'next/navigation';
-import {adjustInputLength, sendTitleUpdate, useDebounce} from '@/comp/Util';
+import {adjustInputLength, handleAnimateSideBar, sendTitleUpdate, useDebounce} from '@/comp/Util';
 import { chatAPIEndpoints } from '../api';
+import Title from '@/comp/Title';
 
 
 export default function page() {
@@ -23,22 +24,16 @@ export default function page() {
   //const [wait, setWait] = useState(false)
 
 
-  const DEFAULT_MODEL_OPTIONS = {top_k:'40', top_p:'0.9', temperature: '0.8'}
-  const DEFAULT_CHAT_METADATA = {title:'Chat Title', dateCreate:'', dataChanged:'', currentModel:'llama3:instruct', modelOptions:DEFAULT_MODEL_OPTIONS}
-
-  const [isOptionPanel, setIsOptionPanel] = useState<boolean>(false)
   const [chat, setChat] = useState<ChatResponse[] | any[]>([])
 
 
   const modelSelectRef = useRef<HTMLDivElement>(null);
   const titleContRef = useRef<HTMLDivElement>(null);
-  const pathname = usePathname()
   const inputRef = useRef<HTMLInputElement>(null)
 
 
-  const { toggleSidebar, 
+  const {
         currentChat, 
-        fetchChatSnippets, 
         isSidebarToggled, 
         setChatMeta, 
         chatMeta,
@@ -48,14 +43,7 @@ export default function page() {
 
 
   useEffect(() => {
-    if (titleContRef && titleContRef.current) {
-      if (isSidebarToggled) {
-        titleContRef.current.style.transform='translateX(10%)'
-      } else {
-        titleContRef.current.style.transform='translateX(0)'
-      }
-    }
-
+    handleAnimateSideBar(titleContRef, isSidebarToggled)
   }, [isSidebarToggled]) 
 
 
@@ -75,7 +63,7 @@ if (res.data.meta != undefined) {
 }
 
 
-const debouncedSendTitleUpdate = useDebounce((newMeta) => {
+/* const debouncedSendTitleUpdate = useDebounce((newMeta) => {
   sendTitleUpdate(pathname, currentChat, newMeta).then((res)=>{
     fetchChatSnippets()
   });
@@ -86,7 +74,7 @@ const handleTitleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
   newMeta["title"] = e.target.value
   setChatMeta((prev)=>({...prev, title: e.target.value}))
   debouncedSendTitleUpdate(newMeta)
-}
+} */
 
 
 
@@ -130,9 +118,9 @@ const chatOptionPanel = (<div className='chat-option-panel'>
 
 
 
-//    const chatTitle = () => {return (<Title titleContRef={titleContRef} optionPanelComp={chatOptionPanel}/>)}
+  const chatTitle = () => {return (<Title titleContRef={titleContRef} optionPanelComp={chatOptionPanel} inputRef={inputRef} titleFunctionalBlock={titleFunctionalBlock}/>)}
 
-    const chatTitle = () => {return (<div className='chat-page-title-cont'>
+    /* const chatTitle = () => {return (<div className='chat-page-title-cont'>
       <h2 className='sidebar-toggle' onClick={()=>toggleSidebar()}>O</h2>
 
       <div ref={titleContRef} className='chat-title-func-cont'>
@@ -146,7 +134,7 @@ const chatOptionPanel = (<div className='chat-option-panel'>
 
         {isOptionPanel? chatOptionPanel : ''}
     </div>
-  </div>)}
+  </div>)} */
 
 const chatTextStream = (userMessage:ChatResponse, streamText:string) => {
 setChat((prevChat) => {
@@ -174,8 +162,6 @@ const chatProps = {
   chat: chat,
   setChat: setChat,
   resProcess: cfetch,
-  streamBodyExtras:{},
-  resCleanUp: ()=>{},
   chatInputBox: chatInputBox,
   streamProcessing: chatTextStream
 
