@@ -420,7 +420,7 @@ const chatInputBox = (defaultChatInputBox: React.JSX.Element)=> {
 
 const pipelineTextStream = (userMessage:ChatResponse, streamText:string) => {
   if (streamText.includes('<PIPELINE_BREAK>')) { /* TEST */
-  setChat(prevChat => [...prevChat, { role: 'assistant', content: "" }]); /* TEST */
+  setChat(prevChat => [...prevChat, { role: 'assistant', content: "", name:chatMeta.currentModel }]); /* TEST */
 }
 
 setChat((prevChat) => {

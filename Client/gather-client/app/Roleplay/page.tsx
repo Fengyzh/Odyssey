@@ -9,7 +9,7 @@ import { usePathname } from 'next/navigation'
 import { ChatResponse, IModalMeta, IModelOptions, IOllamaList, IRPLayer, ISavedPipeline } from '@/comp/Types'
 import { AxiosResponse } from 'axios'
 import { constants } from '@/app/constants'
-import { deleteSavedPlays, getSavedPlayById, getSavedPlays, updateRP } from './api'
+import { deleteSavedPlays, favouritePlay, getSavedPlayById, getSavedPlays, updateRP } from './api'
 import Title from '@/comp/Title'
 import '@/app/Roleplay/rp.css'
 import { ModalLayers } from '@/comp/ModalLayers/ModalLayers'
@@ -38,6 +38,7 @@ export default function page() {
         fetchChatSnippets, 
         isSidebarToggled, 
         setChatMeta, 
+        chatMeta,
         handleChatDelete,
         setCurrentChat,
         getModalList } = useSidebar();
@@ -87,7 +88,7 @@ export default function page() {
 
 
     const handleRPTitleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
-        setRpMeta((prev)=>({...prev, pipelineName: e.target.value}))
+        setRpMeta((prev)=>({...prev, name: e.target.value}))
         adjustInputLength(rpInputRef, 15, 12)
       }
 
@@ -135,6 +136,29 @@ export default function page() {
     }
 
 
+    const handleFav = () => {
+      favouritePlay(layers, rpMeta).then(()=>{
+        fetchAllSavedPlays()
+      })
+    }
+
+  const handleNewChat = () => {
+    setLayers([DEFAULT_RP_LAYER])
+    setRpMeta(DEFAULT_RP_META)
+  }
+
+
+  const handleLayerOption = (index:number, e:React.ChangeEvent<HTMLInputElement>, type: "name" | "role" | "behavior") => {
+    let allL = [...layers]
+    let curLayer = allL[index]
+    curLayer.rpOptions[type] = e.target.value
+
+    setLayers(allL)
+  }
+
+
+
+
     /* ---- FUNCTIONAL LINE ---- */
 
     const titleOptionalBlock = () => {
@@ -154,7 +178,7 @@ export default function page() {
 
     const chatTextStream = (userMessage:ChatResponse, streamText:string) => {
       if (streamText.includes('<RP_BREAK>')) { /* TEST */
-      setChat(prevChat => [...prevChat, { role: 'assistant', content: "" }]); /* TEST */
+      setChat(prevChat => [...prevChat, { role: 'assistant', content: "", name:chatMeta.currentModel }]); /* TEST */
     }
     
     setChat((prevChat) => {
@@ -190,18 +214,18 @@ const modalOptionalText = (index:number, layer:IRPLayer) => {
     <div className='rp-option-row'>
       <div className='rp-options-cont'>
         <label>Name</label>
-        <input className='rp-option-input' value={layer.rpOptions.name}/>
+        <input className='rp-option-input' value={layer.rpOptions.name} onChange={(e)=>handleLayerOption(index, e, 'name')}/>
       </div>
       <div className='rp-options-cont'>
         <label>Role</label>
-        <input className='rp-option-input' value={layer.rpOptions.role}/>
+        <input className='rp-option-input' value={layer.rpOptions.role} onChange={(e)=>handleLayerOption(index, e, 'role')}/>
       </div>
     </div>
 
     <div className='rp-option-row'>
       <div className='rp-options-cont'>
         <label>Behavior</label>
-        <input className='rp-option-input' value={layer.rpOptions.behavior}/>
+        <input className='rp-option-input' value={layer.rpOptions.behavior} onChange={(e)=>handleLayerOption(index, e, 'behavior')}/>
       </div>
 
     </div>
@@ -216,12 +240,14 @@ const modalOptionalText = (index:number, layer:IRPLayer) => {
         return (
         <div>
             <div className='pipeline-title-cont'>
-            <input ref={rpInputRef} className='pipeline-body-title' onChange={(e)=>handleRPTitleChange(e)} value={rpMeta.name}/>
+              <input ref={rpInputRef} className='pipeline-body-title' onChange={(e)=>handleRPTitleChange(e)} value={rpMeta.name}/>
+              <button className={`pipeline-fav`} onClick={()=>handleFav()}>Save Play</button>
+              <button className='pipeline-new' onClick={()=>handleNewChat()}>New Play</button>
             </div>
             <div className='pipeline-body'>
                 {layers.map((layer, index)=>{
                     return (
-                            <ModalLayers key={`${index}-${Math.floor(Math.random()*1000)}`} layer={layer} layers={layers} setLayers={setLayers} index={index} optionalTextField={modalOptionalText}/>
+                            <ModalLayers key={index} layer={layer} layers={layers} setLayers={setLayers} index={index} optionalTextField={modalOptionalText}/>
                         )
                 })}
             <div className='pipeline-output-labal'>Output</div>

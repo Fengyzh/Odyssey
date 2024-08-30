@@ -128,9 +128,9 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
 
   const sendPrompt = async () => {
     
-    let userMessage = {role:'user', content:prompt}
+    let userMessage = {role:'user', content:prompt, name:'User'}
     setWait(prev => !prev)
-    setChat(prevChat => [...prevChat, userMessage, { role: 'assistant', content: "" }]);
+    setChat(prevChat => [...prevChat, userMessage, { role: 'assistant', content: "", name:chatMeta.currentModel}]);
     let createdEntryId;
 
     if (!currentChat) {
@@ -244,8 +244,10 @@ const ChatInputBoxComp = (el=<div></div>) => {
             return <StaggerText className="chat-bubble chat-ai" key={index} text={item.content}></StaggerText>
           }
           return (
-          
-          <div key={index} className={`chat-bubble ${item.role =='assistant'? "chat-ai" : "chat-client"}`}>{item.content}</div>) 
+          <>
+          {item.name? item.name : "NO NAME"}
+          <div key={index} className={`chat-bubble ${item.role =='assistant'? "chat-ai" : "chat-client"}`}>{item.content}</div>
+          </>) 
         })}
         
 

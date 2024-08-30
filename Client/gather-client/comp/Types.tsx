@@ -1,6 +1,7 @@
 export interface ChatResponse {
     role: string;
     content: any;
+    name?:string;
 }
 
 export interface FileSnippets {

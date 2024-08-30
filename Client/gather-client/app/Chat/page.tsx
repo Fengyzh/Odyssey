@@ -139,7 +139,7 @@ const chatOptionPanel = (<div className='chat-option-panel'>
 const chatTextStream = (userMessage:ChatResponse, streamText:string) => {
 setChat((prevChat) => {
   if (prevChat.length === 0) {
-    return [userMessage, { role: 'assistant', content: streamText }];
+    return [userMessage, { role: 'assistant', content: streamText, name:chatMeta.currentModel }];
   } else {
     const updatedChat = [...prevChat];
     const lastMessage = updatedChat[updatedChat.length - 1];

@@ -21,3 +21,10 @@ export const updateRP = async (chatId:string, layers:IRPLayer[], rpMeta:IModalMe
 export const deleteSavedPlays = (playId:string) => {
     return axios.delete("http://localhost:5000/api/rp/saved" + playId)
 }
+
+export const favouritePlay = async (layers:IRPLayer[], meta:IModalMeta) => {
+    return axios.post("http://localhost:5000/api/pipelines/saved", {
+        layers:layers,
+        name:meta.name
+      })
+}

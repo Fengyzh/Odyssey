@@ -57,6 +57,7 @@
     - [x] Refactor out client-side send prompt setChat logic to their individual mode (chat, pipeline, RP)
     - [x] Refactor all the creat new chat to use the one in utils.tsx
     - [x] Backend routes
+- [] Add 'name' for each chat box so it now has "role", "name" and "content"
 
 
 # Issues
