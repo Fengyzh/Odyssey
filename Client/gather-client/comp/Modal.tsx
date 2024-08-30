@@ -23,7 +23,7 @@ interface IModalProp {
 
 
 export const Modal:React.FC<IModalProp> = ({modalBody, setIsModal, modalExternalControlPanel, modalLeftBody, modalLeftExtras}) => {
-  const [isLeftPanel, setIsLeftPanel] = useState<boolean>(true)
+  const [isLeftPanel, setIsLeftPanel] = useState<boolean>(false)
   
   return (
     <div className='modal-cont' onClick={()=>(setIsModal(prev=>!prev))}>

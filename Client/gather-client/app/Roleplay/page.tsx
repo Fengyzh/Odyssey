@@ -89,7 +89,7 @@ export default function page() {
 
     const handleRPTitleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
         setRpMeta((prev)=>({...prev, name: e.target.value}))
-        adjustInputLength(rpInputRef, 15, 12)
+        adjustInputLength(rpInputRef, 13, 11)
       }
 
 
@@ -186,7 +186,7 @@ export default function page() {
         return [...prevChat]
       }  
       if (prevChat.length === 0) {
-        return [userMessage, { role: 'assistant', content: streamText }];
+        return [userMessage, { role: 'assistant', content: streamText, name:chatMeta.currentModel }];
       } else {
         const updatedChat = [...prevChat];
         const lastMessage = updatedChat[updatedChat.length - 1];

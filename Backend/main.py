@@ -43,7 +43,7 @@ def stream():
             yield f'{content}'
         
         """ Complete Current Chat history """
-        chat_context.append({'role':'assistant', 'content':complete_text})
+        chat_context.append({'role':'assistant', 'content':complete_text, 'name':chat_meta['currentModel']})
         #print("context", chat_context)
         if (request_msg['id']):
             object_id = ObjectId(request_msg['id'])

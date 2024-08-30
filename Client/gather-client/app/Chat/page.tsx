@@ -63,6 +63,10 @@ if (res.data.meta != undefined) {
 }
 
 
+const handleSysprompt = (e:React.ChangeEvent<HTMLTextAreaElement>) => {
+  setChatMeta(prev=>({...prev, modelOptions:{...prev.modelOptions, systemPrompt:e.target.value}}))
+}
+
 /* const debouncedSendTitleUpdate = useDebounce((newMeta) => {
   sendTitleUpdate(pathname, currentChat, newMeta).then((res)=>{
     fetchChatSnippets()
@@ -100,10 +104,8 @@ const chatOptionPanel = (<div className='chat-option-panel'>
   <div>
     {/* Update mongo entries to accept sysprompt and then remove the logic here */}
     <label className='chat-option-sysprompt-label'>System Prompt</label>
-    <textarea className='chat-option-sysprompt' value={chatMeta.modelOptions.systemPrompt? chatMeta.modelOptions.systemPrompt : "Placeholder sys prompt"}/>
+    <textarea className='chat-option-sysprompt' value={chatMeta.modelOptions.systemPrompt? chatMeta.modelOptions.systemPrompt : "Placeholder sys prompt"} onChange={(e)=>handleSysprompt(e)}/>
   </div>
-
-  <button onClick={()=>{console.log(chatMeta)}}>Test</button>
 
   {currentChat?   
   <div className='chat-delete-btn-cont'>

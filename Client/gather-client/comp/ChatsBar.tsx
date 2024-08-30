@@ -304,8 +304,6 @@ TODO:
             </div>
 
             <div>
-                <button onClick={()=>{console.log(pathname)}}>PATH</button>
-                <button onClick={()=>{console.log(chatMeta)}}>Current Chat</button>
             </div>
         </div>
   )

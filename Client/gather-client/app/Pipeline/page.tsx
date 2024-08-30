@@ -27,7 +27,7 @@ export default function page() {
   const [chat, setChat] = useState<ChatResponse[] | any[]>([])
   const [pipeline, setPipeline] = useState<IPipelineLayer[]>([DEFAULT_LAYER_DATA])
   const pathname = usePathname()
-  const [isModal, setIsModal] = useState<boolean>(true)
+  const [isModal, setIsModal] = useState<boolean>(false)
   const [isModelSelect, setIsModelSelect] = useState<boolean[]>([false])
   const [modelList, setModelList] = useState<IOllamaList[] | []>([])
   const [pipelineMeta, setPipelineMeta] = useState<IModalMeta>(DEFAULT_PIPELINE_META)
@@ -207,7 +207,7 @@ export default function page() {
 
   const handlePipelineTitleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
     setPipelineMeta((prev)=>({...prev, name: e.target.value}))
-    adjustInputLength(pipelineInputRef, 15, 12)
+    adjustInputLength(pipelineInputRef, 13, 11)
   }
   
   const handleRAGOption = (index:number, isWeb:boolean) => {
@@ -428,7 +428,7 @@ setChat((prevChat) => {
     return [...prevChat]
   }  
   if (prevChat.length === 0) {
-    return [userMessage, { role: 'assistant', content: streamText }];
+    return [userMessage, { role: 'assistant', content: streamText, name:chatMeta.currentModel }];
   } else {
     const updatedChat = [...prevChat];
     const lastMessage = updatedChat[updatedChat.length - 1];
