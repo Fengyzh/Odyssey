@@ -12,7 +12,7 @@ import { constants } from '@/app/constants'
 import './pipeline.css'
 import { Modal, modalExBtnPanel }  from '@/comp/Modal'
 import { getLLMList, pipelineARIEndpoints } from '../api'
-import { favouritePipeline, getSavedPipelineById, getSavedPipelines, updatePipeline } from './api'
+import { deleteSavedPipeline, favouritePipeline, getSavedPipelineById, getSavedPipelines, updatePipeline } from './api'
 import Title from '@/comp/Title';
 import { ModalLayers } from '@/comp/ModalLayers/ModalLayers';
 
@@ -27,11 +27,12 @@ export default function page() {
   const [chat, setChat] = useState<ChatResponse[] | any[]>([])
   const [pipeline, setPipeline] = useState<IPipelineLayer[]>([DEFAULT_LAYER_DATA])
   const pathname = usePathname()
-  const [isModal, setIsModal] = useState<boolean>(false)
+  const [isModal, setIsModal] = useState<boolean>(true)
   const [isModelSelect, setIsModelSelect] = useState<boolean[]>([false])
   const [modelList, setModelList] = useState<IOllamaList[] | []>([])
   const [pipelineMeta, setPipelineMeta] = useState<IModalMeta>(DEFAULT_PIPELINE_META)
   const [savedPipelines, setSavedPipelines] = useState<ISavedPipeline[] | []>([])
+  const [editSaved, setEditSaved] = useState<boolean>(false)
 
 
   
@@ -205,7 +206,7 @@ export default function page() {
 
 
   const handlePipelineTitleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
-    setPipelineMeta((prev)=>({...prev, pipelineName: e.target.value}))
+    setPipelineMeta((prev)=>({...prev, name: e.target.value}))
     adjustInputLength(pipelineInputRef, 15, 12)
   }
   
@@ -226,7 +227,23 @@ export default function page() {
       setPipeline([...res.data.settings])
     })
   }
+
+  const handleDeleteSaved = (index:number) => {
+    console.log(`Deleting: ${savedPipelines[index]._id}`)
+    if (!savedPipelines[index]._id) return
+    deleteSavedPipeline(savedPipelines[index]._id).then(()=>{
+      fetchAllSavedPipeline()
+    })
+
+  }
+
+  const handleNewChat = () => {
+    setPipeline([DEFAULT_LAYER_DATA])
+    setPipelineMeta(DEFAULT_PIPELINE_META)
+  }
   
+
+
 
 
   const chatOptionPanel = (<div className='pipeline-option-panel chat-option-panel'>
@@ -347,7 +364,8 @@ const modalBody = () => {
     <div>
       <div className='pipeline-title-cont'>
         <input ref={pipelineInputRef} className='pipeline-body-title' onChange={(e)=>handlePipelineTitleChange(e)} value={pipelineMeta.name}/>
-        <button className={`pipeline-fav`} onClick={()=>handleFav()}>Save Play</button>
+        <button className={`pipeline-fav`} onClick={()=>handleFav()}>Save Pipeline</button>
+        <button className='pipeline-new' onClick={()=>handleNewChat()}>New Pipeline</button>
       </div>
       <div className='pipeline-body'>
           {pipeline.map((pipe, index)=>{
@@ -370,12 +388,25 @@ const modalBody = () => {
 
 const modalLeftBody = () => {
   return (
+    <>
     <div className='pipeline-saved-body'>
       {savedPipelines.map((sPipe, index)=>{
-        return <div key={sPipe._id} onClick={()=>handleChangePipeline(sPipe._id)} className='saved-pipelines'>{sPipe.name}</div>
+        return <>
+          <div key={sPipe._id} onClick={()=>handleChangePipeline(sPipe._id)} className='saved-pipelines'>{sPipe.name}
+          {editSaved?  
+          <div onClick={()=>handleDeleteSaved(index)} className='pipeline-saved-delete'>
+            X
+          </div> : ''}
+
+            </div>
+        </>
       })}
 
     </div>
+    <div className='modal-left-panel-btn-cont'>
+      <button className='modal-left-panel-edit' onClick={()=>setEditSaved(()=>!editSaved)}>Edit Saved</button>
+    </div>
+    </>
   )
 }
 
@@ -411,6 +442,7 @@ setChat((prevChat) => {
 
 
 
+
 const chatProps = {
   chatEndpoints: pipelineARIEndpoints,
   titleComp: chatTitle,
@@ -428,7 +460,7 @@ const ModalProps = {
   setIsModal:setIsModal,
   modalExternalControlPanel: modalExBtnPanel(handleSubmitPipeline, 'Update Pipeline'),
   modalLeftBody: modalLeftBody,
-  modalLeftName: "Saved Pipeline"
+  modalLeftExtras: {modalLeftBtnTxt:'Saved Pipelines', modalLeftTitle:'Saved'}
 }
 
 

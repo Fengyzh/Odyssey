@@ -9,7 +9,7 @@ import { usePathname } from 'next/navigation'
 import { ChatResponse, IModalMeta, IModelOptions, IOllamaList, IRPLayer, ISavedPipeline } from '@/comp/Types'
 import { AxiosResponse } from 'axios'
 import { constants } from '@/app/constants'
-import { getSavedPlayById } from './api'
+import { deleteSavedPlays, getSavedPlayById, getSavedPlays, updateRP } from './api'
 import Title from '@/comp/Title'
 import '@/app/Roleplay/rp.css'
 import { ModalLayers } from '@/comp/ModalLayers/ModalLayers'
@@ -24,7 +24,7 @@ export default function page() {
     const [layers, setLayers] = useState<IRPLayer[] | []>([DEFAULT_RP_LAYER])
     const [rpMeta, setRpMeta] = useState<IModalMeta>(DEFAULT_RP_META)
     const [savedPlays, setSavedPlays] = useState<ISavedPipeline[] | []>([])
-
+    const [editSaved, setEditSaved] = useState<boolean>(false)
 
 
     const titleContRef = useRef<HTMLDivElement>(null);
@@ -49,19 +49,33 @@ export default function page() {
 
     useEffect(() => {
       if (isModal) {      
-        //getModalList()
+        getModalList()
       }
     }, [isModal]) 
 
 
+    const fetchAllSavedPlays = () => {
+      return getSavedPlays().then((res)=>{
+        console.log(res.data)
+        setSavedPlays(res.data)
+      })
+    }
+
+
 
     const rpfetch = (res:AxiosResponse<any, any>)=>{
-        console.log(res.data)
         setChat(res.data.history)
       
       if (res.data.meta != undefined) {
-          console.log(res.data.meta)
           setChatMeta(res.data.meta)
+        }
+
+        if (res.data.layers != undefined && res.data.rp_meta != undefined) {
+          setLayers(res.data.layers)
+          setRpMeta(res.data.rp_meta)
+        } else {
+          setLayers([DEFAULT_RP_LAYER])
+          setRpMeta(DEFAULT_RP_META)
         }
       
       }
@@ -79,9 +93,8 @@ export default function page() {
 
 
       const handleSubmitRp = async () => {
-        // TODO: Impl
         console.log(layers)
-        /* let createdEntryId;
+        let createdEntryId;
         let chatId
         if (!currentChat) {
           const createResponse = await createNewChat(pathname)
@@ -96,9 +109,9 @@ export default function page() {
           chatId = currentChat
         }
     
-        //await updatePipeline(chatId, pipeline, pipelineMeta)
+        await updateRP(chatId, layers, rpMeta)
         setCurrentChat(chatId)
-        setIsModal(false) */
+        setIsModal(false) 
       }
 
 
@@ -107,11 +120,19 @@ export default function page() {
         // TODO: IMPL
         getSavedPlayById(playId).then((res)=>{
         // TEMP set value
-        setLayers([])
+        setLayers(res.data.playLayers)
     })
     }
 
 
+    const handleDeleteSaved = (index:number) => {
+      console.log(`Deleting: ${savedPlays[index]._id}`)
+      if (!savedPlays[index]._id) return
+      deleteSavedPlays(savedPlays[index]._id).then(()=>{
+        fetchAllSavedPlays()
+      })
+  
+    }
 
 
     /* ---- FUNCTIONAL LINE ---- */
@@ -131,21 +152,28 @@ export default function page() {
     }
 
 
-
-
     const chatTextStream = (userMessage:ChatResponse, streamText:string) => {
-        setChat((prevChat) => {
-          if (prevChat.length === 0) {
-            return [userMessage, { role: 'assistant', content: streamText }];
-          } else {
-            const updatedChat = [...prevChat];
-            const lastMessage = updatedChat[updatedChat.length - 1];
-            updatedChat[updatedChat.length - 1] = { ...lastMessage, content: lastMessage.content + streamText };          
-            return updatedChat;
-          }
-        });  
-        
+      if (streamText.includes('<RP_BREAK>')) { /* TEST */
+      setChat(prevChat => [...prevChat, { role: 'assistant', content: "" }]); /* TEST */
     }
+    
+    setChat((prevChat) => {
+      if (streamText == '<RP_BREAK>') {
+        return [...prevChat]
+      }  
+      if (prevChat.length === 0) {
+        return [userMessage, { role: 'assistant', content: streamText }];
+      } else {
+        const updatedChat = [...prevChat];
+        const lastMessage = updatedChat[updatedChat.length - 1];
+        updatedChat[updatedChat.length - 1] = { ...lastMessage, content: lastMessage.content + streamText };          
+        return updatedChat;
+      }
+    });  
+    
+    }
+
+
 
 
   const chatOptionPanel = (<div className='pipeline-option-panel chat-option-panel'>
@@ -206,39 +234,76 @@ const modalOptionalText = (index:number, layer:IRPLayer) => {
 
     const modalLeftBody = () => {
         return (
-          <div className='pipeline-saved-body'>
-            {savedPlays.map((splay, index)=>{
-              return <div key={splay._id} onClick={()=>handleChangePlay(splay._id)} className='saved-pipelines'>{splay.name}</div>
-            })}
-      
-          </div>
+          <>
+            <div className='pipeline-saved-body'>
+              {savedPlays.map((splay, index)=>{
+                return <>
+                  <div key={splay._id} onClick={()=>handleChangePlay(splay._id)} className='saved-pipelines'>{splay.name}</div>
+                  {editSaved?  
+                  <div onClick={()=>handleDeleteSaved(index)} className='pipeline-saved-delete'>
+                    X
+                  </div> : ''}
+                </>
+              })}
+        
+            </div>
+          </>
         )
       }
 
 
+      /* const modalLeftBody = () => {
+  return (
+    <>
+    <div className='pipeline-saved-body'>
+      {savedPipelines.map((sPipe, index)=>{
+        return <>
+          <div key={sPipe._id} onClick={()=>handleChangePipeline(sPipe._id)} className='saved-pipelines'>{sPipe.name}
+          {editSaved?  
+          <div onClick={()=>handleDeleteSaved(index)} className='pipeline-saved-delete'>
+            X
+          </div> : ''}
 
-    const chatProps = {
-        chatEndpoints: RPAPIEndpoints,
-        titleComp: chatTitle,
-        chat: chat,
-        setChat: setChat,
-        resProcess: rpfetch,
-        chatInputBox: chatInputBox,
-        streamProcessing: chatTextStream
-      }
+            </div>
+        </>
+      })}
+
+    </div>
+    <div className='modal-left-panel-btn-cont'>
+      <button className='modal-left-panel-edit' onClick={()=>setEditSaved(()=>!editSaved)}>Edit Saved</button>
+    </div>
+    </>
+  )
+} */
+
+
+    var rpStreamBodyExtra = {
+      layers: layers,
+      rpMeta: rpMeta
+    }
+
+  const chatProps = {
+      chatEndpoints: RPAPIEndpoints,
+      titleComp: chatTitle,
+      chat: chat,
+      setChat: setChat,
+      resProcess: rpfetch,
+      chatInputBox: chatInputBox,
+      streamProcessing: chatTextStream,
+      streamBodyExtras:rpStreamBodyExtra
+    }
 
     const ModalProps = {
     modalBody: modalBody,
     setIsModal:setIsModal,
     modalLeftBody:modalLeftBody,
-    modalLeftName: "Saved Plays",
     modalExternalControlPanel: modalExBtnPanel(handleSubmitRp, 'Update Play'),
+    modalLeftExtras: {modalLeftBtnTxt:'Saved Plays', modalLeftTitle:'Saved'}
     }
 
   return (
     <>
         <ChatPage {...chatProps}/>
-        {/* TODO: Add modal */}
         {isModal? <Modal {...ModalProps}/> : ''}
     </>
   )

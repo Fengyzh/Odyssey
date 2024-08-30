@@ -48,6 +48,8 @@
 - [x] Pipeline LLM workflow
     - [x] Add front-end logic to send all user questions to backend for LLM context
 - [] RP Routess
+    - /api/rp/saved/" + playId
+    - /api/rp/" + chatId
  
 # General
 - [x] Phase I refactor
@@ -106,3 +108,18 @@ LLMChat: {
 
 - When delete, remove the ids in the docs list for LLMchat
 - Use the docs id to find the docs and remove the chat id from the chats[], same for deleting a chat for docs
+
+
+
+rp data structure:
+
+{
+    _id
+    title
+    history
+    docs
+    meta
+    layers
+    rp_meta
+}
+

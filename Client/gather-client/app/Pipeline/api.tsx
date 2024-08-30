@@ -8,6 +8,11 @@ export const updatePipeline = async (chatId:string, pipeline:IPipelineLayer[], p
       })
 }
 
+export const deleteSavedPipeline = async (pipelineId:string) => {
+    return axios.delete("http://localhost:5000/api/pipelines/saved" + pipelineId)
+}
+
+
 export const favouritePipeline = async (pipeline:IPipelineLayer[], pipelineMeta:IModalMeta) => {
     return axios.post("http://localhost:5000/api/pipelines/saved", {
         pipeline:pipeline,

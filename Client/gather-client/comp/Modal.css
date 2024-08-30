@@ -33,12 +33,40 @@
     position: absolute;
     background-color: var(--deep-background-color-dark);
     height: 80%;
-    width: 10rem;
-    transform: translateX(-45rem);
+    width: 15rem;
+    transform: translateX(-48rem);
     margin-left: 15rem;
     border-radius: 10px;
     transition: 0.3s ease-in-out;
 }
+
+.modal-left-panel-btn-cont {
+    display: flex;
+    justify-content: center;
+    border-radius: 10px;
+    height: 2rem;
+    width: 100%;
+    margin-top: 5%;
+
+}
+
+.modal-left-panel-edit {
+    width: 90%;
+    background-color: var(--button-color-dark);
+    border-radius: 10px;
+    border: 0;
+    text-align: center;
+    font-size: large;
+    font-weight: 500;
+    color:white;
+    transition: 0.3s ease-in;
+    cursor: pointer;
+}
+
+.modal-left-panel-edit:hover {
+    background-color: var(--accent-color);
+}
+
 
 .panel-closed {
     transform: translateX(-100vw);
@@ -56,12 +84,6 @@
 
 }
 
-.model-left-func {
-    height: 100%;
-    width: 100%;
-}
-
-
 
 .modal-btn-panel {
     display: flex;
@@ -69,6 +91,7 @@
 }
 
 .modal-left-panel-toggle {
+    position: relative;
     bottom: 0;
     left: 0;
     height: 2rem;
@@ -98,6 +121,30 @@
 
 
 /* Pipeline Styling */
+.pipeline-saved-delete {
+    cursor: pointer;
+    position: absolute;
+    color: var(--deep-dark);
+    top: 0;
+    right: 0;
+    background-color: tomato;
+    display: flex;
+    height: 100%;
+    align-items: center;
+    border-radius: 5px;
+    width: 10%;
+    justify-content: center;
+    font-weight: 600;
+    transition: 0.3s ease-in;
+}
+
+.pipeline-saved-delete:hover {
+    color: tomato;
+    background-color: black;
+}
+
+
+
 .pipeline-body-title {
     background-color: transparent;
     border: 0;
@@ -133,6 +180,28 @@
     color: black;
     background: rgb(228, 228, 80);
 }
+
+.pipeline-new {
+    width: 20%;
+    position: relative;
+    margin-left: 1rem;
+    font-size: large;
+    font-weight: 700;
+    background-color: rgb(10,10,10);
+    padding: 0.5rem 1rem 0.5rem 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    color: white;
+    border: 0;
+    transition: 0.3s ease-in;
+    margin-left: auto;
+}
+
+.pipeline-new:hover {
+    color: black;
+    background: var(--accent-color);
+}
+
 
 
 .pipeline-body {
@@ -424,7 +493,7 @@
 .pipeline-saved-body {
     overflow-y: scroll;
     padding: 5%;
-    height: 90%;
+    height: 85%;
     background-color: rgb(10, 10, 10);
     color: white;
 }
@@ -433,6 +502,7 @@
     margin-bottom: 0.5em;
     cursor: pointer;
     transition: 0.3s ease-in;
+    position: relative;
 }
 
 .saved-pipelines:hover {
