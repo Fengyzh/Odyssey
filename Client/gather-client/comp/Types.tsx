@@ -1,6 +1,7 @@
 export interface ChatResponse {
     role: string;
     content: any;
+    name?:string;
 }
 
 export interface FileSnippets {
@@ -69,10 +70,10 @@ export interface IPipelineLayer {
   isWeb:boolean;
   isDoc:boolean;
 }
-
-export interface IPipelineMeta {
+/* IPipelineMeta */
+export interface IModalMeta {
   id:string;
-  pipelineName:string;
+  name:string;
   isFav:boolean;
 }
 
@@ -89,3 +90,17 @@ export interface ISavedPipeline {
   settings: IPipelineLayer[]
 }
 
+export interface IRPLayerOptions {
+  name:string;
+  role:string;
+  behavior:string;
+  extra:string;
+}
+
+export interface IRPLayer extends IPipelineLayer {
+  isWorld:boolean
+  rpOptions: IRPLayerOptions
+}
+
+
+/* {model: 'llama3:instruct', modelOptions: DEFAULT_MODEL_OPTIONS, rp_options:DEFAULT_RP_LAYER_OPTIONS, isWeb:false, isDoc:false, isWorld:false} */

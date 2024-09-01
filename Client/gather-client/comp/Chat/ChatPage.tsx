@@ -10,6 +10,8 @@ import { usePathname } from 'next/navigation'
 import { constants } from '@/app/constants'
 import { createNewChat } from '../Util'
 import { getChatTitleSummary, getCurrentChat } from '@/app/api'
+import Markdown from 'react-markdown'
+import '@/app/Chat/chat.css'
 
 interface IChatPageProps {
     chatEndpoints: IChatEndpoints
@@ -17,8 +19,8 @@ interface IChatPageProps {
     chat: ChatResponse[] | any[]
     setChat: Dispatch<SetStateAction<ChatResponse[] | any[]>>;
     resProcess: (res: AxiosResponse<any, any>) => void
-    streamBodyExtras: any
-    resCleanUp: () => void
+    streamBodyExtras?: any
+    resCleanUp?: () => void
     chatInputBox: (defaultChatInputBox:React.JSX.Element) => React.JSX.Element
     streamProcessing: (userMessage:ChatResponse, streamText:string) => void;
 } 
@@ -75,7 +77,9 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
       console.log("reset")
       setChat([])
       setChatMeta(DEFAULT_CHAT_METADATA)
-      resCleanUp()
+      if (resCleanUp != undefined) {
+        resCleanUp()
+      }
     }
 
   }, [currentChat])
@@ -126,9 +130,9 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
 
   const sendPrompt = async () => {
     
-    let userMessage = {role:'user', content:prompt}
+    let userMessage = {role:'user', content:prompt, name:'User'}
     setWait(prev => !prev)
-    setChat(prevChat => [...prevChat, userMessage, { role: 'assistant', content: "" }]);
+    setChat(prevChat => [...prevChat, userMessage, { role: 'assistant', content: "", name:chatMeta.currentModel}]);
     let createdEntryId;
 
     if (!currentChat) {
@@ -156,7 +160,7 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
         context:curContext,
         meta:chatMeta,
         id:currentChat? currentChat : createdEntryId,
-        streamBodyExtras
+        streamBodyExtras:streamBodyExtras? streamBodyExtras : {}
       })
 
     })
@@ -235,15 +239,29 @@ const ChatInputBoxComp = (el=<div></div>) => {
         {titleComp()}
 
       <div ref={chatPageRef} className='chat-box'> 
-        <h3> {chat.length === 0 && !wait? "New Chat?" : ""} </h3>
+        {chat.length === 0 && !wait? 
+        <div className='newchat-cont'>
+          <div className='newChat-title-cont'>
+            <h3>New Chat! {`-->`}  Start the conversation by sending a message!</h3>
+          </div>
+        </div> : ""}
+        
         {chat.map((item, index)=> {
-          /* Might remove this staggerText and put the markdown tag in the div at the bottom */
+          if (item.content == "") return
           if (item.role == 'assistant') {
-            return <StaggerText className="chat-bubble chat-ai" key={index} text={item.content}></StaggerText>
+            return (
+              <>
+                <div className="chat-bubble chat-ai">
+                  <div className='chat-name'>{item.name? item.name : "NO NAME"}</div>
+                  <Markdown>{item.content}</Markdown>
+                </div>
+              </>
+            )
           }
           return (
-          
-          <div key={index} className={`chat-bubble ${item.role =='assistant'? "chat-ai" : "chat-client"}`}>{item.content}</div>) 
+          <>
+            <div key={index} className={`chat-bubble ${item.role =='assistant'? "chat-ai" : "chat-client"}`}>{item.content}</div>
+          </>) 
         })}
         
 

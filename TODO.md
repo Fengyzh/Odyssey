@@ -48,6 +48,8 @@
 - [x] Pipeline LLM workflow
     - [x] Add front-end logic to send all user questions to backend for LLM context
 - [] RP Routess
+    - /api/rp/saved/" + playId
+    - /api/rp/" + chatId
  
 # General
 - [x] Phase I refactor
@@ -55,6 +57,7 @@
     - [x] Refactor out client-side send prompt setChat logic to their individual mode (chat, pipeline, RP)
     - [x] Refactor all the creat new chat to use the one in utils.tsx
     - [x] Backend routes
+- [] Add 'name' for each chat box so it now has "role", "name" and "content"
 
 
 # Issues
@@ -106,3 +109,18 @@ LLMChat: {
 
 - When delete, remove the ids in the docs list for LLMchat
 - Use the docs id to find the docs and remove the chat id from the chats[], same for deleting a chat for docs
+
+
+
+rp data structure:
+
+{
+    _id
+    title
+    history
+    docs
+    meta
+    layers
+    rp_meta
+}
+

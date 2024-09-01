@@ -2,22 +2,23 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import '@/app/Chat/chat.css'
-import NavLayout from '@/app/navLayout'
 import ChatPage from '@/comp/Chat/ChatPage'
 import { useSidebar } from '../context/sidebarContext';
-import ChatTitleFunc from '@/comp/Chat/ChatTitleFunc';
-import { ChatMetaData, ChatResponse, IChatEndpoints, IModelOptions, IOllamaList, IPipelineLayer, IPipelineMeta, ISavedPipeline } from '@/comp/Types';
+import { ChatMetaData, ChatResponse, IChatEndpoints, IModalMeta, IModelOptions, IOllamaList, IPipelineLayer, ISavedPipeline } from '@/comp/Types';
 import axios, { AxiosResponse } from 'axios';
 import { usePathname } from 'next/navigation';
-import { useDebounce, sendTitleUpdate, adjustInputLength, createNewChat } from '@/comp/Util';
+import { useDebounce, sendTitleUpdate, adjustInputLength, createNewChat, handleAnimateSideBar } from '@/comp/Util';
 import { constants } from '@/app/constants'
 import './pipeline.css'
-import { Modal }  from '@/comp/Modal'
+import { Modal, modalExBtnPanel }  from '@/comp/Modal'
 import { getLLMList, pipelineARIEndpoints } from '../api'
-import { favouritePipeline, getSavedPipelineById, getSavedPipelines, updatePipeline } from './api'
+import { deleteSavedPipeline, favouritePipeline, getSavedPipelineById, getSavedPipelines, updatePipeline } from './api'
+import Title from '@/comp/Title';
+import { ModalLayers } from '@/comp/ModalLayers/ModalLayers';
 
 export default function page() {
-  const { DEFAULT_LAYER_DATA, DEFAULT_PIPELINE_META } = constants();
+  const { DEFAULT_LAYER_DATA } = constants();
+  const DEFAULT_PIPELINE_META = {id:'', name:'New Pipeline', isFav:false}
 
   const titleContRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -26,16 +27,16 @@ export default function page() {
   const [chat, setChat] = useState<ChatResponse[] | any[]>([])
   const [pipeline, setPipeline] = useState<IPipelineLayer[]>([DEFAULT_LAYER_DATA])
   const pathname = usePathname()
-  const [isOptionPanel, setIsOptionPanel] = useState<boolean>(false)
   const [isModal, setIsModal] = useState<boolean>(false)
   const [isModelSelect, setIsModelSelect] = useState<boolean[]>([false])
   const [modelList, setModelList] = useState<IOllamaList[] | []>([])
-  const [pipelineMeta, setPipelineMeta] = useState<IPipelineMeta>(DEFAULT_PIPELINE_META)
+  const [pipelineMeta, setPipelineMeta] = useState<IModalMeta>(DEFAULT_PIPELINE_META)
   const [savedPipelines, setSavedPipelines] = useState<ISavedPipeline[] | []>([])
+  const [editSaved, setEditSaved] = useState<boolean>(false)
 
 
   
-  const { toggleSidebar, 
+  const {
     currentChat,  
     fetchChatSnippets, 
     isSidebarToggled, 
@@ -45,14 +46,7 @@ export default function page() {
     setCurrentChat } = useSidebar();
 
     useEffect(() => {
-      if (titleContRef && titleContRef.current) {
-        if (isSidebarToggled) {
-          titleContRef.current.style.transform='translateX(10%)'
-        } else {
-          titleContRef.current.style.transform='translateX(0)'
-        }
-      }
-  
+      handleAnimateSideBar(titleContRef, isSidebarToggled)
     }, [isSidebarToggled]) 
 
     useEffect(() => {
@@ -114,23 +108,9 @@ export default function page() {
   }
 
 
-  const debouncedSendTitleUpdate = useDebounce((newMeta) => {
-    sendTitleUpdate(pathname, currentChat, newMeta).then((res)=>{
-      fetchChatSnippets()
-    });
-  }, 1000);
-
-  const handleTitleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
-    let newMeta = chatMeta
-    newMeta["title"] = e.target.value
-    setChatMeta((prev)=>({...prev, title: e.target.value}))
-    debouncedSendTitleUpdate(newMeta)
-  }
-
  const handleAddPipelineLayer = () => {
-  let temp = DEFAULT_LAYER_DATA
-  temp.model = temp.model
-    setPipeline((prev)=>[...prev, temp])
+
+    setPipeline((prev)=>[...prev, DEFAULT_LAYER_DATA])
  }
 
 
@@ -226,8 +206,8 @@ export default function page() {
 
 
   const handlePipelineTitleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
-    setPipelineMeta((prev)=>({...prev, pipelineName: e.target.value}))
-    adjustInputLength(pipelineInputRef, 15, 12)
+    setPipelineMeta((prev)=>({...prev, name: e.target.value}))
+    adjustInputLength(pipelineInputRef, 13, 11)
   }
   
   const handleRAGOption = (index:number, isWeb:boolean) => {
@@ -247,7 +227,23 @@ export default function page() {
       setPipeline([...res.data.settings])
     })
   }
+
+  const handleDeleteSaved = (index:number) => {
+    console.log(`Deleting: ${savedPipelines[index]._id}`)
+    if (!savedPipelines[index]._id) return
+    deleteSavedPipeline(savedPipelines[index]._id).then(()=>{
+      fetchAllSavedPipeline()
+    })
+
+  }
+
+  const handleNewChat = () => {
+    setPipeline([DEFAULT_LAYER_DATA])
+    setPipelineMeta(DEFAULT_PIPELINE_META)
+  }
   
+
+
 
 
   const chatOptionPanel = (<div className='pipeline-option-panel chat-option-panel'>
@@ -258,7 +254,7 @@ export default function page() {
 </div>)
 
 
-  const chatTitle = () => {return (<div className='chat-page-title-cont'>
+/*   const chatTitle = () => {return (<div className='chat-page-title-cont'>
   <h2 className='sidebar-toggle' onClick={()=>toggleSidebar()}>O</h2>
 
   <div ref={titleContRef} className='chat-title-func-cont'>
@@ -278,7 +274,18 @@ export default function page() {
   </div> : ''}
 
 
-</div>)}
+</div>)} */
+
+const titleOptionalBlock = () => {
+  return (<div className='chat-options pipeline-options'>
+    <button className='chat-options-btn' onClick={()=>setIsModal((prev)=>!prev)}> P+ </button>
+</div>)
+}
+
+const chatTitle = () => {return (<Title titleContRef={titleContRef} optionPanelComp={chatOptionPanel} inputRef={inputRef} titleOptionalBlock={titleOptionalBlock}/>)}
+ 
+
+
 
 
 const pipelineLayerComp = (pipe:IPipelineLayer, index:number) => {
@@ -356,14 +363,16 @@ const modalBody = () => {
   return (
     <div>
       <div className='pipeline-title-cont'>
-        <input ref={pipelineInputRef} className='pipeline-body-title' onChange={(e)=>handlePipelineTitleChange(e)} value={pipelineMeta.pipelineName}/>
+        <input ref={pipelineInputRef} className='pipeline-body-title' onChange={(e)=>handlePipelineTitleChange(e)} value={pipelineMeta.name}/>
         <button className={`pipeline-fav`} onClick={()=>handleFav()}>Save Pipeline</button>
+        <button className='pipeline-new' onClick={()=>handleNewChat()}>New Pipeline</button>
       </div>
       <div className='pipeline-body'>
           {pipeline.map((pipe, index)=>{
                 return (
                   <>
-                    {pipelineLayerComp(pipe, index)}
+                    {/* {pipelineLayerComp(pipe, index)} */}
+                    <ModalLayers layer={pipe} layers={pipeline} index={index} setLayers={setPipeline}/>
                     <h3 className='pipeline-layer-seperator'>V</h3>
                   </>
                   )
@@ -376,22 +385,28 @@ const modalBody = () => {
   )
 }
 
-const modalExBtnPanel = () => {
-  return (
-    <div className='pipeline-ex-btn-panel'>
-      <button onClick={()=>handleSubmitPipeline()} className='pipeline-submit'>Update Pipeline</button>
-    </div>
-  )
-}
 
 const modalLeftBody = () => {
   return (
+    <>
     <div className='pipeline-saved-body'>
       {savedPipelines.map((sPipe, index)=>{
-        return <div key={sPipe._id} onClick={()=>handleChangePipeline(sPipe._id)} className='saved-pipelines'>{sPipe.name}</div>
+        return <>
+          <div key={sPipe._id} onClick={()=>handleChangePipeline(sPipe._id)} className='saved-pipelines'>{sPipe.name}
+          {editSaved?  
+          <div onClick={()=>handleDeleteSaved(index)} className='pipeline-saved-delete'>
+            X
+          </div> : ''}
+
+            </div>
+        </>
       })}
 
     </div>
+    <div className='modal-left-panel-btn-cont'>
+      <button className='modal-left-panel-edit' onClick={()=>setEditSaved(()=>!editSaved)}>Edit Saved</button>
+    </div>
+    </>
   )
 }
 
@@ -405,7 +420,7 @@ const chatInputBox = (defaultChatInputBox: React.JSX.Element)=> {
 
 const pipelineTextStream = (userMessage:ChatResponse, streamText:string) => {
   if (streamText.includes('<PIPELINE_BREAK>')) { /* TEST */
-  setChat(prevChat => [...prevChat, { role: 'assistant', content: "" }]); /* TEST */
+  setChat(prevChat => [...prevChat, { role: 'assistant', content: "", name:chatMeta.currentModel }]); /* TEST */
 }
 
 setChat((prevChat) => {
@@ -413,7 +428,7 @@ setChat((prevChat) => {
     return [...prevChat]
   }  
   if (prevChat.length === 0) {
-    return [userMessage, { role: 'assistant', content: streamText }];
+    return [userMessage, { role: 'assistant', content: streamText, name:chatMeta.currentModel }];
   } else {
     const updatedChat = [...prevChat];
     const lastMessage = updatedChat[updatedChat.length - 1];
@@ -423,6 +438,7 @@ setChat((prevChat) => {
 });  
 
 }
+
 
 
 
@@ -442,9 +458,9 @@ const chatProps = {
 const ModalProps = {
   modalBody: modalBody,
   setIsModal:setIsModal,
-  modalExternalControlPanel: modalExBtnPanel,
+  modalExternalControlPanel: modalExBtnPanel(handleSubmitPipeline, 'Update Pipeline'),
   modalLeftBody: modalLeftBody,
-  modalLeftName: "Saved Pipeline"
+  modalLeftExtras: {modalLeftBtnTxt:'Saved Pipelines', modalLeftTitle:'Saved'}
 }
 
 
