@@ -24,7 +24,7 @@ export const useDebounce = (func: (...args: any[]) => void, wait: number) => {
 };
 
 export const sendTitleUpdate = async (pathname:string | null, id:string, meta:ChatMetaData) => {
-    return axios.post('http://localhost:5000/api/chat/title' + `?type=${pathname?.replace('/', '')}`, {id:id, meta:meta})
+    return axios.post('http://localhost:5000/api/chat/title' + `?type=${pathname?.replace('/', '')}`, {id:id, titleName:meta.title})
 }
 
 
@@ -38,7 +38,7 @@ export const adjustInputLength = (inputRef:React.RefObject<HTMLInputElement>, ch
 
 export const createNewChat = async (pathname:string | null) => {
     if (!pathname) return
-    return await axios.get("http://localhost:5000/api/chat/create" + `?type=${pathname?.replace('/', '')}`)
+    return await axios.get("http://localhost:5000/api/create" + `?type=${pathname?.replace('/', '')}`)
 }
 
 export const handleAnimateSideBar = (titleContRef:React.RefObject<HTMLDivElement>, isSidebarToggled:boolean) => {

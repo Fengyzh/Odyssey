@@ -5,7 +5,7 @@ import React, { createContext, useState, useContext, ReactNode, Dispatch, SetSta
 import { ChatSnippets, FileSnippets, ChatMetaData, IOllamaList } from '@/comp/Types';
 import { usePathname } from 'next/navigation';
 import { constants } from '@/app/constants'
-import { getLLMList } from '../api';
+import { getLLMList, getURLbyPathName } from '../api';
 
 
 
@@ -57,17 +57,11 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children }) =>
 
 
   const fetchChatSnippets = () => {
-    if (pathname === "/Chat") {    
-      axios.get("http://localhost:5000/api/chat/all").then((res)=>{
+    let url = getURLbyPathName(pathname)
+    if (url == "") return
+    axios.get(url).then((res) => {
       setChats([...res.data])
     })
-  } else if (pathname == "/Pipeline") {
-    axios.get("http://localhost:5000/api/pipelines").then((res)=>{
-      setChats(res.data)
-    })
-  } else if (pathname == "/Roleplay") {
-    setChats([])
-  }
   }
 
 

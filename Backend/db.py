@@ -7,6 +7,9 @@ mongoCollection = mongoDB["LLM-Chats"]
 mongoDocCollection = mongoDB["LLM-Docs"]
 mongoPipeLCollection = mongoDB["LLM-Pipelines"]
 mongoSavedCollection = mongoDB["LLM-Saved-Settings"]
+mongoRPCollection = mongoDB["LLM-RP"]
+
+
 
 def get_mongo_clinet():
     return mongoClient
@@ -30,6 +33,9 @@ def get_collection_by_type(type):
         return mongoDocCollection
     if type == 'saved_pipeline':
         return mongoSavedCollection
+    if type == 'roleplay':
+        return mongoRPCollection
+
 
 def get_chat_collection():
     return mongoCollection
@@ -40,5 +46,9 @@ def get_pipeline_collection():
 def get_doc_collection():
     return mongoDocCollection
 
-def get_saved_pipeline_collection():
+def get_saved_collection():
     return mongoSavedCollection
+
+def get_rp_collection():
+    return mongoRPCollection
+

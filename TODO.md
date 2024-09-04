@@ -23,8 +23,11 @@
 - [x] Load all the saved pipeline in the left modal panel (wait for backend impl)
 - [] Add delete saved pipeline in left modal panel
 - [x] Pipeline Web/Doc toggle
-- [] RP Page
-    - [] RP selection panel
+- [x] RP Page
+    - [x] RP selection panel
+    - [x] RP world setting (Be its own can not be deleted layer at the top)
+
+
 
 
 
@@ -47,9 +50,8 @@
 - [x] Use front-end model options
 - [x] Pipeline LLM workflow
     - [x] Add front-end logic to send all user questions to backend for LLM context
-- [] RP Routess
-    - /api/rp/saved/" + playId
-    - /api/rp/" + chatId
+- [x] RP Routess
+- [] Change 'date changed' for meta in stream endpoints
  
 # General
 - [x] Phase I refactor
@@ -57,7 +59,7 @@
     - [x] Refactor out client-side send prompt setChat logic to their individual mode (chat, pipeline, RP)
     - [x] Refactor all the creat new chat to use the one in utils.tsx
     - [x] Backend routes
-- [] Add 'name' for each chat box so it now has "role", "name" and "content"
+- [x] Add 'name' for each chat box so it now has "role", "name" and "content"
 
 
 # Issues

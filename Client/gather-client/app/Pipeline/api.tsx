@@ -9,7 +9,7 @@ export const updatePipeline = async (chatId:string, pipeline:IPipelineLayer[], p
 }
 
 export const deleteSavedPipeline = async (pipelineId:string) => {
-    return axios.delete("http://localhost:5000/api/pipelines/saved" + pipelineId)
+    return axios.delete("http://localhost:5000/api/saved" + pipelineId)
 }
 
 
@@ -25,5 +25,5 @@ export const getSavedPipelines = () => {
 }
 
 export const getSavedPipelineById = (pipelineId:string) => {
-    return axios.get("http://localhost:5000/api/pipelines/saved/" + pipelineId)
+    return axios.get("http://localhost:5000/api/saved/" + pipelineId)
 }

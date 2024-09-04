@@ -31,3 +31,30 @@
 .rp-options-cont:nth-of-type(2) {
     margin-left: 1rem;
 }
+
+.rp-world-cont {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 0.5rem;
+
+}
+
+.rp-world-input {
+    background-color: var(--background-color-dark);
+    border-radius: 10px;
+    border: 0;
+    color: white;
+    font-size: medium;
+    padding: 0.5rem;
+    width: 100%;
+    margin-top: 0.5rem;
+
+}
+
+.rp-world-textarea {
+    height: 5rem;
+    resize: none;
+    font-family: Arial, Helvetica, sans-serif;
+}
