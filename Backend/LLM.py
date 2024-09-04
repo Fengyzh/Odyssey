@@ -4,7 +4,7 @@ DEFAULT_MODEL_OPTIONS = {'temperature': '0.7', 'top_k':'50', 'top_p':'0.9'}
 generic_pipeline_p = "You are part of a LLM response pipeline, you must do as best as you can in your role. you can mention last or previous responses but do not explictly say they are from the previous or last response. You might be given context to the questions the user have asked previously in the structure of { PREVIOUS_QUESTIONS: question1, question2, ... } but there won't be any response to those questions in your context, treat it as those questions had been answered. \n"
 
 GENERIC_RP_PROMPT = "You are a professional roleplayer, this is a play in a roleplay conversation, refer to actores in the play by their names. DO NOT state anything else, just continue the scene based of the context. Only focus on the roleplay. Reply as the character, reply in the form of 'YOUR_NAME: YOUR_REPLY' where YOUR_NAME is the character name you are playing as and YOUR_REPLY is the reply of your play. Example: Jim: Hello there Bob!  Bob: Hey Jim!  Play and act based on the information provided for your character as best as you can and interact with other characters in the play based on the information provided. You are only allowed to play the character that has been assiged to you! Do not play as the user's character! If the user said things like 'continue' or 'start', keep replying as your own character as if there was just a narration\n"
-
+GENERIC_RAG_PROMPT = "Below are the information retrieved to help you better answer this question. Answer the question with the provided context only, context: "
 
 
 class LLM_controller():
@@ -53,6 +53,23 @@ class LLM_controller():
         convertedOptions['top_k'] = int(options['top_k'])
         convertedOptions['top_p'] = float(options['top_p'])
         return convertedOptions
+
+
+    def flatten_RAG_context(self, rag_context):
+        flat_context = ""
+        for rc in rag_context:
+            flat_context = flat_context + rc + "\n"
+        return flat_context
+
+
+    def chat_pod(self, context, chat_meta, RAG_context=[]):
+        if RAG_context:
+            RAG_context = self.flatten_RAG_context(RAG_context)
+            original_user_prompt = context[-1]
+            context[-1] = self.buildConversationBlock(f"{GENERIC_RAG_PROMPT}\n{RAG_context}\n user promot: {original_user_prompt['content']}", 'user')
+        res = self.chat_llm(context=context, model=chat_meta['currentModel'], options=self.convertOptions(options=chat_meta['modelOptions']))
+        return res
+        
 
     
     def getLayerResults(self):
@@ -288,11 +305,33 @@ if __name__ == '__main__':
     "isWorld": False
 }
 ]
+    
 
 
-    res = lc.rp_chat_pod("start", sim_layers, [])
+    meta = {
+        "currentModel": "llama3:instruct",
+        "dataChanged": "Sun, 01 Sep 2024 23:28:40 GMT",
+        "dateCreate": "Sun, 01 Sep 2024 23:28:40 GMT",
+        "isDoc": False,
+        "isWeb": False,
+        "modelOptions": {
+        "systemPrompt": "you are a helpful assistant",
+        "temperature": "0.7",
+        "top_k": "40",
+        "top_p": "0.9"
+        },
+        "title": "Initial Greeting"
+    }
+
+
+    #res = lc.rp_chat_pod("start", sim_layers, [])
     #res = lc.rp_chat_pod("continue", sim_layers, res)
-    print(res)
+    #print(res)
+
+    res = lc.chat_pod([lc.buildConversationBlock('what is storm base based on the provide context?', 'user')], meta, "SW, the organization created by Feng has a varity of services. One of which is storm base, a family of backend services created by Feng. It includes services like message queue, backend API servers and API gateways")
+    for chunk in res:
+        content = chunk['message']['content']
+        print(content, flush=True, end="")
 
     #res = lc.pipeline_chat("tell me a very short story about a cat named kit helping a dog named sam to finish its homework assignment", sim_pipe)
     #res = lc.pipeline_gen("tell me a very short story about a cat named kit helping a dog named sam to finish its homework assignment", sim_pipe)

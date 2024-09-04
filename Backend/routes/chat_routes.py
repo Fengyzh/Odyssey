@@ -1,15 +1,17 @@
 import datetime
 from bson import ObjectId
 from flask import Blueprint, request, jsonify
-from utils import context2Plain
+from utils import context2Plain, flatten_2d_list
 from LLM import LLM_controller
 from db import get_all_from_collection, get_chat_collection, get_collection_by_type, get_pipeline_collection
+from retriever import RAGRetriever
 
 chat_bp = Blueprint('chat_bp', __name__)
 
 
 # Base URL for this file: /api/chat
 llm = LLM_controller()
+RAG_client = RAGRetriever()
 
 @chat_bp.route('/', methods=["GET"])
 def get_chats():
@@ -68,3 +70,59 @@ def getChatTitle():
     
         return jsonify({'title': response})
     return jsonify({'Error': "Unable to generate title for the current chat"})
+
+
+
+@chat_bp.route('/stream', methods=['POST'])
+def stream():
+
+    def get_data():
+        chat_context = request_msg['context']
+        print(chat_meta)
+
+        complete_text = ""
+        original_user_context = chat_context[-1]
+        #llm_res = llm.chat_llm(context=chat_context, model=chat_meta['currentModel'], options=llm.convertOptions(options=chat_meta['modelOptions']))
+        llm_res = llm.chat_pod(context=chat_context, chat_meta=chat_meta, RAG_context=rag_context)
+        for chunk in llm_res:
+            complete_text += chunk['message']['content']
+            content = chunk['message']['content']
+            yield f'{content}'
+        
+        chat_context[-1] = original_user_context
+        print("context:")
+        print(chat_context)
+        """ Complete Current Chat history """
+        chat_context.append({'role':'assistant', 'content':complete_text, 'name':chat_meta['currentModel']})
+        #print("context", chat_context)
+        if (request_msg['id']):
+            object_id = ObjectId(request_msg['id'])
+            get_chat_collection().update_one({'_id':object_id}, {'$set':{
+                'history': chat_context,
+                'meta':chat_meta
+            }})
+
+    request_msg = request.get_json()
+    chat_meta = request_msg['meta']
+    rag_context = []
+
+    if request_msg and request_msg['id']:
+        chatId = request_msg['id']
+        isWeb = chat_meta['isWeb']
+        isDoc = chat_meta['isDoc']
+
+        if isDoc:
+            entry = get_chat_collection().find_one({"_id": ObjectId(chatId)}, {"docs":1}) 
+
+            rag_context = RAG_client.hybrid_search(request_msg['message'], entry['docs'])
+            print("rag_context")
+            print(rag_context)
+        rag_context = flatten_2d_list(rag_context)
+
+
+    #if request_msg and 'message' in request_msg:
+    return get_data(), {'Content-Type': 'text/plain'}
+
+    #return Response({"msg":"No Message"})
+
+

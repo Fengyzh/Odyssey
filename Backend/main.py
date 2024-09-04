@@ -31,49 +31,6 @@ app.register_blueprint(rp_bp, url_prefix='/api/rp')
 
 
 
-@app.route('/api/stream', methods=['POST'])
-def stream():
-
-    def get_data():
-        chat_context = request_msg['context']
-        chat_meta = request_msg['meta']
-        print(chat_meta)
-        print("context", chat_context)
-
-        complete_text = ""
-        llm_res = llm.chat_llm(context=chat_context, model=chat_meta['currentModel'], options=llm.convertOptions(options=chat_meta['modelOptions']))
-        for chunk in llm_res:
-            complete_text += chunk['message']['content']
-            content = chunk['message']['content']
-            yield f'{content}'
-        
-        """ Complete Current Chat history """
-        chat_context.append({'role':'assistant', 'content':complete_text, 'name':chat_meta['currentModel']})
-        #print("context", chat_context)
-        if (request_msg['id']):
-            object_id = ObjectId(request_msg['id'])
-            mongoCollection.update_one({'_id':object_id}, {'$set':{
-                'history': chat_context,
-                'meta':chat_meta
-            }})
-
-    request_msg = request.get_json()
-
-    """ if request_msg and request_msg['id']:
-        chatId = request_msg['id']
-        isWeb = chat_meta['isWeb']
-        isDoc = chat_meta['isDoc']
-
-        entry = mongoCollection.find_one({"_id": ObjectId(chatId)}, {"_id":1, "docs":1}) 
-        rag_context = RAG_client.hybrid_search(request_msg['message'], list(entry)) """
-
-
-    #if request_msg and 'message' in request_msg:
-    return get_data(), {'Content-Type': 'text/plain'}
-
-    #return Response({"msg":"No Message"})
-
-
 @app.route('/api/create', methods=["GET"])
 def new_chat():
     updated_meta = DEFAULT_CHAT_METADATA

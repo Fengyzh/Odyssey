@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 import PyPDF2
+from LLM import LLM_controller
 
 
 emb = HuggingFaceBgeEmbeddings(
@@ -80,13 +81,15 @@ class RAGRetriever():
     
     def create_embeddings(self, *, file_path, collection_name):
         docs = self.read_document(file_path=file_path)
-        print(docs)
-        """ splits = self.text_spliter.split_text(docs)
+        #print(docs)
+        splits = self.text_spliter.split_text(docs)
         collection = self.chromaClient.get_or_create_collection(name=collection_name,  embedding_function=MyEmbeddingFunction())
 
         if (collection.count() < 1):
-            collection.add(documents=splits, ids=[str(i) for i in range(len(splits))]) """
-        
+            collection.add(documents=splits, ids=[str(i) for i in range(len(splits))])
+    
+    def get_current_embeddings(self):
+        return self.chromaClient.list_collections()
 
     def hyde(self, user_prompt, n=1):
         generated_docs = [user_prompt]
@@ -161,7 +164,6 @@ TODO:
     content. Then pass the content to LLM for processing then return the processed info for RAG
  """
 
-from main import LLM_controller
 
 
 class Web_Retriever:

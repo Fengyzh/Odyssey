@@ -40,7 +40,7 @@ export const getURLbyPathName = (pathName:string | null) => {
 
 
 
-export const chatAPIEndpoints:IChatEndpoints = {getCurrentChat:'http://localhost:5000/api/chat/', newChat:'http://localhost:5000/api/chat/create', stream:'http://localhost:5000/api/stream'}
+export const chatAPIEndpoints:IChatEndpoints = {getCurrentChat:'http://localhost:5000/api/chat/', newChat:'http://localhost:5000/api/chat/create', stream:'http://localhost:5000/api/chat/stream'}
 
 export const pipelineARIEndpoints:IChatEndpoints = {getCurrentChat:'http://localhost:5000/api/chat/', newChat:'http://localhost:5000/api/chat/create', stream:'http://localhost:5000/api/pipelines/stream'}
 
