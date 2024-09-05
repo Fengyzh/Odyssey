@@ -1,3 +1,4 @@
+import datetime
 from bson import ObjectId
 from flask import Blueprint, request, jsonify
 from LLM import LLM_controller
@@ -41,7 +42,8 @@ def stream_pipeline():
         for chunk in llm_res:
             yield chunk
         [pipeline_convo, chat] = llm.getLayerResults()
-        
+        chat_meta['dataChanged'] = datetime.datetime.now()
+
         
         if (request_msg['id']):
             object_id = ObjectId(request_msg['id'])

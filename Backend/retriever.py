@@ -154,8 +154,36 @@ class RAGRetriever():
         return rag_context
 
 
+    def retrieve_information(self, hybrid_search_para_map, isHyde=False, isRerank=False):
+        if isHyde:
+            hyde_result_list = self.hyde(hybrid_search_para_map['query'])
+            hyde_result_string = ""
+            for hr in hyde_result_list:
+                hyde_result_string += hr + "\n"
+            hybrid_search_para_map['query'] = hyde_result_string
+        
+        doc_rag_result = self.hybrid_search(hybrid_search_para_map['query'], hybrid_search_para_map['documents'], hybrid_search_para_map['kwargs'], hybrid_search_para_map['weights'], hybrid_search_para_map['fweights'])
+
+        if isRerank:
+            for r in doc_rag_result:
+                r.append(hybrid_search_para_map['query'])
+            scores = self.rerank(doc_rag_result)
+            scored_pairs = list(zip(scores, doc_rag_result))
+            sorted_scored_pairs = sorted(scored_pairs, key=lambda x: x[0], reverse=True)
+            top_x = 2  
+            top_pairs = [pair for score, pair in sorted_scored_pairs[:top_x]]
+            final_result = [[tp[0]] for tp in top_pairs]
+            return final_result
+        return doc_rag_result
+
+        
+
+
+
+
     def getClient(self):
         return self.chromaClient
+
 
 
 """ 
@@ -190,24 +218,32 @@ class Web_Retriever:
         results_json = json.loads(search.text)
         limited_results = results_json['results'][:num_results]
         web_links = [res['url'] for res in limited_results]
-        return self.webScraper(web_links, query)
+        return self.web_scraper(web_links, query)
     
-    def webScraper(self, urls, search_query):
+    def web_scraper(self, urls, search_query):
         extracted_htmls = [] 
 
         for url in urls:
             search_result = requests.get(url)
-            soup = BeautifulSoup(search_result.content)
+            soup = BeautifulSoup(search_result.content, 'html.parser')
             soup_text = soup.get_text()
             p_st = soup_text.replace("\n", "")
             cont = f"You are a professional web scrapper, you will be provided with a website raw HTML text information, extract and list the necessary infomation out based on the search query. You can also include information that you find fit or related to the user prompt. "
             sys_convo = self.html_summarizer.buildConversationBlock(cont, 'system')
             user_convo = self.html_summarizer.buildConversationBlock(f"Search query: {search_query} \n\n Raw HTML text: {p_st}", 'user')
-            extracted_info = self.html_summarizer.chat_llm([sys_convo, user_convo])
+            extracted_info = self.html_summarizer.chat_llm([sys_convo, user_convo], stream=False)
             extracted_htmls.append(extracted_info)
-            self.html_summarizer.printStream(extracted_info)
+            #self.html_summarizer.printStream(extracted_info)
 
         return [extracted_htmls, urls]
+
+    def get_extracted_htmls(self, web_scraper_res):
+        complete_text = ""
+
+        for res in web_scraper_res:
+                complete_text += res['message']['content']
+        return complete_text
+    
         
 
 
@@ -216,13 +252,10 @@ class Web_Retriever:
 
 
 if __name__ == '__main__':
-    #wr = Web_Retriever()
-    #wr.webSearch()
-    #lm = LLM_controller()
+
+    
     r = RAGRetriever()
-    #re = r.hybrid_search(query='what is inode number', documents=['test_emb'])
-    #print(re)
-    r.create_embeddings(file_path='./docs/pdft.pdf', collection_name=123)
+    #r.create_embeddings(file_path='./docs/pdft.pdf', collection_name=123)
 
 
     #res = r.hyde('what is inode number')[1]
@@ -230,48 +263,3 @@ if __name__ == '__main__':
 
     #print(re)
     #print(r.hyde('how to make a sandwich', 2))
-
-
-
-
-
-""" rr = RAGRetriever()
-with open('./docs/plain.txt', 'r', encoding='UTF-8') as file:
-    docs = file.read()
-
-rr.create_embeddings(docs, collection_name='test_emb')
-result = rr.hybrid_search('inode', ['test_emb'], kwargs=4)
-
-
-print("Finished")
-print(result) """
-
-
-""" rr = RAG_Retriever()
-client = rr.getClient()
-print(client.list_collections())
-print(client.get_collection("668d722dcd1a12d62d1336f7").get()['documents']) """
-
-
-"""
-    rerank:
-
-    r = RAGRetriever()
-    re = r.hybrid_search(query='what is inode number', documents=['test_emb'])
-    #print(re)
-    for i in re:
-        i.append('what is inode number')
-    pairs = [['what is panda?', 'hi'], ['what is panda?', 'The giant panda (Ailuropoda melanoleuca), sometimes called a panda bear or simply panda, is a bear species endemic to China.']]
-
-    scores = r.rerank(re)
-
-    scored_pairs = list(zip(scores, re))
-    sorted_scored_pairs = sorted(scored_pairs, key=lambda x: x[0], reverse=True)
-
-    top_x = 2  
-    top_pairs = [pair for score, pair in sorted_scored_pairs[:top_x]]
-
-    print(top_pairs)
-
-
-"""

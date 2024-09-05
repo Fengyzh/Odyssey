@@ -8,3 +8,4 @@ Odyssey is a personal front-end to interact with LLMs. It offers Chat, Pipeline 
 - Web Search
 - Chat, Pipeline and RolePlay mode
 - Chat history
+

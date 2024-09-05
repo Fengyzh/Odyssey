@@ -1,3 +1,4 @@
+import datetime
 from bson import ObjectId
 from flask import Blueprint, request, jsonify
 from db import get_all_from_collection, get_saved_collection, get_rp_collection
@@ -53,15 +54,13 @@ def stream_play():
         rp_world = request_msg['streamBodyExtras']['world']
 
         chat_context = request_msg['context']
-        print("--------------", user_prompt)
-        # TODO: Impl
-
         llm_res = llm.rp_chat_pod(user_prompt=user_prompt, layers=chat_rp, chat_context=chat_context, rp_world=rp_world)
         for chunk in llm_res:
             yield chunk
 
         [pipeline_convo, chat] = llm.getLayerResults()        
-        
+        chat_meta['dataChanged'] = datetime.datetime.now()
+
         if (request_msg['id']):
             object_id = ObjectId(request_msg['id'])
             get_rp_collection().update_one({'_id':object_id}, {
@@ -75,12 +74,6 @@ def stream_play():
 
     request_msg = request.get_json()
     
-    """ if request_msg and request_msg['id']:
-        chatId = request_msg['id']
-        entry = mongoCollection.find_one({"_id": ObjectId(chatId)}, {"_id":1, "docs":1}) 
-        rag_context = RAG_client.hybrid_search(request_msg['message'], list(entry)) """
-
-
     #if request_msg and 'message' in request_msg:
     return get_data(), {'Content-Type': 'text/plain'}
 

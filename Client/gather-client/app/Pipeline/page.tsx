@@ -297,7 +297,7 @@ const modalBody = () => {
                 return (
                   <>
                     {/* {pipelineLayerComp(pipe, index)} */}
-                    <ModalLayers layer={pipe} layers={pipeline} index={index} setLayers={setPipeline}/>
+                    <ModalLayers layer={pipe} layers={pipeline} index={index} setLayers={setPipeline} allowRag={true}/>
                     <h3 className='pipeline-layer-seperator'>V</h3>
                   </>
                   )

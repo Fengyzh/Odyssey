@@ -282,7 +282,7 @@ const rpWorldLayer =
                 {rpWorldLayer}
                 {layers.map((layer, index)=>{
                     return (
-                            <ModalLayers key={index} layer={layer} layers={layers} setLayers={setLayers} index={index} optionalTextField={modalOptionalText}/>
+                            <ModalLayers key={index} layer={layer} layers={layers} setLayers={setLayers} index={index} optionalTextField={modalOptionalText} allowRag={false}/>
                         )
                 })}
             <div className='pipeline-output-labal'>Output</div>

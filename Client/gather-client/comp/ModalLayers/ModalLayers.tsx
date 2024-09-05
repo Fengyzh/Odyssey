@@ -9,13 +9,14 @@ interface IModalLayers {
     setLayers: Dispatch<SetStateAction<any>>
     index:number
     optionalTextField?: (index:number, layer:any) => ReactNode
+    allowRag:boolean
 }
 
 
 
 
 
-export const ModalLayers:React.FC<IModalLayers> = ({layer, layers, setLayers, index, optionalTextField}) => {
+export const ModalLayers:React.FC<IModalLayers> = ({layer, layers, setLayers, index, optionalTextField, allowRag}) => {
 
 const [isModelSelect, setIsModelSelect] = useState<boolean[]>([false])
 
@@ -110,10 +111,13 @@ const handleRAGOption = (index:number, isWeb:boolean) => {
        
 
               <div className='layer-model-option-cont'>
+                {allowRag?
                 <div className='layer-model-options'>
                   <button className={`layer-model-option-toggle ${layers[index].isWeb? `layer-model-option-open` : ``}`} onClick={()=>handleRAGOption(index, true)}>Web</button>
                   <button className={`layer-model-option-toggle ${layers[index].isDoc? `layer-model-option-open` : ``}`} onClick={()=>handleRAGOption(index, false)}>Document</button>
                 </div>
+                  : ""
+                }
 
                 <div className='layer-model-options'>
                     <p>Temperature</p>
