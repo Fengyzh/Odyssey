@@ -118,8 +118,8 @@ def stream():
             rag_context = flatten_2d_list(rag_context)
         if isWeb:
             [web_info, urls] = Web_client.webSearch(chat_context[-1]['content'])
-            web_summaries = Web_client.get_extracted_htmls(web_info)
-            rag_context = rag_context + "\n" + GENERIC_WEB_SUM_PROMPT + web_summaries            
+            web_summaries = GENERIC_WEB_SUM_PROMPT + Web_client.get_extracted_htmls(web_info)
+            rag_context.append(web_summaries)            
 
     return get_data(), {'Content-Type': 'text/plain'}
 

@@ -28,7 +28,6 @@ class chromaRetriever():
         return text.split()
 
     def query_documents(self,query, kwargs):
-        #q = self.preProcess(query)
         q = query
         results = self.collection.query(query_texts=q, n_results=kwargs)
         print("\n\n", results, "\n\n")
@@ -186,14 +185,6 @@ class RAGRetriever():
 
 
 
-""" 
-TODO:
-    Use playwright to scrape HTML element from a webpage and use BS4 to remove all HTML tags to get the clean
-    content. Then pass the content to LLM for processing then return the processed info for RAG
- """
-
-
-
 class Web_Retriever:
     def __init__(self):
         self.searXNGURL = "http://localhost:8080"
@@ -228,7 +219,7 @@ class Web_Retriever:
             soup = BeautifulSoup(search_result.content, 'html.parser')
             soup_text = soup.get_text()
             p_st = soup_text.replace("\n", "")
-            cont = f"You are a professional web scrapper, you will be provided with a website raw HTML text information, extract and list the necessary infomation out based on the search query. You can also include information that you find fit or related to the user prompt. "
+            cont = f"You are a professional web scrapper, you will be provided with a website raw HTML text information, extract and list the necessary infomation out based on the search query. You can also include information that you find fit or related to the user prompt. Only reply the extracted information and nothing else"
             sys_convo = self.html_summarizer.buildConversationBlock(cont, 'system')
             user_convo = self.html_summarizer.buildConversationBlock(f"Search query: {search_query} \n\n Raw HTML text: {p_st}", 'user')
             extracted_info = self.html_summarizer.chat_llm([sys_convo, user_convo], stream=False)
@@ -255,6 +246,9 @@ if __name__ == '__main__':
 
     
     r = RAGRetriever()
+    ws = Web_Retriever()
+    res = ws.get_extracted_htmls(ws.webSearch()[0])
+    print(res)
     #r.create_embeddings(file_path='./docs/pdft.pdf', collection_name=123)
 
 
