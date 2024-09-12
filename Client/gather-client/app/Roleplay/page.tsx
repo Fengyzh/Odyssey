@@ -121,9 +121,7 @@ export default function page() {
 
 
     const handleChangePlay = (playId:string) => {
-        // TODO: IMPL
         getSavedPlayById(playId).then((res)=>{
-        // TEMP set value
         setLayers(res.data.playLayers)
     })
     }

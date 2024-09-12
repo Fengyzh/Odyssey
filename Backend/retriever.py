@@ -11,10 +11,11 @@ import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 import PyPDF2
 from LLM import LLM_controller
+from config import RAGConfig
 
 
 emb = HuggingFaceBgeEmbeddings(
-    model_name = 'BAAI/bge-large-en-v1.5',
+    model_name = RAGConfig.DEFAULT_EMBEDDING_MODEL,
     model_kwargs = {"device": "cuda"},
     encode_kwargs = {"normalize_embeddings": True}
 )
@@ -80,7 +81,6 @@ class RAGRetriever():
     
     def create_embeddings(self, *, file_path, collection_name):
         docs = self.read_document(file_path=file_path)
-        #print(docs)
         splits = self.text_spliter.split_text(docs)
         collection = self.chromaClient.get_or_create_collection(name=collection_name,  embedding_function=MyEmbeddingFunction())
 
@@ -121,7 +121,7 @@ class RAGRetriever():
         return top_pairs
 
 
-    def hybrid_search(self, query, documents, kwargs=2, weights=[0.5,0.5], fweights=None):
+    def hybrid_search(self, query, documents, kwargs=RAGConfig.HYBRID_SEARCH_KWARG, weights=[0.5,0.5], fweights=None):
         rag_context = []
         sparse_vector_weight = [int(kwargs*weights[0]), int(kwargs*weights[1])]
         if fweights:
@@ -187,8 +187,9 @@ class RAGRetriever():
 
 class Web_Retriever:
     def __init__(self):
-        self.searXNGURL = "http://localhost:8080"
+        self.searXNGURL = RAGConfig.SEARXNG_URL
         self.html_summarizer = LLM_controller()
+        self.WEB_SUM_PROMPT = f"You are a professional web scrapper, you will be provided with a website raw HTML text information, extract and list the necessary infomation out based on the search query. You can also include information that you find fit or related to the user prompt. Only reply the extracted information and nothing else"
     
 
     def q_web_format(self, web):
@@ -199,7 +200,7 @@ class Web_Retriever:
     """ 
         use LLM to generate the appro. search query and pass that as the query field in this function
     """
-    def webSearch(self, query="jokes", num_results=2, format='json', engine=['google, brave']):
+    def webSearch(self, query="jokes", num_results=RAGConfig.WEB_SEARCH_NUM, format='json', engine=RAGConfig.WEB_SEARCH_ENGINE):
         if not query:
             return 
         search = requests.get(self.searXNGURL, params={'q':query, 'format':format, 'engines':engine})
@@ -219,12 +220,10 @@ class Web_Retriever:
             soup = BeautifulSoup(search_result.content, 'html.parser')
             soup_text = soup.get_text()
             p_st = soup_text.replace("\n", "")
-            cont = f"You are a professional web scrapper, you will be provided with a website raw HTML text information, extract and list the necessary infomation out based on the search query. You can also include information that you find fit or related to the user prompt. Only reply the extracted information and nothing else"
-            sys_convo = self.html_summarizer.buildConversationBlock(cont, 'system')
+            sys_convo = self.html_summarizer.buildConversationBlock(self.WEB_SUM_PROMPT, 'system')
             user_convo = self.html_summarizer.buildConversationBlock(f"Search query: {search_query} \n\n Raw HTML text: {p_st}", 'user')
-            extracted_info = self.html_summarizer.chat_llm([sys_convo, user_convo], stream=False)
+            extracted_info = self.html_summarizer.chat_llm([sys_convo, user_convo], stream=False, model=RAGConfig.DEFAULT_WEB_SEARCH_MODEL)
             extracted_htmls.append(extracted_info)
-            #self.html_summarizer.printStream(extracted_info)
 
         return [extracted_htmls, urls]
 

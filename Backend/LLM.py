@@ -1,4 +1,5 @@
 import ollama
+from config import LLMConfig
 
 DEFAULT_MODEL_OPTIONS = {'temperature': '0.7', 'top_k':'50', 'top_p':'0.9'}
 generic_pipeline_p = "You are part of a LLM response pipeline, you must do as best as you can in your role. you can mention last or previous responses but do not explictly say they are from the previous or last response. You might be given context to the questions the user have asked previously in the structure of { PREVIOUS_QUESTIONS: question1, question2, ... } but there won't be any response to those questions in your context, treat it as those questions had been answered. \n"
@@ -12,7 +13,7 @@ class LLM_controller():
         self.pipeline_convo = []
         self.chat = []
     
-    def chat_llm(self, context="", stream=True, model='llama3:instruct', options={}):
+    def chat_llm(self, context="", stream=True, model=LLMConfig.DEFAULT_MODEL, options={}):
         text_stream = []
         if context:
             text_stream = context
@@ -26,7 +27,7 @@ class LLM_controller():
 
         return response
 
-    def gen_llm(self, message="", systemMsg="", model='llama3:instruct', options={}, stream=False):
+    def gen_llm(self, message="", systemMsg="", model=LLMConfig.DEFAULT_MODEL, options={}, stream=False):
         if options:
             options = {'temperature':options['temperature'], 'top_k':options['top_k'], 'top_p':options['top_p']}
         response = ollama.generate(
@@ -127,10 +128,8 @@ class LLM_controller():
                 stream_text = ""
                 for chunk in curSlice:
                     stream_text += chunk['response']
-                    #print(chunk['response'], flush=True, end="")
                     yield chunk['response']
                 if index != len(pipeline)-1:
-                    #print("<PIPELINE_BREAK>")
                     yield "<PIPELINE_BREAK>"
 
                 add_name_block = self.buildConversationBlock(stream_text, 'assistant')
@@ -205,17 +204,13 @@ class LLM_controller():
             current_actor_chat = ""
             for chunk in current_slice:
                 current_actor_chat += chunk['response']
-                #print(chunk['response'], flush=True, end="")
                 yield chunk['response']
 
             self.chat.append(self.buildConversationBlock(current_actor_chat, 'assistant', layer['rpOptions']['name']))
             if index != len(layers)-1:
-                #print("<RP_BREAK>")
-                #current_actor_chat += "<RP_BREAK>"
                 yield "<RP_BREAK>"
             working_chat = working_chat + "\n" + current_actor_chat
             total_convo += current_actor_chat
-       # print("\n\n" + total_convo + "\n\n")
 
 
 

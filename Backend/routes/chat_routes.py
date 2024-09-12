@@ -6,6 +6,7 @@ from LLM import LLM_controller
 from db import get_all_from_collection, get_chat_collection, get_collection_by_type, get_pipeline_collection
 from retriever import RAGRetriever, Web_Retriever
 from constants import GENERIC_WEB_SUM_PROMPT
+from config import RAGConfig
 
 chat_bp = Blueprint('chat_bp', __name__)
 
@@ -114,7 +115,10 @@ def stream():
         if isDoc:
             entry = get_chat_collection().find_one({"_id": ObjectId(chatId)}, {"docs":1}) 
 
-            rag_context = RAG_client.hybrid_search(request_msg['message'], entry['docs'])
+            if RAGConfig.ENABLE_HYDE or RAGConfig.ENABLE_RERANK:
+                rag_context = RAG_client.retrieve_information({'query':request_msg['message'], 'documents':entry['docs'], 'kwargs':None, 'weights':None, 'fweights':None}, RAGConfig.ENABLE_HYDE, RAGConfig.ENABLE_RERANK)
+            else:
+                rag_context = RAG_client.hybrid_search(request_msg['message'], entry['docs'])
             rag_context = flatten_2d_list(rag_context)
         if isWeb:
             [web_info, urls] = Web_client.webSearch(chat_context[-1]['content'])

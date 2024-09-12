@@ -51,8 +51,7 @@
 - [x] Pipeline LLM workflow
     - [x] Add front-end logic to send all user questions to backend for LLM context
 - [x] RP Routess
-- [] Change 'date changed' for meta in stream endpoints
-- [] URL to front-end
+- [x] Change 'date changed' for meta in stream endpoints
  
 # General
 - [x] Phase I refactor

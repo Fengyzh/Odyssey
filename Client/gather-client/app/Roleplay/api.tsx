@@ -1,7 +1,6 @@
 import { IModalMeta, IRPLayer } from "@/comp/Types"
 import axios from "axios"
 
-// TODO: Backend IMPL
 export const getSavedPlays = () => {
     return axios.get("http://localhost:5000/api/rp/saved")
 }
