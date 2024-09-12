@@ -19,7 +19,7 @@ export default function page() {
     const DEFAULT_RP_META = {id:'', name:'New Play', isFav:false}
 
 
-    const [isModal, setIsModal] = useState<boolean>(true)
+    const [isModal, setIsModal] = useState<boolean>(false)
     const [chat, setChat] = useState<ChatResponse[] | any[]>([])
     const [layers, setLayers] = useState<IRPLayer[] | []>([DEFAULT_RP_LAYER])
     const [rpMeta, setRpMeta] = useState<IModalMeta>(DEFAULT_RP_META)
@@ -297,15 +297,20 @@ const rpWorldLayer =
             <div className='pipeline-saved-body'>
               {savedPlays.map((splay, index)=>{
                 return <>
-                  <div key={splay._id} onClick={()=>handleChangePlay(splay._id)} className='saved-pipelines'>{splay.name}</div>
+                  <div key={splay._id} onClick={()=>handleChangePlay(splay._id)} className='saved-pipelines'>{splay.name}
                   {editSaved?  
                   <div onClick={()=>handleDeleteSaved(index)} className='pipeline-saved-delete'>
                     X
                   </div> : ''}
+                  </div>
                 </>
               })}
-        
             </div>
+            <div className='modal-left-panel-btn-cont'>
+              <button className='modal-left-panel-edit' onClick={()=>setEditSaved(()=>!editSaved)}>Edit Saved</button>
+            </div>
+
+
           </>
         )
       }
