@@ -23,11 +23,12 @@ interface IChatPageProps {
     resCleanUp?: () => void
     chatInputBox: (defaultChatInputBox:React.JSX.Element) => React.JSX.Element
     streamProcessing: (userMessage:ChatResponse, streamText:string) => void;
+    streamPreProcessing?: (userMessage:ChatResponse) => void
 } 
 
 
 
-const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, setChat, resProcess, streamBodyExtras, resCleanUp, chatInputBox, streamProcessing }) => {
+const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, setChat, resProcess, streamBodyExtras, resCleanUp, chatInputBox, streamProcessing, streamPreProcessing }) => {
   const { DEFAULT_CHAT_METADATA } = constants();
 
 
@@ -41,6 +42,8 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
   const [prompt, setPrompt] = useState("")
   const [wait, setWait] = useState(false)
   const [showBorder, setShowBorder] = useState(false);
+  const [streaming, setStreaming] = useState(false)
+
 
   const pathname = usePathname()
 
@@ -132,7 +135,11 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
     
     let userMessage = {role:'user', content:prompt, name:'User'}
     setWait(prev => !prev)
-    setChat(prevChat => [...prevChat, userMessage, { role: 'assistant', content: "", name:chatMeta.currentModel}]);
+
+    // This is causing the pipeline model name issue
+    if (streamPreProcessing) {streamPreProcessing(userMessage)} 
+    else {setChat(prevChat => [...prevChat, userMessage, { role: 'assistant', content: "", name:chatMeta.currentModel}]);}
+
     let createdEntryId;
 
     if (!currentChat) {
@@ -147,6 +154,7 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
     
 
     //setChat((prevChat) => [...prevChat, { role: 'assistant', content: "" }])
+    console.log(chatMeta)
     let curContext = [...chat]
     curContext.push(userMessage)
     console.log(createdEntryId)
@@ -179,12 +187,13 @@ const ChatPage: React.FC<IChatPageProps> = ({ chatEndpoints, titleComp, chat, se
     const reader = response.body?.getReader();
     setWait(prev => !prev)
     setPrompt("")
-
+    setStreaming(prev => !prev)
     while(true) {
       if (reader) {
         const {done, value} = await reader.read()
         let streamText = new TextDecoder().decode(value)
         if (done) {
+          setStreaming(prev => !prev)
           console.log("break!")
           break;
         }
@@ -266,6 +275,7 @@ const ChatInputBoxComp = (el=<div></div>) => {
         
 
         {wait? <div className='waiting-res-indicator'>Waiting for Response ...</div> : ""}
+        {streaming? <div className='waiting-res-indicator'>Streaming</div> : ""}
 
         <div ref={chatSpaceRef} className='chat-space'></div>
       </div>

@@ -1,32 +1,36 @@
 import datetime
 from bson import ObjectId
 from flask import Blueprint, request, jsonify
-from utils import context2Plain
+from utils import context2Plain, flatten_2d_list
 from LLM import LLM_controller
 from db import get_all_from_collection, get_chat_collection, get_collection_by_type, get_pipeline_collection
-from constants import DEFAULT_CHAT_METADATA, DEFAULT_PIPELINE_META, DEFAULT_LAYER_DATA
+from retriever import RAGRetriever, Web_Retriever
+from constants import GENERIC_WEB_SUM_PROMPT
+from config import RAGConfig
 
 chat_bp = Blueprint('chat_bp', __name__)
 
 
 # Base URL for this file: /api/chat
 llm = LLM_controller()
+RAG_client = RAGRetriever()
+Web_client = Web_Retriever()
 
-@chat_bp.route('/all', methods=["GET"])
-def getChats():
+@chat_bp.route('/', methods=["GET"])
+def get_chats():
     entries = get_all_from_collection(get_chat_collection(), {"_id": 1, "title": 1, "meta": 1})
     return jsonify(entries)
 
 
 
 @chat_bp.route('/<chatId>', methods=["GET"])
-def getChat(chatId):
+def get_chat(chatId):
     ty = request.args.get('type')
     try:
         entry = get_collection_by_type(ty.lower()).find_one({"_id": ObjectId(chatId)})
             
         if entry:
-            entry['_id'] = str(entry['_id'])  # Convert ObjectId to string for JSON serialization
+            entry['_id'] = str(entry['_id']) 
             return jsonify(entry)
         else:
             return jsonify({"error": "Entry not found"}), 404
@@ -34,7 +38,7 @@ def getChat(chatId):
         return jsonify({"error": str(e)}), 400
     
 @chat_bp.route('/<chatId>', methods=["DELETE"])
-def deleteChat(chatId):
+def delete_chat(chatId):
     try:
         ty = request.args.get('type')
         entry = get_collection_by_type(ty.lower()).delete_one({"_id": ObjectId(chatId)})
@@ -46,19 +50,7 @@ def deleteChat(chatId):
 
 
 
-@chat_bp.route('/create', methods=["GET"])
-def new_chat():
-    updated_meta = DEFAULT_CHAT_METADATA
-    updated_meta['dateCreate'] = datetime.datetime.now()
-    updated_meta['dataChanged'] = datetime.datetime.now()
-    ty = request.args.get('type')
 
-    if ty == 'Chat':
-        result = get_chat_collection().insert_one({'title': "New Chat", 'history':[], 'docs':[], 'meta':updated_meta})
-    elif ty == 'Pipeline':
-        result = get_pipeline_collection().insert_one({'title': "New Chat", 'history':[], 'docs':[], 'meta':updated_meta, 'pipeline':[DEFAULT_LAYER_DATA], 'pipeline_meta':DEFAULT_PIPELINE_META})
-    result_id = result.inserted_id
-    return jsonify({'id': str(result_id)})
 
 
 
@@ -81,3 +73,59 @@ def getChatTitle():
     
         return jsonify({'title': response})
     return jsonify({'Error': "Unable to generate title for the current chat"})
+
+
+
+@chat_bp.route('/stream', methods=['POST'])
+def stream():
+
+    def get_data():
+        print(chat_meta)
+
+        complete_text = ""
+        original_user_context = chat_context[-1]
+        llm_res = llm.chat_pod(context=chat_context, chat_meta=chat_meta, RAG_context=rag_context)
+        for chunk in llm_res:
+            complete_text += chunk['message']['content']
+            content = chunk['message']['content']
+            yield f'{content}'
+        
+        chat_context[-1] = original_user_context
+        chat_meta['dataChanged'] = datetime.datetime.now()
+
+        """ Complete Current Chat history """
+        chat_context.append({'role':'assistant', 'content':complete_text, 'name':chat_meta['currentModel']})
+        if (request_msg['id']):
+            object_id = ObjectId(request_msg['id'])
+            get_chat_collection().update_one({'_id':object_id}, {'$set':{
+                'history': chat_context,
+                'meta':chat_meta
+            }})
+
+    request_msg = request.get_json()
+    chat_meta = request_msg['meta']
+    chat_context = request_msg['context']
+    rag_context = []
+
+    if request_msg and request_msg['id']:
+        chatId = request_msg['id']
+        isWeb = chat_meta['isWeb']
+        isDoc = chat_meta['isDoc']
+
+        if isDoc:
+            entry = get_chat_collection().find_one({"_id": ObjectId(chatId)}, {"docs":1}) 
+
+            if RAGConfig.ENABLE_HYDE or RAGConfig.ENABLE_RERANK:
+                rag_context = RAG_client.retrieve_information({'query':request_msg['message'], 'documents':entry['docs'], 'kwargs':None, 'weights':None, 'fweights':None}, RAGConfig.ENABLE_HYDE, RAGConfig.ENABLE_RERANK)
+            else:
+                rag_context = RAG_client.hybrid_search(request_msg['message'], entry['docs'])
+            rag_context = flatten_2d_list(rag_context)
+        if isWeb:
+            [web_info, urls] = Web_client.webSearch(chat_context[-1]['content'])
+            web_summaries = GENERIC_WEB_SUM_PROMPT + Web_client.get_extracted_htmls(web_info)
+            rag_context.append(web_summaries)            
+
+    return get_data(), {'Content-Type': 'text/plain'}
+
+
+

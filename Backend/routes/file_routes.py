@@ -2,9 +2,10 @@ from bson import ObjectId
 from flask import Blueprint,request, jsonify
 import os
 from db import get_collection_by_type, get_doc_collection
+from retriever import RAGRetriever
 
 file_bp = Blueprint('file_bp', __name__)
-
+RAG_client = RAGRetriever()
 
 
 
@@ -55,12 +56,8 @@ def upload_files():
                 {'$push': {'docs': str(result.inserted_id)}}
             )
 
-            with open(file_path,"r") as f:
-                content = f.read()
-                _, file_extension = os.path.splitext(f.name)
-
-            #RAG_client.create_embeddings(file_path=file_path, collection_name=str(result.inserted_id))
-            print("embedding created")
+            RAG_client.create_embeddings(file_path=file_path, collection_name=str(result.inserted_id))
+            print("embedding created", str(result.inserted_id))
     
     return jsonify({'message': 'Files successfully uploaded'}), 200
 

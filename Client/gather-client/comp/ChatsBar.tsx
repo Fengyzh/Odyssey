@@ -11,15 +11,6 @@ import { createNewChat } from './Util';
 
 export default function ChatsBar() {
 
-/* 
-TODO:
-  - Init the sidebar will grab all the convo belong to the current mode (exp: chat)
-  - List all of them
-  - When the user clicks on it, it will set the currentChat in the context to that so it can be displayed
-    - the current chat will just be an id, and the chatpgae or whatever mode page will have to make a request to
-    get that chat convo so that we are not getting every chat all at once to clog up memory
-
-*/
     const pathname = usePathname()
 
     const { isSidebarToggled, toggleSidebar, setCurrentChat, currentChat, fetchChatSnippets, chats, tab, setTab, fetchCurrentChatFiles, curFiles, chatMeta } = useSidebar();

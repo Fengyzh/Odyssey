@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import '@/app/Chat/chat.css'
 import ChatPage from '@/comp/Chat/ChatPage'
 import { useSidebar } from '../context/sidebarContext';
@@ -24,15 +24,15 @@ export default function page() {
   const inputRef = useRef<HTMLInputElement>(null);
   const pipelineInputRef = useRef<HTMLInputElement>(null);
 
-  const [chat, setChat] = useState<ChatResponse[] | any[]>([])
+  const [chat, setChat] = useState<ChatResponse[]>([])
   const [pipeline, setPipeline] = useState<IPipelineLayer[]>([DEFAULT_LAYER_DATA])
   const pathname = usePathname()
   const [isModal, setIsModal] = useState<boolean>(false)
   const [isModelSelect, setIsModelSelect] = useState<boolean[]>([false])
-  const [modelList, setModelList] = useState<IOllamaList[] | []>([])
   const [pipelineMeta, setPipelineMeta] = useState<IModalMeta>(DEFAULT_PIPELINE_META)
   const [savedPipelines, setSavedPipelines] = useState<ISavedPipeline[] | []>([])
   const [editSaved, setEditSaved] = useState<boolean>(false)
+  const [counter, setCounter] = useState<number>(0)
 
 
   
@@ -43,7 +43,8 @@ export default function page() {
     setChatMeta, 
     chatMeta,
     handleChatDelete,
-    setCurrentChat } = useSidebar();
+    setCurrentChat,
+    getModalList } = useSidebar();
 
     useEffect(() => {
       handleAnimateSideBar(titleContRef, isSidebarToggled)
@@ -56,19 +57,11 @@ export default function page() {
 
     useEffect(() => {
       if (isModal) {      
-        handleExtentModelSelect()
-        fetchAllSavedPipeline()    
+        fetchAllSavedPipeline()
+        getModalList()
       }
     }, [isModal]) 
 
-
-
-    const handleExtentModelSelect = () => {
-      getLLMList().then((res)=> {
-        setModelList(res.data?.models.models)
-        console.log(res.data.models.models)
-      })
-    }
 
     const fetchAllSavedPipeline = () => {
       return getSavedPipelines().then((res)=>{
@@ -288,75 +281,7 @@ const chatTitle = () => {return (<Title titleContRef={titleContRef} optionPanelC
 
 
 
-const pipelineLayerComp = (pipe:IPipelineLayer, index:number) => {
-  return (
-    <div className='pipeline-layers'>
-      <div>
 
-        <div  className='pipeline-model-options'>
-
-            <div className='layer-title'>
-              <div className='pipeline-model-select' > 
-                {pipe.model} 
-              </div>
-              <div className='layer-options-btn' onClick={()=>ToggleLayerModelPanel(index)}> Options</div>
-            </div>
-
-            <div className={`layer-model-select-cont ${isModelSelect[index]? `model-option-toggle` : ``}`}>
-              <div className='layer-model-select'>
-              {modelList.map((model, modelindex) => {
-                return <h4 key={modelindex} className='layer-model-items' onClick={()=>handleModelSelect(index, model.name)}>{model.name} {model.details.parameter_size}</h4>
-                })}
-              </div>
-       
-
-              <div className='layer-model-option-cont'>
-                <div className='layer-model-options'>
-                  <button className={`layer-model-option-toggle ${pipeline[index].isWeb? `layer-model-option-open` : ``}`} onClick={()=>handleRAGOption(index, true)}>Web</button>
-                  <button className={`layer-model-option-toggle ${pipeline[index].isDoc? `layer-model-option-open` : ``}`} onClick={()=>handleRAGOption(index, false)}>Document</button>
-                </div>
-
-                <div className='layer-model-options'>
-                    <p>Temperature</p>
-                    <input className='layer-option-inputs' onChange={(e)=>handleLayerOptions(index, 'temperature', e)} value={pipeline[index].modelOptions?.temperature}/>
-                  </div>
-                  <div className='layer-model-options'>
-                    <p>Top K</p>
-                    <input className='layer-option-inputs' onChange={(e)=>handleLayerOptions(index, 'top_k', e)} value={pipeline[index].modelOptions?.top_k}/>
-                  </div>
-                  <div className='layer-model-options'>
-                    <p>Top P</p>
-                    <input className='layer-option-inputs' onChange={(e)=>handleLayerOptions(index, 'top_p', e)} value={pipeline[index].modelOptions?.top_p}/>
-                  </div>
-              </div>
-            </div>
-
-        </div>
-
-        <div>
-          <textarea className='pipeline-sysprompt-text' onChange={(e)=>handleSysPrompt(e, index)} value={pipe.modelOptions?.systemPrompt}/>
-        </div>
-
-      </div>
-      <div className='pipeline-delete-cont'>
-        <div className='pipeline-layers-delete'>
-          <button onClick={()=>handleLayerDelete(index)} className='pipeline-layers-btn pipeline-layers-btn-delete'>X</button>
-        </div>
-      </div>
-      <div className='pipeline-layers-control'>
-
-        {index != 0? 
-        <button onClick={()=>handleLayerOrdering(true, index)} className='pipeline-layers-btn'>U</button> : ""}
-
-        {index != pipeline.length-1? 
-        <button onClick={()=>handleLayerOrdering(false, index)} className='pipeline-layers-btn'>D</button>
-                : ""}
-
-      </div>
-    </div>
-  )
-
-}
 
 
 const modalBody = () => {
@@ -372,7 +297,7 @@ const modalBody = () => {
                 return (
                   <>
                     {/* {pipelineLayerComp(pipe, index)} */}
-                    <ModalLayers layer={pipe} layers={pipeline} index={index} setLayers={setPipeline}/>
+                    <ModalLayers layer={pipe} layers={pipeline} index={index} setLayers={setPipeline} allowRag={true}/>
                     <h3 className='pipeline-layer-seperator'>V</h3>
                   </>
                   )
@@ -418,9 +343,11 @@ const chatInputBox = (defaultChatInputBox: React.JSX.Element)=> {
   }
 }
 
+
 const pipelineTextStream = (userMessage:ChatResponse, streamText:string) => {
   if (streamText.includes('<PIPELINE_BREAK>')) { /* TEST */
-  setChat(prevChat => [...prevChat, { role: 'assistant', content: "", name:chatMeta.currentModel }]); /* TEST */
+  setCounter(prev=>prev+1)
+  setChat(prevChat => [...prevChat, { role: 'assistant', content: "", name:pipeline[counter+1].model }]); /* TEST */
 }
 
 setChat((prevChat) => {
@@ -428,7 +355,7 @@ setChat((prevChat) => {
     return [...prevChat]
   }  
   if (prevChat.length === 0) {
-    return [userMessage, { role: 'assistant', content: streamText, name:chatMeta.currentModel }];
+    return [userMessage, { role: 'assistant', content: streamText, name:pipeline[0].model }];
   } else {
     const updatedChat = [...prevChat];
     const lastMessage = updatedChat[updatedChat.length - 1];
@@ -437,6 +364,12 @@ setChat((prevChat) => {
   }
 });  
 
+}
+
+
+const pipelinePreProcessing = (userMessage:ChatResponse) => {
+  setChat(prevChat => [...prevChat, userMessage, { role: 'assistant', content: "", name:pipeline[0].model}]);
+  setCounter(prev=>0)
 }
 
 
@@ -452,7 +385,8 @@ const chatProps = {
   streamBodyExtras: {pipeline:pipeline, pipelineMeta:pipelineMeta},
   resCleanUp: pclean,
   chatInputBox: chatInputBox,
-  streamProcessing: pipelineTextStream
+  streamProcessing: pipelineTextStream,
+  streamPreProcessing: pipelinePreProcessing
 }
 
 const ModalProps = {

@@ -98,8 +98,13 @@ export interface IRPLayerOptions {
 }
 
 export interface IRPLayer extends IPipelineLayer {
-  isWorld:boolean
   rpOptions: IRPLayerOptions
+}
+
+export interface IRPWorld {
+  userName:string;
+  setting:string;
+  intro:string
 }
 
 

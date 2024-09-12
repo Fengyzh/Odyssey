@@ -1,7 +1,8 @@
+import datetime
 from bson import ObjectId
 from flask import Blueprint, request, jsonify
 from LLM import LLM_controller
-from db import get_all_from_collection, get_pipeline_collection, get_saved_pipeline_collection
+from db import get_all_from_collection, get_pipeline_collection, get_saved_collection
 
 pipeline_bp = Blueprint('pipeline_bp', __name__)
 
@@ -28,7 +29,7 @@ def update_pipelines(pipelineId):
 
 
 @pipeline_bp.route('/stream', methods=["POST"])
-def streamPipeline():
+def stream_pipeline():
 
     def get_data():
         user_prompt = request_msg['message']
@@ -37,11 +38,12 @@ def streamPipeline():
         chat_context = request_msg['context']
 
         #print(pipeline_prompt)
-        llm_res = llm.pipeline_chat_pod(user_prompt, chat_pipeline, chat_context,cutOffUserPrompt=False, stream=True)
+        llm_res = llm.pipeline_chat_pod(user_prompt, chat_pipeline, chat_context, cutOffUserPrompt=False, stream=True)
         for chunk in llm_res:
             yield chunk
-        [pipeline_convo, chat] = llm.getPipelineResults()
-        
+        [pipeline_convo, chat] = llm.getLayerResults()
+        chat_meta['dataChanged'] = datetime.datetime.now()
+
         
         if (request_msg['id']):
             object_id = ObjectId(request_msg['id'])
@@ -68,33 +70,19 @@ def streamPipeline():
 
 @pipeline_bp.route('/saved', methods=["GET"])
 def get_all_saved_pipelines():
-    entries = get_all_from_collection(get_saved_pipeline_collection(), {"_id": 1, "name": 1})
+    entries = get_all_from_collection(get_saved_collection(), {"_id": 1, "name": 1}, {'type':'pipeline'})
     return jsonify(entries)
 
 @pipeline_bp.route('/saved', methods=["POST"])
 def save_pipeline():
     req = request.get_json()
     try:
-        entries = get_saved_pipeline_collection().insert_one({'settings':req["pipeline"], 'name':req["name"], 'type':'pipeline'})
+        entries = get_saved_collection().insert_one({'settings':req["pipeline"], 'name':req["name"], 'type':'pipeline'})
 
         return jsonify({'response': 'pipeline saved'},200)
     except:
         return jsonify({'response': 'failed to save pipeline'}, 400)
 
-@pipeline_bp.route('/saved', methods=["DELETE"])
-def delete_saved_pipeline():
-    # TODO
-    pass
-
-
-
-
-@pipeline_bp.route('/saved/<pipelineId>', methods=["GET"])
-def get_saved_pipeline(pipelineId):
-    entries = get_saved_pipeline_collection().find_one({"_id": ObjectId(pipelineId)})
-    if entries:
-        entries['_id'] = str(entries['_id'])
-    return jsonify(entries)
 
 
 

@@ -6,7 +6,7 @@ import { RPAPIEndpoints } from '../api'
 import { useSidebar } from '../context/sidebarContext'
 import { adjustInputLength, createNewChat, handleAnimateSideBar, sendTitleUpdate, useDebounce } from '@/comp/Util'
 import { usePathname } from 'next/navigation'
-import { ChatResponse, IModalMeta, IModelOptions, IOllamaList, IRPLayer, ISavedPipeline } from '@/comp/Types'
+import { ChatResponse, IModalMeta, IModelOptions, IOllamaList, IRPLayer, IRPWorld, ISavedPipeline } from '@/comp/Types'
 import { AxiosResponse } from 'axios'
 import { constants } from '@/app/constants'
 import { deleteSavedPlays, favouritePlay, getSavedPlayById, getSavedPlays, updateRP } from './api'
@@ -15,7 +15,7 @@ import '@/app/Roleplay/rp.css'
 import { ModalLayers } from '@/comp/ModalLayers/ModalLayers'
 
 export default function page() {
-    const { DEFAULT_RP_LAYER } = constants();
+    const { DEFAULT_RP_LAYER, DEFAULT_RP_WORLD } = constants();
     const DEFAULT_RP_META = {id:'', name:'New Play', isFav:false}
 
 
@@ -25,6 +25,8 @@ export default function page() {
     const [rpMeta, setRpMeta] = useState<IModalMeta>(DEFAULT_RP_META)
     const [savedPlays, setSavedPlays] = useState<ISavedPipeline[] | []>([])
     const [editSaved, setEditSaved] = useState<boolean>(false)
+    const [rpWorld, setRPWorld] = useState<IRPWorld>(DEFAULT_RP_WORLD)
+    const [counter, setCounter] = useState<number>(0)
 
 
     const titleContRef = useRef<HTMLDivElement>(null);
@@ -51,6 +53,7 @@ export default function page() {
     useEffect(() => {
       if (isModal) {      
         getModalList()
+        fetchAllSavedPlays()
       }
     }, [isModal]) 
 
@@ -118,9 +121,7 @@ export default function page() {
 
 
     const handleChangePlay = (playId:string) => {
-        // TODO: IMPL
         getSavedPlayById(playId).then((res)=>{
-        // TEMP set value
         setLayers(res.data.playLayers)
     })
     }
@@ -157,6 +158,12 @@ export default function page() {
   }
 
 
+  const handleRPWorld = (e:React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, type:"setting" | "userName" | "intro") => {
+    let worldSettings = {...rpWorld}
+    worldSettings[type] = e.target.value
+    setRPWorld(prev=>(worldSettings))
+  }
+ 
 
 
     /* ---- FUNCTIONAL LINE ---- */
@@ -177,8 +184,9 @@ export default function page() {
 
 
     const chatTextStream = (userMessage:ChatResponse, streamText:string) => {
-      if (streamText.includes('<RP_BREAK>')) { /* TEST */
-      setChat(prevChat => [...prevChat, { role: 'assistant', content: "", name:chatMeta.currentModel }]); /* TEST */
+      if (streamText.includes('<RP_BREAK>')) { 
+      setCounter(prev=>prev+1)
+      setChat(prevChat => [...prevChat, { role: 'assistant', content: "", name:layers[counter+1].rpOptions.name }]); 
     }
     
     setChat((prevChat) => {
@@ -186,7 +194,7 @@ export default function page() {
         return [...prevChat]
       }  
       if (prevChat.length === 0) {
-        return [userMessage, { role: 'assistant', content: streamText, name:chatMeta.currentModel }];
+        return [userMessage, { role: 'assistant', content: streamText, name:layers[0].rpOptions.name }];
       } else {
         const updatedChat = [...prevChat];
         const lastMessage = updatedChat[updatedChat.length - 1];
@@ -195,6 +203,11 @@ export default function page() {
       }
     });  
     
+    }
+
+    const rpPreProcessing = (userMessage:ChatResponse) => {
+      setChat(prevChat => [...prevChat, userMessage, { role: 'assistant', content: "", name:layers[0].rpOptions.name}]);
+      setCounter(prev=>0)
     }
 
 
@@ -235,6 +248,25 @@ const modalOptionalText = (index:number, layer:IRPLayer) => {
 )}
 
 
+const rpWorldLayer = 
+  (<div className='pipeline-layers'>
+      <div className='rp-world-cont'>
+        <label>User Character Name</label>
+        <input className='rp-world-input' value={rpWorld.userName} onChange={(e)=>handleRPWorld(e, 'userName')}/>
+      </div>
+      <div className='rp-world-cont'>
+        <label>World Setting</label>
+        <textarea className='rp-world-input rp-world-textarea' value={rpWorld.setting} onChange={(e)=>handleRPWorld(e, 'setting')}/>
+      </div>
+
+      <div className='rp-world-cont'>
+        <label>Introduction</label>
+        <textarea className='rp-world-input rp-world-textarea' value={rpWorld.intro} onChange={(e)=>handleRPWorld(e, 'intro')}/>
+      </div>
+  </div>
+)
+
+
 
     const modalBody = () => {
         return (
@@ -245,9 +277,10 @@ const modalOptionalText = (index:number, layer:IRPLayer) => {
               <button className='pipeline-new' onClick={()=>handleNewChat()}>New Play</button>
             </div>
             <div className='pipeline-body'>
+                {rpWorldLayer}
                 {layers.map((layer, index)=>{
                     return (
-                            <ModalLayers key={index} layer={layer} layers={layers} setLayers={setLayers} index={index} optionalTextField={modalOptionalText}/>
+                            <ModalLayers key={index} layer={layer} layers={layers} setLayers={setLayers} index={index} optionalTextField={modalOptionalText} allowRag={false}/>
                         )
                 })}
             <div className='pipeline-output-labal'>Output</div>
@@ -305,7 +338,8 @@ const modalOptionalText = (index:number, layer:IRPLayer) => {
 
     var rpStreamBodyExtra = {
       layers: layers,
-      rpMeta: rpMeta
+      rpMeta: rpMeta,
+      world: rpWorld
     }
 
   const chatProps = {
@@ -316,7 +350,8 @@ const modalOptionalText = (index:number, layer:IRPLayer) => {
       resProcess: rpfetch,
       chatInputBox: chatInputBox,
       streamProcessing: chatTextStream,
-      streamBodyExtras:rpStreamBodyExtra
+      streamBodyExtras:rpStreamBodyExtra,
+      streamPreProcessing: rpPreProcessing
     }
 
     const ModalProps = {

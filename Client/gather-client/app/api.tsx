@@ -21,7 +21,26 @@ export const getLLMList = async () => {
 }
 
 
-export const chatAPIEndpoints:IChatEndpoints = {getCurrentChat:'http://localhost:5000/api/chat/', newChat:'http://localhost:5000/api/chat/create', stream:'http://localhost:5000/api/stream'}
+export const getURLbyPathName = (pathName:string | null) => {
+    if (!pathName) {
+        return ""
+    }
+    if (pathName == '/Chat') {
+        return "http://localhost:5000/api/chat"
+    } 
+    else if (pathName == "/Pipeline") {
+        return "http://localhost:5000/api/pipelines"
+    }
+    else if (pathName == "/Roleplay") {
+        return "http://localhost:5000/api/rp"
+    } else {
+        return ""
+    }
+}
+
+
+
+export const chatAPIEndpoints:IChatEndpoints = {getCurrentChat:'http://localhost:5000/api/chat/', newChat:'http://localhost:5000/api/chat/create', stream:'http://localhost:5000/api/chat/stream'}
 
 export const pipelineARIEndpoints:IChatEndpoints = {getCurrentChat:'http://localhost:5000/api/chat/', newChat:'http://localhost:5000/api/chat/create', stream:'http://localhost:5000/api/pipelines/stream'}
 
