@@ -1,7 +1,8 @@
 import pymongo
+import os
 
-
-mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
+mongo_uri = os.getenv('MONGO_URI', 'mongodb://localhost:27017/default-db')
+mongoClient = pymongo.MongoClient(mongo_uri)
 mongoDB = mongoClient["Project-gather"]
 mongoCollection = mongoDB["LLM-Chats"]
 mongoDocCollection = mongoDB["LLM-Docs"]

@@ -107,64 +107,6 @@ export default function page() {
  }
 
 
- const handleLayerDelete = (index:number) => {
-    let temp = [...pipeline]
-    temp.splice(index,1)
-    setPipeline(temp)
- }
-
-
- const swapElement = (arr:any[], el1:any, el2:any) => {
-  let tempArr = [...arr]
-  let temp = tempArr[el1]
-  tempArr[el1] = tempArr[el2]
-  tempArr[el2] = temp
-  return tempArr
- }
-
-
- const handleLayerOrdering = (isUp:boolean, index:number) => {
-  if (isUp) {
-    setPipeline(swapElement(pipeline, index, index-1))
-  } else {
-    setPipeline(swapElement(pipeline, index, index+1))
-  }
-
- }
-
-
- const handleSysPrompt = (e:React.ChangeEvent<HTMLTextAreaElement>, index:number) => {
-  let temp = [...pipeline]
-  temp[index].modelOptions!.systemPrompt = e.target.value
-  setPipeline(temp)
- }
-
-
- const ToggleLayerModelPanel = (index:number) => {
-  setIsModelSelect((prev)=>{
-    let temp = [...prev]
-    temp[index] = !temp[index]
-    return temp
-  })
-
- }
-
-
- const handleModelSelect = (index:number, modelName:string) => {
-  const newPipeline = [...pipeline]
-  newPipeline[index].model = modelName
-  setPipeline(newPipeline)
-}
-
-
-  const handleLayerOptions = (index:number, options:keyof IModelOptions, e:React.ChangeEvent<HTMLInputElement>) => {
-    let tempPipe = [...pipeline]
-    let tempOptions = tempPipe[index]
-    if (tempOptions.modelOptions) {
-      tempOptions.modelOptions[options] = e.target.value
-      setPipeline(tempPipe)
-    }    
-  }
 
   const handleSubmitPipeline = async () => {
     // Handle Pipeline update url
@@ -203,17 +145,6 @@ export default function page() {
     adjustInputLength(pipelineInputRef, 13, 11)
   }
   
-  const handleRAGOption = (index:number, isWeb:boolean) => {
-    let tempPipe = [...pipeline]
-    
-    if (isWeb) {
-      tempPipe[index].isWeb = !tempPipe[index].isWeb
-    } else {
-      tempPipe[index].isDoc = !tempPipe[index].isDoc
-    }
-    setPipeline(tempPipe)
-
-  }
 
   const handleChangePipeline = (pipelineId:string) => {
     getSavedPipelineById(pipelineId).then((res)=>{
@@ -245,29 +176,6 @@ export default function page() {
   </div>
 
 </div>)
-
-
-/*   const chatTitle = () => {return (<div className='chat-page-title-cont'>
-  <h2 className='sidebar-toggle' onClick={()=>toggleSidebar()}>O</h2>
-
-  <div ref={titleContRef} className='chat-title-func-cont'>
-    <input ref={inputRef} className='chat-page-title-t' onChange={(e)=>handleTitleChange(e)} value={chatMeta.title}/> 
-
-          
-  </div>
-
-  <div className='chat-options pipeline-options'>
-    <button className='chat-options-btn' onClick={()=>setIsModal((prev)=>!prev)}> P+ </button>
-  </div>
-
-  {currentChat?   
-  <div className='chat-options'>
-    <button onClick={()=>{setIsOptionPanel(!isOptionPanel)}} className='chat-options-btn'> === </button>
-    {isOptionPanel? chatOptionPanel : ''}
-  </div> : ''}
-
-
-</div>)} */
 
 const titleOptionalBlock = () => {
   return (<div className='chat-options pipeline-options'>

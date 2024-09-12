@@ -316,31 +316,6 @@ const rpWorldLayer =
       }
 
 
-      /* const modalLeftBody = () => {
-  return (
-    <>
-    <div className='pipeline-saved-body'>
-      {savedPipelines.map((sPipe, index)=>{
-        return <>
-          <div key={sPipe._id} onClick={()=>handleChangePipeline(sPipe._id)} className='saved-pipelines'>{sPipe.name}
-          {editSaved?  
-          <div onClick={()=>handleDeleteSaved(index)} className='pipeline-saved-delete'>
-            X
-          </div> : ''}
-
-            </div>
-        </>
-      })}
-
-    </div>
-    <div className='modal-left-panel-btn-cont'>
-      <button className='modal-left-panel-edit' onClick={()=>setEditSaved(()=>!editSaved)}>Edit Saved</button>
-    </div>
-    </>
-  )
-} */
-
-
     var rpStreamBodyExtra = {
       layers: layers,
       rpMeta: rpMeta,

@@ -7,6 +7,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - '80:80'
+    depends_on:
+      - backend
 
   backend:
     build:
@@ -17,6 +19,8 @@ services:
       - MONGO_URI=mongodb://mongo:27017/project-gather
     ports:
       - '5000:80'
+    depends_on:
+      - mongo
 
 
   mongo:
@@ -24,6 +28,10 @@ services:
     volumes:
       - mongodb_data:/data/db
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    environment:
+      - MONGO_INITDB_DATABASE=project-gather
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=root_password
     ports:
       - "27017:27017"
 

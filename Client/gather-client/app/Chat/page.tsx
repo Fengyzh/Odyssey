@@ -14,15 +14,6 @@ import Title from '@/comp/Title';
 
 export default function page() {
 
-  /* Chat looks like:
-    [{role:xxxx, message:xxxx}, {role:xxxx, message:xxxx}...]
-  */
-  
-  //const [prompt, setPrompt] = useState("")
-  //const [chat, setChat] = useState<ChatResponse[] | any[]>([])
-  //const [chatMeta, setChatMeta] = useState<ChatMetaData>(DEFAULT_CHAT_METADATA)
-  //const [wait, setWait] = useState(false)
-
 
   const [chat, setChat] = useState<ChatResponse[] | any[]>([])
 
@@ -67,22 +58,6 @@ const handleSysprompt = (e:React.ChangeEvent<HTMLTextAreaElement>) => {
   setChatMeta(prev=>({...prev, modelOptions:{...prev.modelOptions, systemPrompt:e.target.value}}))
 }
 
-/* const debouncedSendTitleUpdate = useDebounce((newMeta) => {
-  sendTitleUpdate(pathname, currentChat, newMeta).then((res)=>{
-    fetchChatSnippets()
-  });
-}, 1000);
-
-const handleTitleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
-  let newMeta = chatMeta
-  newMeta["title"] = e.target.value
-  setChatMeta((prev)=>({...prev, title: e.target.value}))
-  debouncedSendTitleUpdate(newMeta)
-} */
-
-
-
-/* model.name, model.details.parameter_size */
 
 const chatInputBox = (defaultChatInputBox: React.JSX.Element)=> {
   return defaultChatInputBox
@@ -121,22 +96,6 @@ const chatOptionPanel = (<div className='chat-option-panel'>
 
 
   const chatTitle = () => {return (<Title titleContRef={titleContRef} optionPanelComp={chatOptionPanel} inputRef={inputRef} titleFunctionalBlock={titleFunctionalBlock}/>)}
-
-    /* const chatTitle = () => {return (<div className='chat-page-title-cont'>
-      <h2 className='sidebar-toggle' onClick={()=>toggleSidebar()}>O</h2>
-
-      <div ref={titleContRef} className='chat-title-func-cont'>
-      {chatMeta.title !== 'Chat Title1'? <input ref={inputRef} className='chat-page-title-t' onChange={(e)=>handleTitleChange(e)} value={chatMeta.title}/> 
-    : 
-    <h2 className='chat-page-title'> {chatMeta.title} </h2>}
-          {titleFunctionalBlock()}
-      </div>
-      <div className='chat-options'>
-        <button onClick={()=>{setIsOptionPanel(!isOptionPanel)}} className='chat-options-btn'> === </button>
-
-        {isOptionPanel? chatOptionPanel : ''}
-    </div>
-  </div>)} */
 
 const chatTextStream = (userMessage:ChatResponse, streamText:string) => {
 setChat((prevChat) => {
